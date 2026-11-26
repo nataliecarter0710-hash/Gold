@@ -1,0 +1,2518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Goldbet — royalatlas7.games Live Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at top, #1f0a12 0%, #0d060a 55%, #070305 100%);
+      color: #f8fafc;
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .font-royal { font-family: 'Playfair Display', serif; }
+    .gold-gradient-text {
+      background: linear-gradient(135deg, #FFF3B0 0%, #D4AF37 45%, #AA771C 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .royal-card {
+      background: linear-gradient(160deg, rgba(36, 14, 24, 0.92) 0%, rgba(16, 8, 12, 0.96) 100%);
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65);
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Playing Cards */
+    .playing-card {
+      width: 2.45rem;
+      height: 3.5rem;
+      border-radius: 0.45rem;
+      flex-shrink: 0;
+      user-select: none;
+      position: relative;
+      transition: transform 0.2s ease;
+    }
+    @media (min-width: 400px) {
+      .playing-card {
+        width: 2.75rem;
+        height: 3.9rem;
+      }
+    }
+    @media (min-width: 640px) {
+      .playing-card {
+        width: 4rem;
+        height: 5.6rem;
+        border-radius: 0.55rem;
+      }
+    }
+    .card-face {
+      background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 100%);
+      border: 1.5px solid #e2e8f0;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.55);
+    }
+    .card-back {
+      background: linear-gradient(135deg, #5b1026 0%, #2d0713 100%);
+      border: 1.5px solid rgba(212, 175, 55, 0.55);
+      box-shadow: inset 0 0 0 3px rgba(212, 175, 55, 0.16), 0 6px 14px rgba(0, 0, 0, 0.5);
+    }
+    @keyframes cardDealOnce {
+      0% { opacity: 0; transform: translateY(-14px) scale(0.88); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .card-deal-anim {
+      animation: cardDealOnce 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    /* Sculpted 3D Casino Pip Dice */
+    .casino-die {
+      width: 3.6rem;
+      height: 3.6rem;
+      border-radius: 0.75rem;
+      background: linear-gradient(145deg, #ffffff 0%, #e2e8f0 85%, #cbd5e1 100%);
+      border: 2px solid #D4AF37;
+      box-shadow:
+        0 8px 18px rgba(0, 0, 0, 0.65),
+        inset 0 2px 3px rgba(255, 255, 255, 0.9),
+        inset 0 -3px 5px rgba(15, 23, 42, 0.25);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      padding: 0.42rem;
+      gap: 0.14rem;
+    }
+    .die-pip {
+      width: 100%;
+      height: 100%;
+      border-radius: 9999px;
+      background: radial-gradient(circle at 35% 35%, #334155, #090d16);
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);
+    }
+    .die-pip.red {
+      background: radial-gradient(circle at 35% 35%, #ef4444, #991b1b);
+    }
+    @keyframes diceTumble {
+      0% { transform: rotate(0deg) scale(0.95) translateY(0px); }
+      25% { transform: rotate(14deg) scale(1.06) translateY(-8px); }
+      50% { transform: rotate(-12deg) scale(0.96) translateY(3px); }
+      75% { transform: rotate(10deg) scale(1.05) translateY(-6px); }
+      100% { transform: rotate(0deg) scale(1) translateY(0px); }
+    }
+    .dice-rolling {
+      animation: diceTumble 0.45s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-[#D4AF37] selection:text-black">
+
+  <!-- ==================== 1. LOGIN PORTAL ==================== -->
+  <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-sm royal-card rounded-3xl p-6 sm:p-8 relative overflow-hidden">
+      <div class="absolute -top-24 -right-24 w-48 h-48 rounded-full bg-[#D4AF37]/10 blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-24 -left-24 w-48 h-48 rounded-full bg-rose-700/15 blur-3xl pointer-events-none"></div>
+
+      <!-- Minimalist Brand Header (Logo + Brand Name Only) -->
+      <div class="text-center mb-6">
+        <button type="button" onclick="togglePreviewAdminPortal()" title="Switch User / Admin Portal" id="loginBrandLogoBox" class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#D4AF37]/25 to-[#5b1026]/60 border border-[#D4AF37]/40 mb-3 shadow-lg overflow-hidden active:scale-95 transition">
+          <span class="text-3xl text-[#D4AF37]">♛</span>
+        </button>
+        <h1 id="loginBrandTitle" class="font-royal text-3xl font-black tracking-wide gold-gradient-text">Goldbet</h1>
+        <p id="loginPortalSubtitle" class="hidden text-[11px] font-extrabold uppercase tracking-widest text-[#D4AF37] mt-1">Admin & Hierarchy Portal</p>
+      </div>
+
+      <!-- Login Form -->
+      <form onsubmit="handlePortalLogin(event)" class="space-y-4">
+        <div class="space-y-1.5">
+          <label class="text-xs font-bold uppercase tracking-wider text-slate-300">User ID</label>
+          <input id="loginIdInput" type="text" autocomplete="username" placeholder="Enter User ID" class="w-full px-4 py-3 rounded-xl bg-black/50 border border-[#D4AF37]/30 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-[#D4AF37]" />
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="text-xs font-bold uppercase tracking-wider text-slate-300">Password</label>
+          <div class="relative flex items-center">
+            <input id="loginPassInput" type="password" autocomplete="current-password" placeholder="Enter Password" class="w-full pl-4 pr-12 py-3 rounded-xl bg-black/50 border border-[#D4AF37]/30 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-[#D4AF37]" />
+            <button type="button" id="toggleLoginPassBtn" onclick="toggleLoginPasswordVisibility()" aria-label="Show or hide password" class="absolute right-2.5 px-2 py-1.5 rounded-lg bg-[#260d18] hover:bg-[#381323] border border-[#D4AF37]/30 text-[#F7E7CE] text-xs font-bold transition">
+              👁️
+            </button>
+          </div>
+        </div>
+
+        <div id="loginErrorBox" class="hidden text-xs font-semibold text-rose-300 bg-rose-950/70 border border-rose-500/40 rounded-xl px-3.5 py-2.5"></div>
+
+        <button type="submit" class="w-full py-3.5 rounded-xl font-extrabold text-sm uppercase tracking-wider bg-gradient-to-r from-[#D4AF37] via-[#f1d279] to-[#b8891e] text-slate-950 shadow-lg hover:brightness-105 active:scale-[0.99] transition">
+          Login
+        </button>
+      </form>
+
+      <!-- Demo ID Button (Shown on Main User Domain Only) -->
+      <div id="userDemoSection" class="mt-5 pt-4 border-t border-[#D4AF37]/20 space-y-2.5">
+        <button type="button" onclick="loginWithEphemeralDemo()" class="w-full py-3 rounded-xl font-bold text-xs uppercase tracking-wider bg-[#2b0f1b] hover:bg-[#3b1525] text-[#F7E7CE] border border-[#D4AF37]/40 transition flex items-center justify-center gap-2">
+          <span>🎲</span>
+          <span>Login with Demo ID</span>
+        </button>
+      </div>
+
+      <!-- Discreet Subdomain / Admin Portal Switch for Preview Testing -->
+      <div class="mt-4 text-center">
+        <button type="button" id="previewPortalSwitchBtn" onclick="togglePreviewAdminPortal()" class="text-[11px] font-bold text-slate-400 hover:text-[#D4AF37] transition">
+          Admin / Hierarchy Login →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 2. MAIN APP SHELL ==================== -->
+  <div id="appShell" class="hidden min-h-screen flex flex-col">
+    <!-- Top Sticky Header -->
+    <header class="sticky top-0 z-40 bg-[#14070d]/95 backdrop-blur-md border-b border-[#D4AF37]/25 px-2 sm:px-5 py-2.5">
+      <div class="max-w-7xl mx-auto flex items-center justify-between gap-1">
+        <!-- Left: Drawer Toggle + Full Brand -->
+        <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
+          <button type="button" onclick="toggleLeftMenu(true)" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#270d18] border border-[#D4AF37]/35 flex items-center justify-center text-[#D4AF37] hover:bg-[#381323] transition shrink-0">
+            ☰
+          </button>
+          <button type="button" onclick="handleBrandHomeClick()" class="flex items-center gap-1.5 text-left shrink-0">
+            <span id="headerBrandLogoBox" class="inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-lg overflow-hidden shrink-0">
+              <span class="text-base sm:text-xl text-[#D4AF37]">♛</span>
+            </span>
+            <span id="headerBrandTitle" class="font-royal text-base sm:text-2xl font-black tracking-tight gold-gradient-text whitespace-nowrap">Goldbet</span>
+          </button>
+        </div>
+
+        <!-- Right: Balance + Account Drawer -->
+        <div class="flex items-center gap-1 sm:gap-2.5 shrink-0">
+          <div class="px-2 sm:px-3.5 py-1 rounded-xl bg-black/60 border border-[#D4AF37]/35 text-right">
+            <div id="headerRoleLabel" class="text-[8px] sm:text-[9px] uppercase tracking-wider text-slate-400 leading-none">Balance</div>
+            <div id="headerBalanceVal" class="text-[11px] sm:text-sm font-extrabold text-emerald-400 leading-tight mt-0.5 whitespace-nowrap">₹1,500.00</div>
+          </div>
+          <button type="button" onclick="toggleRightDrawer(true)" class="px-2.5 sm:px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#b68920] text-slate-950 font-extrabold text-xs flex items-center gap-1 shadow shrink-0">
+            <span>👤</span>
+            <span class="hidden sm:inline">Account</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Dynamic Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-5 py-4">
+
+      <!-- VIEW A: PLAYER LOBBY (24 LIVE TABLES) -->
+      <div id="playerLobbyView" class="space-y-4">
+        <!-- Live Client Notice Banner -->
+        <div id="lobbyNoticeBanner" class="hidden royal-card rounded-2xl px-3.5 py-2.5 border border-[#D4AF37]/45 bg-gradient-to-r from-[#2b0f1b] via-[#1b0810] to-[#2b0f1b] flex items-center gap-2.5">
+          <span class="px-2 py-0.5 rounded-md bg-[#D4AF37] text-slate-950 font-black text-[10px] uppercase shrink-0">Notice</span>
+          <marquee id="lobbyNoticeText" behavior="scroll" direction="left" scrollamount="4" class="text-xs font-bold text-[#FFF3B0]"></marquee>
+        </div>
+
+        <!-- Category Filter Pills -->
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+          <button type="button" onclick="filterLobbyCategory('ALL')" data-cat="ALL" class="lobby-cat-btn px-3.5 py-2 rounded-xl text-xs font-extrabold whitespace-nowrap bg-[#D4AF37] text-slate-950">All 24 Tables</button>
+          <button type="button" onclick="filterLobbyCategory('TEEN_PATTI')" data-cat="TEEN_PATTI" class="lobby-cat-btn px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-[#240d17] text-slate-200 border border-[#D4AF37]/25">Teen Patti</button>
+          <button type="button" onclick="filterLobbyCategory('CARDS')" data-cat="CARDS" class="lobby-cat-btn px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-[#240d17] text-slate-200 border border-[#D4AF37]/25">Card Studio</button>
+          <button type="button" onclick="filterLobbyCategory('WHEEL_DICE')" data-cat="WHEEL_DICE" class="lobby-cat-btn px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-[#240d17] text-slate-200 border border-[#D4AF37]/25">Wheels & Dice</button>
+          <button type="button" onclick="filterLobbyCategory('CRASH')" data-cat="CRASH" class="lobby-cat-btn px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-[#240d17] text-slate-200 border border-[#D4AF37]/25">Aviator & Mines</button>
+        </div>
+
+        <!-- 24-Game Grid -->
+        <div id="lobbyGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4"></div>
+      </div>
+
+      <!-- VIEW B: ACTIVE GAME TABLE STAGE -->
+      <div id="gameTableView" class="hidden space-y-3">
+        <!-- Top Table Navigation Bar -->
+        <div class="royal-card rounded-2xl px-3 py-2.5 flex items-center justify-between gap-2">
+          <button type="button" onclick="returnToLobby()" class="px-3 py-2 rounded-xl bg-[#270d18] hover:bg-[#381323] border border-[#D4AF37]/35 text-[#F7E7CE] text-xs font-extrabold whitespace-nowrap shrink-0">
+            ← Lobby
+          </button>
+          <div class="text-center min-w-0 flex-1 px-1">
+            <h2 id="tableTitle" class="font-royal text-sm sm:text-lg font-black text-[#F7E7CE] truncate">TEEN PATTI 20-20</h2>
+            <div id="tableRoundId" class="text-[11px] font-mono text-[#D4AF37]">#TP20-1001</div>
+          </div>
+          <!-- Circular Countdown Badge -->
+          <div class="w-11 h-11 rounded-full border-2 border-[#D4AF37] bg-black/60 flex flex-col items-center justify-center shrink-0">
+            <span id="tableTimerVal" class="text-sm font-black text-white leading-none">20</span>
+            <span class="text-[8px] font-bold text-[#D4AF37] uppercase">SEC</span>
+          </div>
+        </div>
+
+        <!-- Live Studio Canvas / Stage -->
+        <div class="royal-card rounded-2xl p-3 sm:p-5 relative overflow-hidden min-h-[225px] sm:min-h-[275px] flex flex-col justify-between">
+          <!-- Status & Recent Beads Bar -->
+          <div class="flex items-center justify-between gap-2 z-10">
+            <span id="tableStatusPill" class="px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider whitespace-nowrap shrink-0 bg-emerald-950/90 text-emerald-300 border border-emerald-500/40">
+              PLACE YOUR BETS
+            </span>
+            <div id="tableHistoryBeads" class="flex items-center gap-1 overflow-x-auto no-scrollbar"></div>
+          </div>
+
+          <!-- Dynamic Game Visual Area -->
+          <div id="tableVisualStage" class="my-3 flex-1 flex items-center justify-center"></div>
+
+          <!-- Round Result Banner -->
+          <div id="tableWinnerBanner" class="hidden text-center py-1.5 px-3 rounded-xl bg-gradient-to-r from-[#D4AF37]/20 via-[#D4AF37]/35 to-[#D4AF37]/20 border border-[#D4AF37]/50 text-xs sm:text-sm font-extrabold text-[#FFF3B0]"></div>
+        </div>
+
+        <!-- Runner / Betting Options Grid -->
+        <div id="tableRunnersGrid" class="grid grid-cols-2 gap-2.5 sm:gap-3"></div>
+
+        <!-- Bottom Chip Selector & Bet Actions -->
+        <div class="royal-card rounded-2xl p-2.5 sm:p-3.5 space-y-2.5">
+          <div id="chipRack" class="grid grid-cols-6 gap-1.5 sm:gap-2.5"></div>
+          <div class="flex items-center justify-between gap-2 pt-1">
+            <div class="text-xs text-slate-300">
+              Active Bet: <span id="tableTotalBetVal" class="font-extrabold text-[#D4AF37]">₹0</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" id="cashoutActionBtn" onclick="triggerAviatorCashout()" class="hidden px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow">
+                Cash Out
+              </button>
+              <button type="button" onclick="clearCurrentTableBets()" class="px-3.5 py-2 rounded-xl bg-rose-950/80 hover:bg-rose-900 border border-rose-500/40 text-rose-200 font-bold text-xs">
+                Clear Bets
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW C: STAFF HIERARCHY & CLIENT TRACKER HOME -->
+      <div id="staffHierarchyView" class="hidden space-y-4">
+        <div class="royal-card rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div class="text-xs uppercase tracking-widest text-[#D4AF37] font-bold">Downline & Client Management</div>
+            <h2 class="font-royal text-xl sm:text-2xl font-black text-white mt-0.5">Active & Deactive Clients</h2>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" id="openGenerateCoinsBtn" onclick="openGenerateCoinsModal()" class="hidden px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow">
+              🪙 Generate Coins
+            </button>
+            <button type="button" id="openWhiteLabelBtn" onclick="openWhiteLabelModal()" class="hidden px-3.5 py-2 rounded-xl bg-sky-700 hover:bg-sky-600 text-white font-extrabold text-xs shadow">
+              🌐 White Labels
+            </button>
+            <button type="button" id="openCmsStudioBtn" onclick="openCmsStudioModal()" class="hidden px-3.5 py-2 rounded-xl bg-purple-700 hover:bg-purple-600 text-white font-extrabold text-xs shadow">
+              🎨 Brand & CMS
+            </button>
+            <button type="button" onclick="openAccountModal()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#b5891e] text-slate-950 font-extrabold text-xs">
+              + Create ID
+            </button>
+            <button type="button" id="openHouseEngineBtn" onclick="openHouseProfitModal()" class="hidden px-3.5 py-2 rounded-xl bg-[#2a0e1b] border border-[#D4AF37]/45 text-[#F7E7CE] font-extrabold text-xs">
+              ⚙ House Profit
+            </button>
+          </div>
+        </div>
+
+        <!-- KPI Summary Strip -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="royal-card rounded-2xl p-3.5">
+            <div class="text-[11px] text-slate-400 font-semibold">Deactive Clients</div>
+            <div id="kpiDeactiveClients" class="text-xl font-black text-rose-400 mt-1">0</div>
+          </div>
+          <div class="royal-card rounded-2xl p-3.5">
+            <div class="text-[11px] text-slate-400 font-semibold">Total Client Balance</div>
+            <div id="kpiTotalBalance" class="text-xl font-black text-[#FFF3B0] mt-1">₹0</div>
+          </div>
+          <div class="royal-card rounded-2xl p-3.5">
+            <div class="text-[11px] text-slate-400 font-semibold">Live Exposure</div>
+            <div id="kpiTotalExposure" class="text-xl font-black text-amber-400 mt-1">₹0</div>
+          </div>
+        </div>
+
+        <!-- Filter & Search Bar -->
+        <div class="royal-card rounded-2xl p-3.5 space-y-3">
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="setClientFilter('ALL')" id="filterClientAll" class="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-[#D4AF37] text-slate-950">All</button>
+            <button type="button" onclick="setClientFilter('ACTIVE')" id="filterClientActive" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#250d17] text-slate-300">Active</button>
+            <button type="button" onclick="setClientFilter('DEACTIVE')" id="filterClientDeactive" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#250d17] text-slate-300">Deactive</button>
+          </div>
+          <input id="clientSearchInput" type="text" oninput="renderHierarchyClients()" placeholder="Search client ID or note..." class="w-full px-3.5 py-2.5 rounded-xl bg-black/50 border border-[#D4AF37]/25 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#D4AF37]" />
+        </div>
+
+        <!-- Client Cards List -->
+        <div id="hierarchyClientList" class="space-y-3"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ==================== 3. CREATE ACCOUNT MODAL ==================== -->
+  <div id="accountModal" onclick="closeAccountModal()" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+    <div onclick="event.stopPropagation()" class="w-full max-w-md royal-card rounded-3xl p-5 space-y-4">
+      <div class="flex items-center justify-between pb-2 border-b border-[#D4AF37]/20">
+        <h3 class="font-royal text-lg font-black text-[#FFF3B0]">Create Downline Account</h3>
+        <button type="button" onclick="closeAccountModal()" class="w-8 h-8 rounded-lg bg-white/10 text-slate-300">✕</button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="font-bold text-slate-300 block mb-1">Role</label>
+          <select id="newAccRole" class="w-full px-3 py-2.5 rounded-xl bg-black/60 border border-[#D4AF37]/30 text-white">
+            <option value="USER">User (Player)</option>
+            <option value="AGENT">Agent</option>
+            <option value="MASTER">Master</option>
+          </select>
+        </div>
+        <div>
+          <label class="font-bold text-slate-300 block mb-1">User ID</label>
+          <input id="newAccId" type="text" placeholder="e.g. vip_player_09" class="w-full px-3 py-2.5 rounded-xl bg-black/60 border border-[#D4AF37]/30 text-white" />
+        </div>
+        <div>
+          <label class="font-bold text-slate-300 block mb-1">Password</label>
+          <input id="newAccPass" type="text" placeholder="Set password" class="w-full px-3 py-2.5 rounded-xl bg-black/60 border border-[#D4AF37]/30 text-white" />
+        </div>
+        <div>
+          <label class="font-bold text-slate-300 block mb-1">Opening Coins / Balance (₹)</label>
+          <input id="newAccBal" type="number" value="10000" class="w-full px-3 py-2.5 rounded-xl bg-black/60 border border-[#D4AF37]/30 text-white" />
+        </div>
+        <button type="button" onclick="submitCreateAccount()" class="w-full py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#b5891e] text-slate-950 font-extrabold uppercase tracking-wider">
+          Create Account
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 4. STATEMENT & P&L MODAL ==================== -->
+  <div id="statementModal" onclick="closeStatementModal()" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+    <div onclick="event.stopPropagation()" class="w-full max-w-lg royal-card rounded-3xl p-5 max-h-[82vh] flex flex-col space-y-3">
+      <div class="flex items-center justify-between pb-2 border-b border-[#D4AF37]/20">
+        <h3 class="font-royal text-lg font-black text-[#FFF3B0]">Account Statement & Bets</h3>
+        <button type="button" onclick="closeStatementModal()" class="w-8 h-8 rounded-lg bg-white/10 text-slate-300">✕</button>
+      </div>
+      <div id="statementList" class="space-y-2 overflow-y-auto flex-1 pr-1 text-xs"></div>
+    </div>
+  </div>
+
+  <!-- ==================== 3B. RIGHT PROFILE & ACCOUNT DRAWER ==================== -->
+  <div id="rightDrawerOverlay" onclick="toggleRightDrawer(false)" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex justify-end">
+    <div onclick="event.stopPropagation()" class="w-72 max-w-[85vw] h-full max-h-screen bg-[#16080f] border-l border-[#D4AF37]/30 flex flex-col overflow-hidden">
+      <div class="p-4 border-b border-[#D4AF37]/20 flex items-center justify-between shrink-0">
+        <div>
+          <div id="rightDrawerUserName" class="font-extrabold text-base text-white">Player</div>
+          <div id="rightDrawerUserRole" class="text-[10px] font-bold uppercase tracking-wider text-[#D4AF37]">USER • royalatlas7.games</div>
+        </div>
+        <button type="button" onclick="toggleRightDrawer(false)" class="w-8 h-8 rounded-lg bg-white/10 text-slate-300">✕</button>
+      </div>
+
+      <!-- Scrollable Account & Wallet Body -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-3 text-xs font-bold">
+        <!-- Balance & Exposure Summary Boxes -->
+        <div class="grid grid-cols-2 gap-2">
+          <div class="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/35">
+            <div class="text-[10px] text-emerald-200/80 uppercase">Balance</div>
+            <div id="rightDrawerBalance" class="text-sm font-black text-emerald-400 mt-0.5">₹1,500</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-amber-950/60 border border-amber-500/35">
+            <div id="rightDrawerExposure" class="text-[10px] text-amber-200/80 uppercase">Exposure</div>
+            <div id="rightDrawerExposureVal" class="text-sm font-black text-amber-400 mt-0.5">₹0</div>
+          </div>
+        </div>
+
+        <button type="button" id="rightStatementBtn" onclick="toggleRightDrawer(false); openStatementModal();" class="w-full text-left px-3.5 py-2.5 rounded-xl bg-[#260d18] text-[#F7E7CE] hover:bg-[#361322] flex items-center gap-2.5">
+          <span>📜</span><span>Account Statement & Bets</span>
+        </button>
+        <button type="button" id="rightPnlBtn" onclick="toggleRightDrawer(false); openStatementModal();" class="w-full text-left px-3.5 py-2.5 rounded-xl bg-[#260d18] text-[#F7E7CE] hover:bg-[#361322] flex items-center gap-2.5">
+          <span>📊</span><span>Profit & Loss Report</span>
+        </button>
+        <button type="button" id="rightUnsettledBtn" onclick="toggleRightDrawer(false); showActiveTableExposure();" class="w-full text-left px-3.5 py-2.5 rounded-xl bg-[#260d18] text-[#F7E7CE] hover:bg-[#361322] flex items-center gap-2.5">
+          <span>⏳</span><span>Unsettled / Live Bets</span>
+        </button>
+
+        <!-- Quick Default Chip Stake Selector -->
+        <div class="p-3 rounded-xl bg-black/50 border border-[#D4AF37]/25 space-y-2">
+          <div class="text-[10px] uppercase tracking-wider text-[#D4AF37]">Set Default Chip Stake</div>
+          <div class="grid grid-cols-3 gap-1.5">
+            <button type="button" onclick="selectBetChip(100); showToast('Default stake: ₹100');" class="py-1.5 rounded-lg bg-[#270d18] border border-[#D4AF37]/30 text-[#F7E7CE]">₹100</button>
+            <button type="button" onclick="selectBetChip(500); showToast('Default stake: ₹500');" class="py-1.5 rounded-lg bg-[#270d18] border border-[#D4AF37]/30 text-[#F7E7CE]">₹500</button>
+            <button type="button" onclick="selectBetChip(1000); showToast('Default stake: ₹1,000');" class="py-1.5 rounded-lg bg-[#270d18] border border-[#D4AF37]/30 text-[#F7E7CE]">₹1K</button>
+          </div>
+        </div>
+
+        <button type="button" id="rightReloadDemoBtn" onclick="toggleRightDrawer(false); reloadDemoCoins();" class="hidden w-full text-left px-3.5 py-2.5 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/70">
+          🔄 Reload ₹1,500 Demo Coins
+        </button>
+        <button type="button" id="rightAdminGenerateCoinsBtn" onclick="toggleRightDrawer(false); openGenerateCoinsModal();" class="hidden w-full text-left px-3.5 py-2.5 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/70">
+          🪙 Generate Treasury Coins
+        </button>
+      </div>
+
+      <!-- Fixed Bottom Sign Out -->
+      <div class="p-4 border-t border-[#D4AF37]/20 shrink-0">
+        <button type="button" onclick="logoutCurrentUser()" class="w-full py-3 rounded-xl bg-rose-950 hover:bg-rose-900 border border-rose-500/40 text-rose-200 font-extrabold text-xs uppercase tracking-wider">
+          Sign Out
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 6. SUPER ADMIN HOUSE PROFIT MODAL ==================== -->
+  <div id="houseProfitModal" onclick="closeHouseProfitModal()" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+    <div onclick="event.stopPropagation()" class="w-full max-w-lg royal-card rounded-3xl p-5 max-h-[85vh] flex flex-col space-y-4">
+      <div class="flex items-center justify-between pb-2 border-b border-[#D4AF37]/20">
+        <div>
+          <h3 class="font-royal text-lg font-black text-[#FFF3B0]">Super Admin House Profit Engine</h3>
+          <p class="text-[11px] text-slate-400">Minimum-Liability Net Pool Optimization</p>
+        </div>
+        <button type="button" onclick="closeHouseProfitModal()" class="w-8 h-8 rounded-lg bg-white/10 text-slate-300">✕</button>
+      </div>
+
+      <div class="p-3.5 rounded-2xl bg-black/50 border border-[#D4AF37]/25 space-y-2">
+        <div class="flex justify-between text-xs font-bold">
+          <span class="text-slate-300">Global House : Player Ratio</span>
+          <span id="globalRatioLabel" class="text-[#D4AF37]">70% House : 30% Player</span>
+        </div>
+        <input id="globalRatioSlider" type="range" min="0" max="100" value="70" oninput="updateGlobalHouseRatio(this.value)" class="w-full accent-[#D4AF37]" />
+      </div>
+
+      <div id="perGameHouseList" class="space-y-2 overflow-y-auto flex-1 pr-1 text-xs"></div>
+    </div>
+  </div>
+
+  <!-- ==================== 7. GENERATE COINS MODAL (SUPER ADMIN) ==================== -->
+  <div id="generateCoinsModal" onclick="closeGenerateCoinsModal()" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+    <div onclick="event.stopPropagation()" class="w-full max-w-md royal-card rounded-3xl p-5 space-y-4">
+      <div class="flex items-center justify-between pb-2 border-b border-[#D4AF37]/20">
+        <div>
+          <h3 class="font-royal text-lg font-black text-[#FFF3B0]">Generate Treasury Coins</h3>
+          <p class="text-[11px] text-slate-400">Mint new coins directly into Super Admin wallet</p>
+        </div>
+        <button type="button" onclick="closeGenerateCoinsModal()" class="w-8 h-8 rounded-lg bg-white/10 text-slate-300">✕</button>
+      </div>
+
+      <div class="p-3 rounded-2xl bg-black/50 border border-[#D4AF37]/25 flex items-center justify-between text-xs">
+        <span class="text-slate-300 font-semibold">Current Super Admin Balance</span>
+        <span id="mintCurrentBalLabel" class="font-black text-emerald-400 text-sm">₹50,00,000.00</span>
+      </div>
+
+      <div class="space-y-2.5 text-xs">
+        <div class="grid grid-cols-3 gap-2">
+          <button type="button" onclick="setMintAmount(1000000)" class="py-2 rounded-xl bg-[#270d18] border border-[#D4AF37]/35 text-[#F7E7CE] font-extrabold hover:bg-[#381323]">+₹10 Lakh</button>
+          <button type="button" onclick="setMintAmount(5000000)" class="py-2 rounded-xl bg-[#270d18] border border-[#D4AF37]/35 text-[#F7E7CE] font-extrabold hover:bg-[#381323]">+₹50 Lakh</button>
+          <button type="button" onclick="setMintAmount(10000000)" class="py-2 rounded-xl bg-[#270d18] border border-[#D4AF37]/35 text-[#F7E7CE] font-extrabold hover:bg-[#381323]">+₹1 Crore</button>
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-300 block mb-1">Custom Coin Amount (₹)</label>
+          <input id="mintCoinsInput" type="number" min="1" value="1000000" class="w-full px-3.5 py-2.5 rounded-xl bg-black/60 border border-[#D4AF37]/30 text-white font-bold text-sm focus:outline-none focus:border-[#D4AF37]" />
+        </div>
+
+        <button type="button" onclick="submitGenerateCoins()" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-slate-950 font-black uppercase tracking-wider shadow-lg">
+          🪙 Generate Coins Now
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 8. WHITE-LABEL PARTNER MANAGER (SUPER ADMIN) ==================== -->
+  <div id="whiteLabelModal" onclick="closeWhiteLabelModal()" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+    <div onclick="event.stopPropagation()" class="w-full max-w-lg royal-card rounded-3xl p-5 max-h-[86vh] flex flex-col space-y-4">
+      <div class="flex items-center justify-between pb-2 border-b border-[#D4AF37]/20">
+        <div>
+          <h3 class="font-royal text-lg font-black text-[#FFF3B0]">Multi-Tenant White Labels</h3>
+          <p class="text-[11px] text-slate-400">Launch partner domains under your Super Admin control</p>
+        </div>
+        <button type="button" onclick="closeWhiteLabelModal()" class="w-8 h-8 rounded-lg bg-white/10 text-slate-300">✕</button>
+      </div>
+
+      <div class="p-3.5 rounded-2xl bg-black/50 border border-[#D4AF37]/25 space-y-2.5 text-xs">
+        <div class="font-extrabold text-[#D4AF37] uppercase tracking-wider text-[11px]">+ Launch New White-Label Brand</div>
+        <div class="grid grid-cols-2 gap-2">
+          <input id="wlBrandInput" type="text" placeholder="Brand (e.g. KingExch24)" class="px-3 py-2 rounded-xl bg-black/60 border border-[#D4AF37]/30 text-white" />
+          <input id="wlDomainInput" type="text" placeholder="Domain (kingexch24.games)" class="px-3 py-2 rounded-xl bg-black/60 border border-[#D4AF37]/30 text-white" />
+          <input id="wlAdminIdInput" type="text" placeholder="Admin ID (wl_sanjay)" class="px-3 py-2 rounded-xl bg-black/60 border border-[#D4AF37]/30 text-white" />
+          <input id="wlAdminPassInput" type="text" placeholder="Password (Wl@123)" class="px-3 py-2 rounded-xl bg-black/60 border border-[#D4AF37]/30 text-white" />
+        </div>
+        <div class="flex items-center gap-2">
+          <input id="wlCreditInput" type="number" value="500000" placeholder="Opening Credit Coins" class="w-1/2 px-3 py-2 rounded-xl bg-black/60 border border-[#D4AF37]/30 text-white font-bold" />
+          <button type="button" onclick="submitCreateWhiteLabel()" class="w-1/2 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#b5891e] text-slate-950 font-extrabold uppercase tracking-wider">
+            Create White Label
+          </button>
+        </div>
+      </div>
+
+      <div id="whiteLabelList" class="space-y-2.5 overflow-y-auto flex-1 pr-1 text-xs"></div>
+    </div>
+  </div>
+
+  <!-- ==================== 9. BRAND, LOBBY PHOTOS & NOTICE CMS MODAL ==================== -->
+  <div id="cmsStudioModal" onclick="closeCmsStudioModal()" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+    <div onclick="event.stopPropagation()" class="w-full max-w-lg royal-card rounded-3xl p-5 max-h-[88vh] flex flex-col space-y-4">
+      <div class="flex items-center justify-between pb-2 border-b border-[#D4AF37]/20">
+        <div>
+          <h3 class="font-royal text-lg font-black text-[#FFF3B0]">Brand, Lobby & Notice CMS</h3>
+          <p class="text-[11px] text-slate-400">Customize logo, name, lobby photos & client notices</p>
+        </div>
+        <button type="button" onclick="closeCmsStudioModal()" class="w-8 h-8 rounded-lg bg-white/10 text-slate-300">✕</button>
+      </div>
+
+      <div class="space-y-4 overflow-y-auto flex-1 pr-1 text-xs">
+        <!-- 1. Brand Name & Logo Studio -->
+        <div class="p-3.5 rounded-2xl bg-black/50 border border-[#D4AF37]/25 space-y-2.5">
+          <div class="font-extrabold text-[#D4AF37] uppercase tracking-wider text-[11px]">1. Brand Identity & Logo</div>
+          <div>
+            <label class="font-bold text-slate-300 block mb-1">Select Domain / White Label</label>
+            <select id="cmsTenantSelect" onchange="loadCmsBrandFields()" class="w-full px-3 py-2 rounded-xl bg-black/60 border border-[#D4AF37]/30 text-white font-bold"></select>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="font-bold text-slate-300 block mb-1">Brand Display Name</label>
+              <input id="cmsBrandNameInput" type="text" class="w-full px-3 py-2 rounded-xl bg-black/60 border border-[#D4AF37]/30 text-white font-bold" />
+            </div>
+            <div>
+              <label class="font-bold text-slate-300 block mb-1">Logo Icon / Emoji</label>
+              <input id="cmsBrandEmojiInput" type="text" maxlength="4" placeholder="♛" class="w-full px-3 py-2 rounded-xl bg-black/60 border border-[#D4AF37]/30 text-white font-bold" />
+            </div>
+          </div>
+          <div>
+            <label class="font-bold text-slate-300 block mb-1">Upload Custom Logo Image (PNG/JPG/SVG)</label>
+            <input id="cmsBrandLogoFile" type="file" accept="image/*" onchange="handleCmsLogoUpload(event)" class="w-full text-[11px] text-slate-300 file:mr-2.5 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-[#D4AF37] file:text-slate-950" />
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="saveCmsBrandChanges()" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#b5891e] text-slate-950 font-extrabold uppercase tracking-wider">
+              Save Brand & Logo
+            </button>
+            <button type="button" onclick="clearCmsBrandLogo()" class="px-3 py-2.5 rounded-xl bg-rose-950 border border-rose-500/40 text-rose-200 font-bold">
+              Reset Icon
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Client Announcement Notice Bar -->
+        <div class="p-3.5 rounded-2xl bg-black/50 border border-[#D4AF37]/25 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="font-extrabold text-[#D4AF37] uppercase tracking-wider text-[11px]">2. Live Client Notice Banner</span>
+            <label class="inline-flex items-center gap-1.5 cursor-pointer font-bold text-emerald-300">
+              <input id="cmsNoticeActiveChk" type="checkbox" class="accent-[#D4AF37] w-4 h-4" />
+              <span>Show Banner</span>
+            </label>
+          </div>
+          <input id="cmsNoticeTextInput" type="text" placeholder="e.g. Welcome to Goldbet! 24x7 Instant Deposit & Withdrawal Live." class="w-full px-3 py-2 rounded-xl bg-black/60 border border-[#D4AF37]/30 text-white" />
+          <button type="button" onclick="saveCmsNotice()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-extrabold uppercase tracking-wider">
+            Update Client Notice
+          </button>
+        </div>
+
+        <!-- 3. Lobby Game Cover Photo & Icon Customizer -->
+        <div class="p-3.5 rounded-2xl bg-black/50 border border-[#D4AF37]/25 space-y-2.5">
+          <div class="font-extrabold text-[#D4AF37] uppercase tracking-wider text-[11px]">3. Lobby Game Cover & Icon</div>
+          <div>
+            <label class="font-bold text-slate-300 block mb-1">Choose Lobby Game (All 24 Tables)</label>
+            <select id="cmsGameSelect" onchange="loadCmsGameFields()" class="w-full px-3 py-2 rounded-xl bg-black/60 border border-[#D4AF37]/30 text-white font-bold"></select>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="font-bold text-slate-300 block mb-1">Game Icon / Emoji</label>
+              <input id="cmsGameIconInput" type="text" maxlength="4" class="w-full px-3 py-2 rounded-xl bg-black/60 border border-[#D4AF37]/30 text-white font-bold" />
+            </div>
+            <div>
+              <label class="font-bold text-slate-300 block mb-1">Corner Badge Text</label>
+              <input id="cmsGameBadgeInput" type="text" maxlength="12" class="w-full px-3 py-2 rounded-xl bg-black/60 border border-[#D4AF37]/30 text-white font-bold" />
+            </div>
+          </div>
+          <div>
+            <label class="font-bold text-slate-300 block mb-1">Upload Custom Lobby Cover Photo</label>
+            <input id="cmsGameCoverFile" type="file" accept="image/*" onchange="handleCmsGameCoverUpload(event)" class="w-full text-[11px] text-slate-300 file:mr-2.5 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-[#D4AF37] file:text-slate-950" />
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="saveCmsGameAppearance()" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#b5891e] text-slate-950 font-extrabold uppercase tracking-wider">
+              Apply to Lobby Card
+            </button>
+            <button type="button" onclick="resetCmsGameCover()" class="px-3 py-2.5 rounded-xl bg-rose-950 border border-rose-500/40 text-rose-200 font-bold">
+              Clear Photo
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Banner -->
+  <div id="toastBanner" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-[#1f0a13] border border-[#D4AF37] text-xs font-bold text-[#FFF3B0] shadow-2xl"></div>
+
+  <script>
+    // =========================================================================
+    // 1. MULTI-TENANT WHITE-LABEL REGISTRY & HIERARCHY SEED DATA
+    // =========================================================================
+    const WHITE_LABELS = [
+      { id: 'WL_MAIN', brand: 'Goldbet', logoIcon: '♛', logoImg: '', domain: 'royalatlas7.games', ownerId: 'king', royaltyPct: 100, active: true },
+      { id: 'WL_SILVER', brand: 'SilverBet9', logoIcon: '💎', logoImg: '', domain: 'silverbet9.games', ownerId: 'wl_vikram', royaltyPct: 15, active: true }
+    ];
+    let activeTenant = WHITE_LABELS[0];
+
+    const siteNotice = {
+      active: true,
+      text: '👑 Welcome to Goldbet Official Live Studio — 24x7 Instant Deposit & Withdrawal Available!'
+    };
+
+    const ACCOUNTS = [
+      { id: 'king', pass: 'Royal@789', role: 'SUPER_ADMIN', tenantId: 'WL_MAIN', balance: 5000000, active: true, note: 'Master Owner' },
+      { id: 'master_01', pass: 'Master@123', role: 'MASTER', tenantId: 'WL_MAIN', balance: 500000, active: true, note: 'Mumbai Desk' },
+      { id: 'agent_01', pass: 'Agent@123', role: 'AGENT', tenantId: 'WL_MAIN', balance: 120000, active: true, note: 'Direct Agent' },
+      { id: 'rahul_99', pass: 'User@123', role: 'USER', tenantId: 'WL_MAIN', balance: 18500, active: true, exposure: 1200, note: 'VIP Regular', parent: 'agent_01' },
+      { id: 'amit_77', pass: 'User@123', role: 'USER', tenantId: 'WL_MAIN', balance: 6200, active: true, exposure: 800, note: 'Active evening player', parent: 'agent_01' },
+      { id: 'karan_21', pass: 'User@123', role: 'USER', tenantId: 'WL_MAIN', balance: 0, active: false, exposure: 0, note: 'Settlement pending since Monday', parent: 'master_01' },
+      { id: 'neha_88', pass: 'User@123', role: 'USER', tenantId: 'WL_MAIN', balance: 23000, active: false, exposure: 0, note: 'Self-requested cooling pause', parent: 'agent_01' },
+      { id: 'wl_vikram', pass: 'Wl@123', role: 'WHITE_LABEL', tenantId: 'WL_SILVER', balance: 800000, active: true, note: 'SilverBet9 Partner Admin', parent: 'king' },
+      { id: 'silver_user1', pass: 'User@123', role: 'USER', tenantId: 'WL_SILVER', balance: 14000, active: true, exposure: 500, note: 'SilverBet9 VIP', parent: 'wl_vikram' }
+    ];
+
+    // =========================================================================
+    // 2. 24 LIVE CASINO GAMES CATALOG
+    // =========================================================================
+    const GAMES = [
+      { id: 'TP_20', name: 'Teen Patti 20-20', cat: 'TEEN_PATTI', type: 'TEEN_PATTI', icon: '🃏', badge: 'LIVE 20-20', runners: [{ id: 'A', label: 'Player A', odds: 1.98 }, { id: 'B', label: 'Player B', odds: 1.98 }, { id: 'PA', label: 'Pair Plus A', odds: 3.50 }, { id: 'PB', label: 'Pair Plus B', odds: 3.50 }] },
+      { id: 'TP_1DAY', name: 'One Day Teen Patti', cat: 'TEEN_PATTI', type: 'TEEN_PATTI', isOneDay: true, icon: '👑', badge: '1-DAY IN-PLAY', runners: [{ id: 'A', label: 'Player A', odds: 1.98, layOdds: 2.02, isMain: true }, { id: 'B', label: 'Player B', odds: 1.98, layOdds: 2.02, isMain: true }, { id: 'TIE', label: 'Tie / Split', odds: 11.0, isFancy: true }, { id: 'PA', label: 'High Card A', odds: 2.40, isFancy: true }] },
+      { id: 'TP_TEST', name: 'Teen Patti Test', cat: 'TEEN_PATTI', type: 'TEEN_PATTI', icon: '🏆', badge: 'TEST', runners: [{ id: 'A', label: 'Player A', odds: 1.98 }, { id: 'B', label: 'Player B', odds: 1.98 }, { id: 'TIGER', label: 'Tiger Hand', odds: 4.20 }, { id: 'LION', label: 'Lion Hand', odds: 4.20 }] },
+      { id: 'MUFLIS', name: 'Muflis Teen Patti', cat: 'TEEN_PATTI', type: 'TEEN_PATTI', icon: '🔄', badge: 'LOW HAND', runners: [{ id: 'A', label: 'Player A', odds: 1.98 }, { id: 'B', label: 'Player B', odds: 1.98 }, { id: 'PA', label: 'Muflis Bonus A', odds: 3.20 }, { id: 'PB', label: 'Muflis Bonus B', odds: 3.20 }] },
+      { id: 'TP_OPEN', name: 'Open Teen Patti', cat: 'TEEN_PATTI', type: 'TEEN_PATTI', icon: '✨', badge: 'OPEN', runners: [{ id: 'A', label: 'Player A', odds: 1.98 }, { id: 'B', label: 'Player B', odds: 1.98 }, { id: 'PA', label: 'Flush+', odds: 5.00 }, { id: 'PB', label: 'Trail 3x', odds: 15.0 }] },
+      { id: 'POKER_20', name: '20-20 Poker', cat: 'TEEN_PATTI', type: 'TEEN_PATTI', icon: '♠️', badge: 'HOLDEM', runners: [{ id: 'A', label: 'Hand A', odds: 1.98 }, { id: 'B', label: 'Hand B', odds: 1.98 }, { id: 'PA', label: '2 Pair+', odds: 2.80 }, { id: 'PB', label: 'Full House+', odds: 9.00 }] },
+      { id: 'DT_20', name: 'Dragon Tiger 20-20', cat: 'CARDS', type: 'DRAGON_TIGER', icon: '🐉', badge: 'FAST 20S', runners: [{ id: 'DRAGON', label: 'Dragon', odds: 1.98 }, { id: 'TIGER', label: 'Tiger', odds: 1.98 }, { id: 'TIE', label: 'Tie', odds: 8.50 }, { id: 'SUITED', label: 'Suited Tie', odds: 25.0 }] },
+      { id: 'DT_LION', name: 'Dragon Tiger Lion', cat: 'CARDS', type: 'DRAGON_TIGER', icon: '🦁', badge: '3-WAY', runners: [{ id: 'DRAGON', label: 'Dragon', odds: 2.90 }, { id: 'TIGER', label: 'Tiger', odds: 2.90 }, { id: 'LION', label: 'Lion', odds: 2.90 }, { id: 'TIE', label: 'Any Tie', odds: 7.50 }] },
+      { id: 'AB_20', name: 'Andar Bahar 20-20', cat: 'CARDS', type: 'ANDAR_BAHAR', icon: '🎴', badge: 'CLASSIC', runners: [{ id: 'ANDAR', label: 'Andar', odds: 1.92 }, { id: 'BAHAR', label: 'Bahar', odds: 2.04 }, { id: 'FIRST3', label: '1-5 Cards', odds: 3.40 }, { id: 'LATE', label: '16+ Cards', odds: 2.75 }] },
+      { id: 'AB_SPEED', name: 'Instant Andar Bahar', cat: 'CARDS', type: 'ANDAR_BAHAR', icon: '⚡', badge: 'TURBO', runners: [{ id: 'ANDAR', label: 'Andar', odds: 1.95 }, { id: 'BAHAR', label: 'Bahar', odds: 1.98 }, { id: 'RED', label: 'Joker Red', odds: 1.95 }, { id: 'BLACK', label: 'Joker Black', odds: 1.95 }] },
+      { id: 'BACCARAT', name: 'Speed Baccarat', cat: 'CARDS', type: 'BACCARAT', icon: '🥂', badge: 'VIP', runners: [{ id: 'PLAYER', label: 'Player', odds: 2.00 }, { id: 'BANKER', label: 'Banker', odds: 1.95 }, { id: 'TIE', label: 'Tie', odds: 8.50 }, { id: 'PAIR', label: 'Any Pair', odds: 5.50 }] },
+      { id: 'CARDS_32', name: '32 Cards Casino', cat: 'CARDS', type: 'CARDS_32', icon: '🎯', badge: '4 PLAYERS', runners: [{ id: 'P8', label: 'Player 8', odds: 3.80 }, { id: 'P9', label: 'Player 9', odds: 3.40 }, { id: 'P10', label: 'Player 10', odds: 3.00 }, { id: 'P11', label: 'Player 11', odds: 2.65 }] },
+      { id: 'AMAR_AKBAR', name: 'Amar Akbar Anthony', cat: 'CARDS', type: 'AAA', icon: '🎬', badge: 'AAA', runners: [{ id: 'AMAR', label: 'Amar (A-6)', odds: 2.15 }, { id: 'AKBAR', label: 'Akbar (7-10)', odds: 3.10 }, { id: 'ANTHONY', label: 'Anthony (J-K)', odds: 4.10 }, { id: 'EVEN', label: 'Even Card', odds: 1.95 }] },
+      { id: 'BOLLYWOOD', name: 'Bollywood Table', cat: 'CARDS', type: 'AAA', icon: '🌟', badge: 'STUDIO', runners: [{ id: 'DON', label: 'Don', odds: 2.20 }, { id: 'SHOLAY', label: 'Sholay', odds: 3.00 }, { id: 'MUGHAL', label: 'Mughal-e-Azam', odds: 4.00 }, { id: 'RED', label: 'Red Suit', odds: 1.95 }] },
+      { id: 'LUCKY_7A', name: 'Lucky 7 - A', cat: 'CARDS', type: 'LUCKY_7', icon: '7️⃣', badge: 'HI-LO', runners: [{ id: 'LOW', label: '7 Down (A-6)', odds: 2.05 }, { id: 'HIGH', label: '7 Up (8-K)', odds: 2.05 }, { id: 'SEVEN', label: 'Exact 7', odds: 11.5 }, { id: 'EVEN', label: 'Even', odds: 1.95 }] },
+      { id: 'LUCKY_7B', name: 'Lucky 7 - B', cat: 'CARDS', type: 'LUCKY_7', icon: '🍀', badge: 'LIVE', runners: [{ id: 'LOW', label: '7 Down', odds: 2.05 }, { id: 'HIGH', label: '7 Up', odds: 2.05 }, { id: 'RED', label: 'Red Card', odds: 1.95 }, { id: 'BLACK', label: 'Black Card', odds: 1.95 }] },
+      { id: 'WORLI', name: 'Worli Matka', cat: 'CARDS', type: 'LUCKY_7', icon: '🔢', badge: 'MATKA', runners: [{ id: 'SINGLE_1', label: 'Line 1 (1-5)', odds: 1.95 }, { id: 'SINGLE_2', label: 'Line 2 (6-0)', odds: 1.95 }, { id: 'ODD', label: 'Odd Digit', odds: 1.95 }, { id: 'EVEN', label: 'Even Digit', odds: 1.95 }] },
+      { id: 'ROULETTE', name: 'Royal 3D Roulette', cat: 'WHEEL_DICE', type: 'ROULETTE', icon: '🎡', badge: '3D WHEEL', runners: [{ id: 'RED', label: 'Red', odds: 1.96 }, { id: 'BLACK', label: 'Black', odds: 1.96 }, { id: 'EVEN', label: 'Even', odds: 1.96 }, { id: 'ZERO', label: 'Zero (0)', odds: 35.0 }] },
+      { id: 'CRAZY_TIME', name: 'Crazy Time Wheel', cat: 'WHEEL_DICE', type: 'CRAZY_TIME', icon: '🎪', badge: 'BONUS 50X', runners: [{ id: '1', label: 'Segment 1', odds: 1.95 }, { id: '2', label: 'Segment 2', odds: 2.90 }, { id: '5', label: 'Segment 5', odds: 5.80 }, { id: 'BONUS', label: 'Crazy Bonus', odds: 14.0 }] },
+      { id: 'SIC_BO', name: 'Super Sic Bo', cat: 'WHEEL_DICE', type: 'SIC_BO', icon: '🎲', badge: '3 DICE', runners: [{ id: 'SMALL', label: 'Small (4-10)', odds: 1.98 }, { id: 'BIG', label: 'Big (11-17)', odds: 1.98 }, { id: 'ODD', label: 'Odd Total', odds: 1.98 }, { id: 'TRIPLE', label: 'Any Triple', odds: 30.0 }] },
+      { id: 'SEVEN_UD', name: '7 Up Down Dice', cat: 'WHEEL_DICE', type: 'SEVEN_UP_DOWN', icon: '🎯', badge: '2 DICE', runners: [{ id: 'DOWN', label: '7 Down (2-6)', odds: 2.15 }, { id: 'UP', label: '7 Up (8-12)', odds: 2.15 }, { id: 'SEVEN', label: 'Exact 7', odds: 5.20 }, { id: 'DOUBLE', label: 'Any Double', odds: 5.50 }] },
+      { id: 'AVIATOR', name: 'Royal Aviator', cat: 'CRASH', type: 'AVIATOR', icon: '✈️', badge: 'CRASH', runners: [{ id: 'FLY', label: 'Place Flight Bet', odds: 2.00 }, { id: 'AUTO2', label: 'Auto 2.00x', odds: 2.00 }] },
+      { id: 'MINES', name: 'Gold Mines', cat: 'CRASH', type: 'MINES', icon: '💣', badge: '25 TILES', runners: [{ id: 'SAFE_NEXT', label: 'Reveal Safe Tile', odds: 1.45 }, { id: 'CASHOUT_MINE', label: 'Collect Gems', odds: 1.00 }] },
+      { id: 'HI_LO_TURBO', name: 'High Low Turbo', cat: 'CARDS', type: 'LUCKY_7', icon: '📈', badge: 'INSTANT', runners: [{ id: 'HIGH', label: 'High (8-K)', odds: 2.02 }, { id: 'LOW', label: 'Low (A-6)', odds: 2.02 }, { id: 'ACE', label: 'Ace Hit', odds: 12.0 }, { id: 'KING', label: 'King Hit', odds: 12.0 }] }
+    ];
+
+    // =========================================================================
+    // 3. GLOBAL STATE
+    // =========================================================================
+    let activePortal = 'user';
+    let currentUser = null;
+    let selectedChip = 100;
+    let activeGameId = null;
+    let lobbyCategory = 'ALL';
+    let clientFilter = 'ALL';
+    let demoRemainingSec = 300;
+    let demoInterval = null;
+    let pendingCmsLogoData = '';
+    let pendingCmsCoverData = '';
+
+    const houseConfig = {
+      globalRatio: 70,
+      games: {}
+    };
+    GAMES.forEach(g => {
+      houseConfig.games[g.id] = { enabled: true, ratio: 70 };
+    });
+
+    const tableStates = {};
+    GAMES.forEach((g, idx) => {
+      tableStates[g.id] = {
+        roundNum: 1001 + idx * 10,
+        phase: 'BETTING',
+        timer: 20,
+        bets: {},
+        betPositions: [],
+        liveOdds: {
+          A: { back: 1.98, lay: 2.02 },
+          B: { back: 1.98, lay: 2.02 }
+        },
+        history: ['A', 'B', 'A', 'B', 'A'],
+        cardsA: [],
+        cardsB: [],
+        jokerCard: null,
+        singleCard: null,
+        dice: [3, 4, 5],
+        wheelResult: null,
+        winnerText: '',
+        aviatorMult: 1.00,
+        aviatorCrashed: false,
+        aviatorTarget: 2.35,
+        aviatorCashedOut: false,
+        minesRevealed: 0,
+        minesHitBomb: false,
+        minesMult: 1.00
+      };
+    });
+
+    const userStatements = [];
+
+    // =========================================================================
+    // 4. PORTAL ROUTING & AUTHENTICATION
+    // =========================================================================
+    function formatINR(num) {
+      return '₹' + Number(num || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function showToast(msg) {
+      const el = document.getElementById('toastBanner');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      clearTimeout(el._t);
+      el._t = setTimeout(() => el.classList.add('hidden'), 2600);
+    }
+
+    function applyTenantBranding(tenant) {
+      activeTenant = tenant || WHITE_LABELS[0];
+      document.title = `${activeTenant.brand} — ${activeTenant.domain}`;
+      const loginTitle = document.getElementById('loginBrandTitle');
+      const headerTitle = document.getElementById('headerBrandTitle');
+      const loginLogo = document.getElementById('loginBrandLogoBox');
+      const headerLogo = document.getElementById('headerBrandLogoBox');
+
+      if (loginTitle) loginTitle.textContent = activeTenant.brand;
+      if (headerTitle) headerTitle.textContent = activeTenant.brand;
+
+      if (activeTenant.logoImg) {
+        if (loginLogo) loginLogo.innerHTML = `<img src="${activeTenant.logoImg}" alt="${activeTenant.brand}" class="w-full h-full object-cover" />`;
+        if (headerLogo) headerLogo.innerHTML = `<img src="${activeTenant.logoImg}" alt="${activeTenant.brand}" class="w-full h-full object-cover" />`;
+      } else {
+        const icon = activeTenant.logoIcon || '♛';
+        if (loginLogo) loginLogo.innerHTML = `<span class="text-3xl text-[#D4AF37]">${icon}</span>`;
+        if (headerLogo) headerLogo.innerHTML = `<span class="text-base sm:text-xl text-[#D4AF37]">${icon}</span>`;
+      }
+    }
+
+    function detectDomainAndPortal() {
+      const host = (window.location.hostname || '').toLowerCase();
+      const hash = (window.location.hash || '').toLowerCase();
+
+      const matched = WHITE_LABELS.find(w => host.includes(w.domain));
+      if (matched) applyTenantBranding(matched);
+      else applyTenantBranding(WHITE_LABELS[0]);
+
+      if (host.startsWith('admin.') || hash === '#admin') {
+        activePortal = 'admin';
+      } else {
+        activePortal = 'user';
+      }
+      syncPortalLoginUI();
+    }
+
+    function syncPortalLoginUI() {
+      const demoBox = document.getElementById('userDemoSection');
+      const subTitle = document.getElementById('loginPortalSubtitle');
+      const switchBtn = document.getElementById('previewPortalSwitchBtn');
+      const idInput = document.getElementById('loginIdInput');
+
+      if (demoBox) demoBox.classList.toggle('hidden', activePortal === 'admin');
+      if (subTitle) subTitle.classList.toggle('hidden', activePortal !== 'admin');
+      if (switchBtn) {
+        switchBtn.textContent = activePortal === 'admin'
+          ? '← Back to Player Login'
+          : 'Admin / Hierarchy Login →';
+      }
+      if (idInput) {
+        idInput.placeholder = activePortal === 'admin'
+          ? 'Enter Admin ID (e.g. king)'
+          : 'Enter User ID';
+      }
+    }
+
+    function togglePreviewAdminPortal() {
+      activePortal = activePortal === 'admin' ? 'user' : 'admin';
+      const errBox = document.getElementById('loginErrorBox');
+      if (errBox) errBox.classList.add('hidden');
+      syncPortalLoginUI();
+    }
+
+    function toggleLoginPasswordVisibility() {
+      const input = document.getElementById('loginPassInput');
+      const btn = document.getElementById('toggleLoginPassBtn');
+      if (!input || !btn) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+      }
+    }
+
+    function handlePortalLogin(e) {
+      e.preventDefault();
+      const errBox = document.getElementById('loginErrorBox');
+      errBox.classList.add('hidden');
+
+      const idVal = document.getElementById('loginIdInput').value.trim();
+      const passVal = document.getElementById('loginPassInput').value.trim();
+
+      const acc = ACCOUNTS.find(a => a.id.toLowerCase() === idVal.toLowerCase() && a.pass === passVal);
+      if (!acc) {
+        errBox.textContent = 'Invalid User ID or Password.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      const accTenant = WHITE_LABELS.find(w => w.id === acc.tenantId) || WHITE_LABELS[0];
+      if (!accTenant.active && acc.role !== 'SUPER_ADMIN') {
+        errBox.textContent = 'This white-label domain is temporarily paused by Super Admin.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      const host = (window.location.hostname || '').toLowerCase();
+      const isProductionHost = host.includes('royalatlas7.games') || WHITE_LABELS.some(w => host.includes(w.domain));
+      const isStaff = ['SUPER_ADMIN', 'WHITE_LABEL', 'MASTER', 'AGENT'].includes(acc.role);
+
+      if (isProductionHost) {
+        if (activePortal === 'user' && isStaff) {
+          errBox.textContent = `Staff IDs must sign in via admin.${accTenant.domain}.`;
+          errBox.classList.remove('hidden');
+          return;
+        }
+        if (activePortal === 'admin' && !isStaff) {
+          errBox.textContent = `Players must sign in on ${accTenant.domain}.`;
+          errBox.classList.remove('hidden');
+          return;
+        }
+      }
+
+      if (!acc.active) {
+        errBox.textContent = 'Your ID is currently Deactive. Contact your Master/Agent.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      applyTenantBranding(accTenant);
+      enterAppSession({ ...acc, isDemo: false });
+    }
+
+    function loginWithEphemeralDemo() {
+      const demoId = 'DEMO_' + Math.floor(1000 + Math.random() * 9000);
+      demoRemainingSec = 300;
+      enterAppSession({
+        id: demoId,
+        role: 'DEMO',
+        tenantId: activeTenant.id,
+        balance: 1500,
+        active: true,
+        isDemo: true
+      });
+      startDemoCountdown();
+      showToast('Demo ID active for 5 minutes with ₹1,500 virtual balance.');
+    }
+
+    function startDemoCountdown() {
+      clearInterval(demoInterval);
+      demoInterval = setInterval(() => {
+        if (!currentUser || !currentUser.isDemo) {
+          clearInterval(demoInterval);
+          return;
+        }
+        demoRemainingSec--;
+        updateHeaderBar();
+        if (demoRemainingSec <= 0) {
+          clearInterval(demoInterval);
+          logoutCurrentUser();
+          showToast('5-minute Demo session ended. All demo data cleared.');
+        }
+      }, 1000);
+    }
+
+    function reloadDemoCoins() {
+      if (!currentUser || !currentUser.isDemo) return;
+      currentUser.balance = 1500;
+      updateHeaderBar();
+      showToast('Demo balance reloaded to ₹1,500.00');
+    }
+
+    function enterAppSession(userObj) {
+      currentUser = userObj;
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('appShell').classList.remove('hidden');
+
+      const isStaff = ['SUPER_ADMIN', 'WHITE_LABEL', 'MASTER', 'AGENT'].includes(currentUser.role);
+      const isSuper = currentUser.role === 'SUPER_ADMIN';
+
+      // Left Drawer Setup (Games for Players, Operations for Admin)
+      document.getElementById('leftDrawerTitle').textContent = isStaff ? 'Admin Operations' : `${activeTenant.brand} Games`;
+      document.getElementById('leftDrawerSubtitle').textContent = isStaff ? `${currentUser.role} • ${activeTenant.domain}` : '24 Live Studio Tables';
+      document.getElementById('leftDrawerPlayerNav').classList.toggle('hidden', isStaff);
+      document.getElementById('leftDrawerAdminNav').classList.toggle('hidden', !isStaff);
+      document.getElementById('leftNavWhiteLabelBtn').classList.toggle('hidden', !isSuper);
+      document.getElementById('leftNavCmsStudioBtn').classList.toggle('hidden', !isSuper);
+      document.getElementById('leftNavGenerateCoinsBtn').classList.toggle('hidden', !isSuper);
+      document.getElementById('leftNavHouseProfitBtn').classList.toggle('hidden', !isSuper);
+
+      document.getElementById('leftDrawerQuickGames').innerHTML = GAMES.map(g => `
+        <button type="button" onclick="toggleLeftMenu(false); openGameTable('${g.id}');" class="w-full text-left px-3 py-2 rounded-xl bg-black/40 hover:bg-[#2a0f1b] text-slate-200 flex items-center justify-between">
+          <span class="truncate">${g.icon} ${g.name}</span>
+          <span class="text-[9px] text-[#D4AF37] font-black">${g.badge}</span>
+        </button>
+      `).join('');
+
+      // Right Drawer Setup (Account, Wallet, Exposure, Reports, Sign Out)
+      document.getElementById('rightDrawerUserName').textContent = currentUser.id;
+      document.getElementById('rightDrawerUserRole').textContent = `${currentUser.role} • ${activeTenant.domain}`;
+      document.getElementById('rightStatementBtn').classList.toggle('hidden', currentUser.isDemo);
+      document.getElementById('rightPnlBtn').classList.toggle('hidden', currentUser.isDemo);
+      document.getElementById('rightReloadDemoBtn').classList.toggle('hidden', !currentUser.isDemo);
+      document.getElementById('rightAdminGenerateCoinsBtn').classList.toggle('hidden', !isSuper);
+
+      document.getElementById('openHouseEngineBtn').classList.toggle('hidden', !isSuper);
+      document.getElementById('openGenerateCoinsBtn').classList.toggle('hidden', !isSuper);
+      document.getElementById('openWhiteLabelBtn').classList.toggle('hidden', !isSuper);
+      document.getElementById('openCmsStudioBtn').classList.toggle('hidden', !isSuper);
+
+      updateHeaderBar();
+      applyNoticeBannerUI();
+
+      if (isStaff) {
+        showView('STAFF');
+        renderHierarchyClients();
+      } else {
+        showView('LOBBY');
+        renderLobbyGrid();
+      }
+    }
+
+    function logoutCurrentUser() {
+      clearInterval(demoInterval);
+      currentUser = null;
+      activeGameId = null;
+      toggleLeftMenu(false);
+      toggleRightDrawer(false);
+      closeStatementModal();
+      closeAccountModal();
+      closeHouseProfitModal();
+      closeGenerateCoinsModal();
+      closeWhiteLabelModal();
+      closeCmsStudioModal();
+      const errBox = document.getElementById('loginErrorBox');
+      if (errBox) {
+        errBox.textContent = '';
+        errBox.classList.add('hidden');
+      }
+      document.getElementById('appShell').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+      document.getElementById('loginPassInput').value = '';
+    }
+
+    function getCurrentUserLiveExposure() {
+      if (!currentUser) return 0;
+      const isStaff = ['SUPER_ADMIN', 'WHITE_LABEL', 'MASTER', 'AGENT'].includes(currentUser.role);
+      if (isStaff) {
+        return getScopedClients().reduce((sum, c) => sum + (c.exposure || 0), 0);
+      }
+      let exp = 0;
+      GAMES.forEach(g => {
+        const st = tableStates[g.id];
+        if (g.isOneDay) {
+          exp += st.betPositions.reduce((s, p) => s + p.deducted, 0);
+        } else {
+          exp += Object.values(st.bets).reduce((a, b) => a + b, 0);
+        }
+      });
+      return exp;
+    }
+
+    function updateHeaderBar() {
+      if (!currentUser) return;
+      const roleEl = document.getElementById('headerRoleLabel');
+      const balEl = document.getElementById('headerBalanceVal');
+      if (currentUser.isDemo) {
+        const m = Math.floor(demoRemainingSec / 60);
+        const s = String(demoRemainingSec % 60).padStart(2, '0');
+        roleEl.textContent = `DEMO (${m}:${s})`;
+      } else {
+        roleEl.textContent = currentUser.role;
+      }
+      balEl.textContent = formatINR(currentUser.balance);
+
+      const rightBal = document.getElementById('rightDrawerBalance');
+      const rightExp = document.getElementById('rightDrawerExposureVal');
+      if (rightBal) rightBal.textContent = formatINR(currentUser.balance);
+      if (rightExp) rightExp.textContent = formatINR(getCurrentUserLiveExposure());
+    }
+
+    function showActiveTableExposure() {
+      const exp = getCurrentUserLiveExposure();
+      showToast(exp > 0 ? `Current Live Exposure: ₹${exp.toLocaleString('en-IN')}` : 'No unsettled bets right now.');
+    }
+
+    function showView(viewName) {
+      document.getElementById('playerLobbyView').classList.toggle('hidden', viewName !== 'LOBBY');
+      document.getElementById('gameTableView').classList.toggle('hidden', viewName !== 'TABLE');
+      document.getElementById('staffHierarchyView').classList.toggle('hidden', viewName !== 'STAFF');
+    }
+
+    function handleBrandHomeClick() {
+      if (!currentUser) return;
+      activeGameId = null;
+      const isStaff = ['SUPER_ADMIN', 'WHITE_LABEL', 'MASTER', 'AGENT'].includes(currentUser.role);
+      if (isStaff) {
+        showView('STAFF');
+        renderHierarchyClients();
+      } else {
+        showView('LOBBY');
+        renderLobbyGrid();
+      }
+    }
+
+    function toggleLeftMenu(open) {
+      if (open) toggleRightDrawer(false);
+      document.getElementById('leftMenuOverlay').classList.toggle('hidden', !open);
+    }
+
+    function toggleRightDrawer(open) {
+      if (open) {
+        toggleLeftMenu(false);
+        updateHeaderBar();
+      }
+      document.getElementById('rightDrawerOverlay').classList.toggle('hidden', !open);
+    }
+
+    function applyNoticeBannerUI() {
+      const banner = document.getElementById('lobbyNoticeBanner');
+      const txt = document.getElementById('lobbyNoticeText');
+      if (!banner || !txt) return;
+      if (siteNotice.active && siteNotice.text.trim()) {
+        txt.textContent = siteNotice.text;
+        banner.classList.remove('hidden');
+      } else {
+        banner.classList.add('hidden');
+      }
+    }
+
+    // =========================================================================
+    // 5. PLAYER LOBBY & 24 LIVE TABLES
+    // =========================================================================
+    function filterLobbyCategory(cat) {
+      lobbyCategory = cat;
+      document.querySelectorAll('.lobby-cat-btn').forEach(btn => {
+        const active = btn.dataset.cat === cat;
+        btn.className = active
+          ? 'lobby-cat-btn px-3.5 py-2 rounded-xl text-xs font-extrabold whitespace-nowrap bg-[#D4AF37] text-slate-950'
+          : 'lobby-cat-btn px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-[#240d17] text-slate-200 border border-[#D4AF37]/25';
+      });
+      renderLobbyGrid();
+    }
+
+    function renderLobbyGrid() {
+      const grid = document.getElementById('lobbyGrid');
+      const list = lobbyCategory === 'ALL' ? GAMES : GAMES.filter(g => g.cat === lobbyCategory);
+      grid.innerHTML = list.map(g => {
+        const st = tableStates[g.id];
+        const disabled = !houseConfig.games[g.id].enabled;
+        const coverHtml = g.coverImg
+          ? `<img src="${g.coverImg}" alt="${g.name}" class="absolute inset-0 w-full h-full object-cover opacity-55 group-hover:scale-105 transition duration-300" />
+             <div class="absolute inset-0 bg-gradient-to-t from-[#12060c] via-[#12060c]/45 to-transparent"></div>`
+          : `<div class="relative z-10 text-3xl sm:text-4xl group-hover:scale-110 transition">${g.icon}</div>`;
+
+        return `
+          <button type="button" onclick="openGameTable('${g.id}')" ${disabled ? 'disabled' : ''} class="royal-card rounded-2xl p-3 text-left flex flex-col justify-between group hover:border-[#D4AF37] transition relative overflow-hidden ${disabled ? 'opacity-45 cursor-not-allowed' : ''}">
+            <div class="flex items-center justify-between gap-1 mb-2 z-10">
+              <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-[#D4AF37]/20 text-[#FFF3B0] border border-[#D4AF37]/35">${g.badge}</span>
+              <span class="text-[11px] font-mono font-bold ${st.phase === 'BETTING' ? 'text-emerald-400' : 'text-amber-300'}">${st.timer}s</span>
+            </div>
+            <div class="my-1.5 h-20 rounded-xl bg-gradient-to-br from-[#341121] to-[#14060c] border border-[#D4AF37]/20 flex items-center justify-center relative overflow-hidden">
+              ${coverHtml}
+            </div>
+            <div class="mt-1.5 z-10">
+              <div class="font-extrabold text-xs sm:text-sm text-white truncate">${g.name}</div>
+              <div class="text-[10px] text-slate-400 mt-0.5">${disabled ? 'Table Paused' : 'Live Dealer • Instant Payout'}</div>
+            </div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function openGameTable(gameId) {
+      if (!houseConfig.games[gameId].enabled) {
+        showToast('This table is currently paused by Super Admin.');
+        return;
+      }
+      activeGameId = gameId;
+      showView('TABLE');
+      renderChipRack();
+      renderActiveTableUI();
+    }
+
+    function returnToLobby() {
+      activeGameId = null;
+      showView('LOBBY');
+      renderLobbyGrid();
+    }
+
+    function renderChipRack() {
+      const chips = [50, 100, 250, 500, 1000, 2500];
+      const colors = [
+        'from-sky-600 to-sky-800 border-sky-300',
+        'from-emerald-600 to-emerald-800 border-emerald-300',
+        'from-amber-600 to-amber-800 border-amber-300',
+        'from-purple-600 to-purple-800 border-purple-300',
+        'from-rose-600 to-rose-800 border-rose-300',
+        'from-[#D4AF37] to-[#9a7317] border-white text-slate-950'
+      ];
+      document.getElementById('chipRack').innerHTML = chips.map((val, idx) => {
+        const active = selectedChip === val;
+        return `
+          <button type="button" onclick="selectBetChip(${val})" class="w-full h-10 sm:h-12 rounded-full bg-gradient-to-b ${colors[idx]} border-2 font-black text-[10px] sm:text-xs shadow-lg flex items-center justify-center transition ${active ? 'scale-105 ring-2 ring-[#FFF3B0]' : 'opacity-80 hover:opacity-100'}">
+            ${val >= 1000 ? (val / 1000) + 'K' : val}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectBetChip(val) {
+      selectedChip = val;
+      renderChipRack();
+    }
+
+    // =========================================================================
+    // 6. CARD, SCULPTED DICE & 3D WHEEL RENDERERS
+    // =========================================================================
+    function renderCardHTML(card, animate = false) {
+      if (!card) {
+        return `<div class="playing-card card-back flex items-center justify-center"><span class="text-[#D4AF37] text-base sm:text-xl">♛</span></div>`;
+      }
+      const isRed = card.suit === '♥' || card.suit === '♦';
+      return `
+        <div class="playing-card card-face ${animate ? 'card-deal-anim' : ''} flex flex-col justify-between p-1 sm:p-1.5 ${isRed ? 'text-rose-600' : 'text-slate-900'}">
+          <div class="text-[10px] sm:text-xs font-black leading-none">${card.rank}</div>
+          <div class="text-sm sm:text-lg text-center leading-none">${card.suit}</div>
+          <div class="text-[10px] sm:text-xs font-black leading-none self-end rotate-180">${card.rank}</div>
+        </div>
+      `;
+    }
+
+    function renderCasinoDieHTML(val, rolling = false) {
+      const pipLayouts = {
+        1: [4],
+        2: [2, 6],
+        3: [2, 4, 6],
+        4: [0, 2, 6, 8],
+        5: [0, 2, 4, 6, 8],
+        6: [0, 2, 3, 5, 6, 8]
+      };
+      const activeIndices = pipLayouts[val] || [4];
+      const isRedPip = val === 1 || val === 4;
+      let cells = '';
+      for (let i = 0; i < 9; i++) {
+        if (activeIndices.includes(i)) {
+          cells += `<span class="die-pip ${isRedPip ? 'red' : ''}"></span>`;
+        } else {
+          cells += `<span></span>`;
+        }
+      }
+      return `<div class="casino-die ${rolling ? 'dice-rolling' : ''}">${cells}</div>`;
+    }
+
+    function renderActiveTableUI() {
+      const game = GAMES.find(g => g.id === activeGameId);
+      if (!game) return;
+      const st = tableStates[game.id];
+
+      document.getElementById('tableTitle').textContent = game.name.toUpperCase();
+      document.getElementById('tableRoundId').textContent = `#${game.id}-${st.roundNum}`;
+      document.getElementById('tableTimerVal').textContent = st.timer;
+
+      const statusPill = document.getElementById('tableStatusPill');
+      if (st.phase === 'BETTING') {
+        statusPill.textContent = 'PLACE YOUR BETS';
+        statusPill.className = 'px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider whitespace-nowrap shrink-0 bg-emerald-950/90 text-emerald-300 border border-emerald-500/40';
+      } else if (st.phase === 'IN_PLAY_BETTING') {
+        statusPill.textContent = 'IN-PLAY ODDS OPEN';
+        statusPill.className = 'px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider whitespace-nowrap shrink-0 bg-sky-950/90 text-sky-300 border border-sky-400/50 animate-pulse';
+      } else if (st.phase === 'DEALING') {
+        statusPill.textContent = 'NO MORE BETS';
+        statusPill.className = 'px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider whitespace-nowrap shrink-0 bg-amber-950/90 text-amber-300 border border-amber-500/40';
+      } else {
+        statusPill.textContent = 'ROUND RESULT';
+        statusPill.className = 'px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider whitespace-nowrap shrink-0 bg-rose-950/90 text-rose-200 border border-rose-500/40';
+      }
+      if (game.isOneDay) {
+        const cardsDealtCount = st.cardsA.length + st.cardsB.length;
+        const canBetMain = st.phase === 'BETTING' || st.phase === 'IN_PLAY_BETTING';
+        const canBetFancy = st.phase === 'BETTING' && cardsDealtCount === 0;
+
+        document.getElementById('tableRunnersGrid').innerHTML = game.runners.map(r => {
+          if (r.isMain) {
+            const oddsObj = st.liveOdds[r.id] || { back: 1.98, lay: 2.02 };
+            const backAmt = st.bets[`${r.id}_BACK`] || 0;
+            const layAmt = st.bets[`${r.id}_LAY`] || 0;
+            return `
+              <div class="royal-card rounded-2xl p-2.5 sm:p-3 space-y-2 ${!canBetMain ? 'opacity-65' : ''}">
+                <div class="flex items-center justify-between">
+                  <span class="font-extrabold text-xs sm:text-sm text-white">${r.label}</span>
+                  <span class="text-[10px] font-bold uppercase ${canBetMain ? 'text-emerald-400' : 'text-amber-300'}">${canBetMain ? 'Open' : 'Suspended'}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-1.5">
+                  <button type="button" onclick="placeOneDayBet('${r.id}', 'BACK')" ${!canBetMain ? 'disabled' : ''} class="py-2 px-1.5 rounded-xl bg-sky-600/85 hover:bg-sky-500 border border-sky-300/60 text-center transition active:scale-95 disabled:cursor-not-allowed">
+                    <div class="text-[9px] font-black uppercase text-sky-100">BACK</div>
+                    <div class="text-xs sm:text-sm font-black text-white">${oddsObj.back.toFixed(2)}</div>
+                  </button>
+                  <button type="button" onclick="placeOneDayBet('${r.id}', 'LAY')" ${!canBetMain ? 'disabled' : ''} class="py-2 px-1.5 rounded-xl bg-rose-600/85 hover:bg-rose-500 border border-rose-300/60 text-center transition active:scale-95 disabled:cursor-not-allowed">
+                    <div class="text-[9px] font-black uppercase text-rose-100">LAY</div>
+                    <div class="text-xs sm:text-sm font-black text-white">${oddsObj.lay.toFixed(2)}</div>
+                  </button>
+                </div>
+                <div class="flex items-center justify-between text-[10px] min-h-[16px]">
+                  ${backAmt > 0 ? `<span class="text-sky-300 font-extrabold">Back: ₹${backAmt}</span>` : '<span></span>'}
+                  ${layAmt > 0 ? `<span class="text-rose-300 font-extrabold">Lay: ₹${layAmt}</span>` : '<span></span>'}
+                </div>
+              </div>
+            `;
+          } else {
+            const betAmt = st.bets[r.id] || 0;
+            return `
+              <button type="button" onclick="placeRunnerBet('${r.id}')" ${!canBetFancy ? 'disabled' : ''} class="royal-card rounded-2xl p-3 text-left transition relative ${canBetFancy ? 'hover:border-[#D4AF37] active:scale-[0.98]' : 'opacity-45 cursor-not-allowed'}">
+                <div class="flex items-center justify-between">
+                  <span class="font-extrabold text-xs sm:text-sm text-white">${r.label}</span>
+                  <span class="px-2 py-0.5 rounded-lg bg-[#D4AF37]/20 text-[#FFF3B0] font-black text-xs">${r.odds.toFixed(2)}x</span>
+                </div>
+                <div class="mt-2 flex items-center justify-between text-[10px]">
+                  <span class="${canBetFancy ? 'text-slate-400' : 'text-rose-300 font-bold'}">${canBetFancy ? 'Pre-Card Fancy' : '🔒 Locked (Card Dealt)'}</span>
+                  ${betAmt > 0 ? `<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 font-extrabold">₹${betAmt}</span>` : ''}
+                </div>
+              </button>
+            `;
+          }
+        }).join('');
+      } else {
+        document.getElementById('tableRunnersGrid').innerHTML = game.runners.map(r => {
+          const betAmt = st.bets[r.id] || 0;
+          return `
+            <button type="button" onclick="placeRunnerBet('${r.id}')" class="royal-card rounded-2xl p-3 text-left hover:border-[#D4AF37] active:scale-[0.98] transition relative">
+              <div class="flex items-center justify-between">
+                <span class="font-extrabold text-xs sm:text-sm text-white">${r.label}</span>
+                <span class="px-2 py-0.5 rounded-lg bg-[#D4AF37]/20 text-[#FFF3B0] font-black text-xs">${r.odds.toFixed(2)}x</span>
+              </div>
+              <div class="mt-2 flex items-center justify-between text-[11px]">
+                <span class="text-slate-400">Tap to bet</span>
+                ${betAmt > 0 ? `<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 font-extrabold">₹${betAmt}</span>` : ''}
+              </div>
+            </button>
+          `;
+        }).join('');
+      }
+
+      const stage = document.getElementById('tableVisualStage');
+      if (game.type === 'TEEN_PATTI') {
+        const slotsA = [0, 1, 2].map(i => renderCardHTML(st.cardsA[i] || null, st.phase === 'DEALING' && i === st.cardsA.length - 1)).join('');
+        const slotsB = [0, 1, 2].map(i => renderCardHTML(st.cardsB[i] || null, st.phase === 'DEALING' && i === st.cardsB.length - 1)).join('');
+        stage.innerHTML = `
+          <div class="w-full grid grid-cols-2 gap-1.5 sm:gap-4 text-center items-center">
+            <div class="space-y-1.5 pr-1 border-r border-[#D4AF37]/20">
+              <div class="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-[#D4AF37]">Player A</div>
+              <div class="flex justify-center gap-1 sm:gap-1.5">${slotsA}</div>
+            </div>
+            <div class="space-y-1.5 pl-1">
+              <div class="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-[#D4AF37]">Player B</div>
+              <div class="flex justify-center gap-1 sm:gap-1.5">${slotsB}</div>
+            </div>
+          </div>
+        `;
+      } else if (game.type === 'DRAGON_TIGER' || game.type === 'BACCARAT') {
+        const labelA = game.type === 'DRAGON_TIGER' ? 'Dragon' : 'Player';
+        const labelB = game.type === 'DRAGON_TIGER' ? 'Tiger' : 'Banker';
+        stage.innerHTML = `
+          <div class="w-full grid grid-cols-2 gap-4 text-center">
+            <div class="space-y-1.5">
+              <div class="text-xs font-extrabold uppercase tracking-wider text-amber-300">${labelA}</div>
+              <div class="flex justify-center gap-1.5">${renderCardHTML(st.cardsA[0] || null, st.phase === 'DEALING' && st.cardsA.length === 1 && st.cardsB.length === 0)}</div>
+            </div>
+            <div class="space-y-1.5">
+              <div class="text-xs font-extrabold uppercase tracking-wider text-rose-300">${labelB}</div>
+              <div class="flex justify-center gap-1.5">${renderCardHTML(st.cardsB[0] || null, st.phase === 'DEALING' && st.cardsB.length === 1)}</div>
+            </div>
+          </div>
+        `;
+      } else if (game.type === 'ANDAR_BAHAR') {
+        const slotsA = [0, 1].map(i => renderCardHTML(st.cardsA[i] || null, st.phase === 'DEALING' && i === st.cardsA.length - 1)).join('');
+        const slotsB = [0, 1].map(i => renderCardHTML(st.cardsB[i] || null, st.phase === 'DEALING' && i === st.cardsB.length - 1)).join('');
+        stage.innerHTML = `
+          <div class="w-full flex flex-col items-center gap-2.5 text-center">
+            <div>
+              <div class="text-[10px] font-bold uppercase text-[#D4AF37] mb-1">Joker Card</div>
+              <div class="flex justify-center">${renderCardHTML(st.jokerCard, st.phase === 'DEALING' && !!st.jokerCard && st.cardsA.length === 0)}</div>
+            </div>
+            <div class="w-full grid grid-cols-2 gap-3">
+              <div>
+                <div class="text-[11px] font-bold text-sky-300 mb-1">Andar</div>
+                <div class="flex justify-center gap-1">${slotsA}</div>
+              </div>
+              <div>
+                <div class="text-[11px] font-bold text-emerald-300 mb-1">Bahar</div>
+                <div class="flex justify-center gap-1">${slotsB}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (game.type === 'SIC_BO' || game.type === 'SEVEN_UP_DOWN') {
+        const diceList = game.type === 'SEVEN_UP_DOWN' ? st.dice.slice(0, 2) : st.dice;
+        const rolling = st.phase === 'DEALING';
+        const total = diceList.reduce((a, b) => a + b, 0);
+        stage.innerHTML = `
+          <div class="flex flex-col items-center gap-3">
+            <div class="flex items-center justify-center gap-3 sm:gap-4">
+              ${diceList.map(d => renderCasinoDieHTML(d, rolling)).join('')}
+            </div>
+            <div class="text-xs font-extrabold uppercase tracking-wider text-[#FFF3B0]">
+              ${rolling ? 'Rolling Dice...' : `Dice Total: ${total}`}
+            </div>
+          </div>
+        `;
+      } else if (game.type === 'ROULETTE' || game.type === 'CRAZY_TIME') {
+        const spinning = st.phase === 'DEALING';
+        stage.innerHTML = `
+          <div class="flex flex-col items-center gap-2.5">
+            <div class="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-[#D4AF37] bg-[conic-gradient(#b91c1c_0deg_45deg,#0f172a_45deg_90deg,#15803d_90deg_135deg,#b91c1c_135deg_180deg,#0f172a_180deg_225deg,#d97706_225deg_270deg,#b91c1c_270deg_315deg,#0f172a_315deg_360deg)] shadow-2xl flex items-center justify-center ${spinning ? 'animate-spin' : ''}">
+              <div class="w-12 h-12 rounded-full bg-[#1a0911] border-2 border-[#D4AF37] flex items-center justify-center font-black text-xs text-[#FFF3B0]">
+                ${spinning ? 'SPIN' : (st.wheelResult || 'LIVE')}
+              </div>
+            </div>
+            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-300">
+              ${spinning ? 'Wheel Spinning...' : 'Place Your Bets'}
+            </div>
+          </div>
+        `;
+      } else if (game.type === 'AVIATOR') {
+        stage.innerHTML = `
+          <div class="w-full h-32 rounded-xl bg-gradient-to-t from-rose-950/50 to-black/50 border border-[#D4AF37]/20 flex flex-col items-center justify-center relative overflow-hidden">
+            <div class="text-3xl sm:text-4xl font-black ${st.aviatorCrashed ? 'text-rose-500' : 'text-emerald-400'}">
+              ${st.aviatorMult.toFixed(2)}x
+            </div>
+            <div class="text-xs font-bold uppercase tracking-wider mt-1 ${st.aviatorCrashed ? 'text-rose-300' : 'text-slate-300'}">
+              ${st.aviatorCrashed ? 'FLEW AWAY!' : (st.phase === 'DEALING' ? '✈️ Plane Climbing...' : 'Waiting for Takeoff')}
+            </div>
+          </div>
+        `;
+      } else if (game.type === 'MINES') {
+        stage.innerHTML = `
+          <div class="flex flex-col items-center gap-2 text-center">
+            <div class="text-3xl">${st.minesHitBomb ? '💥' : '💎'}</div>
+            <div class="text-sm font-black text-[#FFF3B0]">Safe Gems: ${st.minesRevealed} • ${st.minesMult.toFixed(2)}x</div>
+            <div class="text-[11px] text-slate-400">Tap "Reveal Safe Tile" below to uncover gems</div>
+          </div>
+        `;
+      } else {
+        stage.innerHTML = `
+          <div class="flex flex-col items-center gap-2 text-center">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-[#D4AF37]">Featured Studio Card</div>
+            ${renderCardHTML(st.singleCard, st.phase === 'DEALING' && !!st.singleCard)}
+          </div>
+        `;
+      }
+
+      const winBanner = document.getElementById('tableWinnerBanner');
+      if (st.winnerText) {
+        winBanner.textContent = st.winnerText;
+        winBanner.classList.remove('hidden');
+      } else {
+        winBanner.classList.add('hidden');
+      }
+
+      document.getElementById('tableHistoryBeads').innerHTML = st.history.map(h => `
+        <span class="w-6 h-6 rounded-full bg-[#2b0f1b] border border-[#D4AF37]/40 text-[10px] font-black text-[#FFF3B0] flex items-center justify-center shrink-0">${h}</span>
+      `).join('');
+
+      const isOneDay = game.isOneDay;
+      if (isOneDay) {
+        const cardsDealtCount = st.cardsA.length + st.cardsB.length;
+        const canBetMain = st.phase === 'BETTING' || st.phase === 'IN_PLAY_BETTING';
+        const canBetFancy = st.phase === 'BETTING' && cardsDealtCount === 0;
+
+        document.getElementById('tableRunnersGrid').innerHTML = game.runners.map(r => {
+          if (r.isMain) {
+            const oddsObj = st.liveOdds[r.id] || { back: 1.98, lay: 2.02 };
+            const backAmt = st.bets[`${r.id}_BACK`] || 0;
+            const layAmt = st.bets[`${r.id}_LAY`] || 0;
+            return `
+              <div class="royal-card rounded-2xl p-2.5 sm:p-3 space-y-2 ${!canBetMain ? 'opacity-65' : ''}">
+                <div class="flex items-center justify-between">
+                  <span class="font-extrabold text-xs sm:text-sm text-white">${r.label}</span>
+                  <span class="text-[10px] font-bold uppercase ${canBetMain ? 'text-emerald-400' : 'text-amber-300'}">${canBetMain ? 'Open' : 'Suspended'}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-1.5">
+                  <button type="button" onclick="placeOneDayBet('${r.id}', 'BACK')" ${!canBetMain ? 'disabled' : ''} class="py-2 px-1.5 rounded-xl bg-sky-600/85 hover:bg-sky-500 border border-sky-300/60 text-center transition active:scale-95 disabled:cursor-not-allowed">
+                    <div class="text-[9px] font-black uppercase text-sky-100">BACK</div>
+                    <div class="text-xs sm:text-sm font-black text-white">${oddsObj.back.toFixed(2)}</div>
+                  </button>
+                  <button type="button" onclick="placeOneDayBet('${r.id}', 'LAY')" ${!canBetMain ? 'disabled' : ''} class="py-2 px-1.5 rounded-xl bg-rose-600/85 hover:bg-rose-500 border border-rose-300/60 text-center transition active:scale-95 disabled:cursor-not-allowed">
+                    <div class="text-[9px] font-black uppercase text-rose-100">LAY</div>
+                    <div class="text-xs sm:text-sm font-black text-white">${oddsObj.lay.toFixed(2)}</div>
+                  </button>
+                </div>
+                <div class="flex items-center justify-between text-[10px] min-h-[16px]">
+                  ${backAmt > 0 ? `<span class="text-sky-300 font-extrabold">Back: ₹${backAmt}</span>` : '<span></span>'}
+                  ${layAmt > 0 ? `<span class="text-rose-300 font-extrabold">Lay: ₹${layAmt}</span>` : '<span></span>'}
+                </div>
+              </div>
+            `;
+          } else {
+            const betAmt = st.bets[r.id] || 0;
+            return `
+              <button type="button" onclick="placeRunnerBet('${r.id}')" ${!canBetFancy ? 'disabled' : ''} class="royal-card rounded-2xl p-3 text-left transition relative ${canBetFancy ? 'hover:border-[#D4AF37] active:scale-[0.98]' : 'opacity-45 cursor-not-allowed'}">
+                <div class="flex items-center justify-between">
+                  <span class="font-extrabold text-xs sm:text-sm text-white">${r.label}</span>
+                  <span class="px-2 py-0.5 rounded-lg bg-[#D4AF37]/20 text-[#FFF3B0] font-black text-xs">${r.odds.toFixed(2)}x</span>
+                </div>
+                <div class="mt-2 flex items-center justify-between text-[10px]">
+                  <span class="${canBetFancy ? 'text-slate-400' : 'text-rose-300 font-bold'}">${canBetFancy ? 'Pre-Card Fancy' : '🔒 Locked (Card Dealt)'}</span>
+                  ${betAmt > 0 ? `<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 font-extrabold">₹${betAmt}</span>` : ''}
+                </div>
+              </button>
+            `;
+          }
+        }).join('');
+      } else {
+        document.getElementById('tableRunnersGrid').innerHTML = game.runners.map(r => {
+          const betAmt = st.bets[r.id] || 0;
+          return `
+            <button type="button" onclick="placeRunnerBet('${r.id}')" class="royal-card rounded-2xl p-3 text-left hover:border-[#D4AF37] active:scale-[0.98] transition relative">
+              <div class="flex items-center justify-between">
+                <span class="font-extrabold text-xs sm:text-sm text-white">${r.label}</span>
+                <span class="px-2 py-0.5 rounded-lg bg-[#D4AF37]/20 text-[#FFF3B0] font-black text-xs">${r.odds.toFixed(2)}x</span>
+              </div>
+              <div class="mt-2 flex items-center justify-between text-[11px]">
+                <span class="text-slate-400">Tap to bet</span>
+                ${betAmt > 0 ? `<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 font-extrabold">₹${betAmt}</span>` : ''}
+              </div>
+            </button>
+          `;
+        }).join('');
+      }
+
+      const totalBet = Object.values(st.bets).reduce((a, b) => a + b, 0);
+      document.getElementById('tableTotalBetVal').textContent = `₹${totalBet}`;
+
+      const cashBtn = document.getElementById('cashoutActionBtn');
+      if (game.type === 'AVIATOR' && st.phase === 'DEALING' && totalBet > 0 && !st.aviatorCashedOut && !st.aviatorCrashed) {
+        cashBtn.classList.remove('hidden');
+        cashBtn.textContent = `Cash Out ₹${Math.floor(totalBet * st.aviatorMult)}`;
+      } else {
+        cashBtn.classList.add('hidden');
+      }
+    }
+
+    // =========================================================================
+    // 7. BETTING, MINES, AVIATOR & HOUSE-PROFIT ENGINE
+    // =========================================================================
+    function placeOneDayBet(runnerId, side) {
+      if (!currentUser || !activeGameId) return;
+      const game = GAMES.find(g => g.id === activeGameId);
+      const st = tableStates[game.id];
+      if (!game.isOneDay) return;
+
+      if (st.phase !== 'BETTING' && st.phase !== 'IN_PLAY_BETTING') {
+        showToast('Market suspended while card is dealing.');
+        return;
+      }
+
+      const oddsObj = st.liveOdds[runnerId];
+      const oddsUsed = side === 'BACK' ? oddsObj.back : oddsObj.lay;
+      const deduction = side === 'BACK'
+        ? selectedChip
+        : Math.round(selectedChip * (oddsUsed - 1));
+
+      if (currentUser.balance < deduction) {
+        showToast(`Insufficient balance (Need ₹${deduction}).`);
+        return;
+      }
+
+      currentUser.balance -= deduction;
+      const key = `${runnerId}_${side}`;
+      st.bets[key] = (st.bets[key] || 0) + selectedChip;
+      st.betPositions.push({
+        runnerId,
+        side,
+        stake: selectedChip,
+        odds: oddsUsed,
+        deducted: deduction
+      });
+      updateHeaderBar();
+      renderActiveTableUI();
+      showToast(`${side} ${runnerId === 'A' ? 'Player A' : 'Player B'} @ ${oddsUsed.toFixed(2)} (₹${selectedChip})`);
+    }
+
+    function placeRunnerBet(runnerId) {
+      if (!currentUser || !activeGameId) return;
+      const game = GAMES.find(g => g.id === activeGameId);
+      const st = tableStates[game.id];
+
+      if (game.type === 'MINES') {
+        handleMinesAction(runnerId, st);
+        return;
+      }
+
+      if (game.isOneDay) {
+        const cardsDealt = st.cardsA.length + st.cardsB.length;
+        if (st.phase !== 'BETTING' || cardsDealt > 0) {
+          showToast('Fancy bets are locked once the first card is dealt.');
+          return;
+        }
+      } else if (st.phase !== 'BETTING') {
+        showToast('Betting is closed for this round.');
+        return;
+      }
+
+      if (currentUser.balance < selectedChip) {
+        showToast('Insufficient balance for selected chip.');
+        return;
+      }
+
+      currentUser.balance -= selectedChip;
+      st.bets[runnerId] = (st.bets[runnerId] || 0) + selectedChip;
+      if (game.isOneDay) {
+        const rObj = game.runners.find(r => r.id === runnerId);
+        st.betPositions.push({
+          runnerId,
+          side: 'FANCY',
+          stake: selectedChip,
+          odds: rObj ? rObj.odds : 2.0,
+          deducted: selectedChip
+        });
+      }
+      updateHeaderBar();
+      renderActiveTableUI();
+    }
+
+    function clearCurrentTableBets() {
+      if (!currentUser || !activeGameId) return;
+      const game = GAMES.find(g => g.id === activeGameId);
+      const st = tableStates[activeGameId];
+      if (st.phase !== 'BETTING') {
+        showToast('Cannot clear bets after cards start dealing.');
+        return;
+      }
+      if (game && game.isOneDay) {
+        const totalRefund = st.betPositions.reduce((s, p) => s + p.deducted, 0);
+        if (totalRefund <= 0) return;
+        currentUser.balance += totalRefund;
+        st.bets = {};
+        st.betPositions = [];
+        updateHeaderBar();
+        renderActiveTableUI();
+        showToast(`Refunded ₹${totalRefund} to balance.`);
+        return;
+      }
+      const total = Object.values(st.bets).reduce((a, b) => a + b, 0);
+      if (total <= 0) return;
+      currentUser.balance += total;
+      st.bets = {};
+      updateHeaderBar();
+      renderActiveTableUI();
+      showToast(`Refunded ₹${total} to balance.`);
+    }
+
+    function triggerAviatorCashout() {
+      const st = tableStates['AVIATOR'];
+      const bet = (st.bets['FLY'] || 0) + (st.bets['AUTO2'] || 0);
+      if (bet <= 0 || st.aviatorCashedOut || st.aviatorCrashed) return;
+      st.aviatorCashedOut = true;
+      const payout = Math.floor(bet * st.aviatorMult);
+      currentUser.balance += payout;
+      recordUserStatement('Royal Aviator', st.roundNum, bet, payout);
+      updateHeaderBar();
+      renderActiveTableUI();
+      showToast(`Cashed out at ${st.aviatorMult.toFixed(2)}x for ₹${payout}!`);
+    }
+
+    function handleMinesAction(runnerId, st) {
+      if (runnerId === 'SAFE_NEXT') {
+        if (st.minesRevealed === 0) {
+          if (currentUser.balance < selectedChip) {
+            showToast('Insufficient balance.');
+            return;
+          }
+          currentUser.balance -= selectedChip;
+          st.bets['SAFE_NEXT'] = selectedChip;
+          updateHeaderBar();
+        }
+        const houseRatio = houseConfig.games['MINES'].ratio;
+        const bombChance = 0.16 + (houseRatio / 100) * 0.25;
+        if (Math.random() < bombChance) {
+          st.minesHitBomb = true;
+          st.winnerText = 'Boom! Hit a Mine.';
+          recordUserStatement('Gold Mines', st.roundNum, st.bets['SAFE_NEXT'] || selectedChip, 0);
+          st.minesRevealed = 0;
+          st.minesMult = 1.00;
+          st.bets = {};
+        } else {
+          st.minesHitBomb = false;
+          st.minesRevealed++;
+          st.minesMult = Number((1 + st.minesRevealed * 0.35).toFixed(2));
+          st.winnerText = `Safe Gem #${st.minesRevealed} Found!`;
+        }
+        renderActiveTableUI();
+      } else if (runnerId === 'CASHOUT_MINE' && st.minesRevealed > 0) {
+        const stake = st.bets['SAFE_NEXT'] || selectedChip;
+        const winAmt = Math.floor(stake * st.minesMult);
+        currentUser.balance += winAmt;
+        recordUserStatement('Gold Mines', st.roundNum, stake, winAmt);
+        st.winnerText = `Collected ₹${winAmt} (${st.minesMult.toFixed(2)}x)!`;
+        st.minesRevealed = 0;
+        st.minesMult = 1.00;
+        st.bets = {};
+        updateHeaderBar();
+        renderActiveTableUI();
+      }
+    }
+
+    function selectHouseOptimizedWinner(game, st) {
+      const runners = game.runners;
+      if (game.isOneDay) {
+        const totalPositions = st.betPositions.length;
+        if (totalPositions === 0) {
+          return Math.random() < 0.5 ? 'A' : 'B';
+        }
+        const ratio = houseConfig.games[game.id]?.ratio ?? houseConfig.globalRatio;
+        const calcPayoutIfWins = (candId) => {
+          let payout = 0;
+          st.betPositions.forEach(p => {
+            if (p.side === 'BACK' && p.runnerId === candId) {
+              payout += Math.floor(p.stake * p.odds);
+            } else if (p.side === 'LAY' && p.runnerId !== candId) {
+              payout += p.deducted + p.stake;
+            }
+          });
+          return payout;
+        };
+        const payA = calcPayoutIfWins('A');
+        const payB = calcPayoutIfWins('B');
+        const houseFavored = payA <= payB ? 'A' : 'B';
+        const playerFavored = payA <= payB ? 'B' : 'A';
+        return (Math.random() * 100 < ratio) ? houseFavored : playerFavored;
+      }
+
+      const totalStaked = Object.values(st.bets).reduce((a, b) => a + b, 0);
+      if (totalStaked === 0) {
+        return runners[Math.floor(Math.random() * runners.length)].id;
+      }
+
+      const ratio = houseConfig.games[game.id]?.ratio ?? houseConfig.globalRatio;
+      const sortedByLiability = [...runners].sort((a, b) => {
+        const liabA = (st.bets[a.id] || 0) * a.odds;
+        const liabB = (st.bets[b.id] || 0) * b.odds;
+        return liabA - liabB;
+      });
+
+      const pickHouseWin = Math.random() * 100 < ratio;
+      if (pickHouseWin) {
+        return sortedByLiability[0].id;
+      }
+      return sortedByLiability[sortedByLiability.length - 1].id;
+    }
+
+    function recordUserStatement(gameName, roundNum, stake, payout) {
+      if (!currentUser || currentUser.isDemo) return;
+      userStatements.unshift({
+        game: gameName,
+        round: roundNum,
+        stake,
+        payout,
+        net: payout - stake,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      });
+    }
+
+    function createShuffledDeck() {
+      const suits = ['♠', '♥', '♦', '♣'];
+      const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+      const deck = [];
+      for (const suit of suits) {
+        for (const rank of ranks) {
+          deck.push({ suit, rank });
+        }
+      }
+      for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+      }
+      return deck;
+    }
+
+    function getCardNumericValue(card) {
+      if (!card) return 0;
+      const map = { 'A': 14, 'K': 13, 'Q': 12, 'J': 11 };
+      return map[card.rank] || Number(card.rank) || 0;
+    }
+
+    function evaluateOneDayLiveOdds(cardsA, cardsB) {
+      const scoreSide = (cards) => {
+        if (cards.length === 0) return 0;
+        let pts = cards.reduce((s, c) => s + getCardNumericValue(c), 0);
+        if (cards.length >= 2 && cards[0].rank === cards[1].rank) pts += 18;
+        if (cards.length === 3 && cards[0].rank === cards[1].rank && cards[1].rank === cards[2].rank) pts += 45;
+        return pts;
+      };
+      const avgA = cardsA.length ? scoreSide(cardsA) / cardsA.length : 8;
+      const avgB = cardsB.length ? scoreSide(cardsB) / cardsB.length : 8;
+      const diff = Math.max(-10, Math.min(10, avgA - avgB));
+      const probA = Math.max(0.14, Math.min(0.86, 0.50 + diff * 0.036));
+      const probB = 1 - probA;
+
+      const backA = Number(Math.max(1.14, Math.min(6.80, (0.98 / probA))).toFixed(2));
+      const layA = Number((backA + 0.04).toFixed(2));
+      const backB = Number(Math.max(1.14, Math.min(6.80, (0.98 / probB))).toFixed(2));
+      const layB = Number((backB + 0.04).toFixed(2));
+
+      return {
+        A: { back: backA, lay: layA },
+        B: { back: backB, lay: layB }
+      };
+    }
+
+    function runRoundDealingSequence(game, st) {
+      const winnerId = selectHouseOptimizedWinner(game, st);
+
+      if (game.type === 'AVIATOR') {
+        st.aviatorMult = 1.00;
+        st.aviatorCrashed = false;
+        st.aviatorCashedOut = false;
+        const totalBet = Object.values(st.bets).reduce((a, b) => a + b, 0);
+        const ratio = houseConfig.games['AVIATOR'].ratio;
+        st.aviatorTarget = totalBet > 0 && Math.random() * 100 < ratio
+          ? Number((1.15 + Math.random() * 0.65).toFixed(2))
+          : Number((2.10 + Math.random() * 3.5).toFixed(2));
+
+        const flightTimer = setInterval(() => {
+          st.aviatorMult = Number((st.aviatorMult + 0.08).toFixed(2));
+          if (st.aviatorMult >= st.aviatorTarget) {
+            clearInterval(flightTimer);
+            st.aviatorCrashed = true;
+            if (totalBet > 0 && !st.aviatorCashedOut) {
+              recordUserStatement('Royal Aviator', st.roundNum, totalBet, 0);
+            }
+            finalizeTableRound(game, st, 'FLY');
+          } else if (activeGameId === game.id) {
+            renderActiveTableUI();
+          }
+        }, 250);
+        return;
+      }
+
+      if (game.type === 'SIC_BO' || game.type === 'SEVEN_UP_DOWN') {
+        st.timer = 4;
+        setTimeout(() => {
+          st.dice = [
+            1 + Math.floor(Math.random() * 6),
+            1 + Math.floor(Math.random() * 6),
+            1 + Math.floor(Math.random() * 6)
+          ];
+          finalizeTableRound(game, st, winnerId);
+        }, 2400);
+        return;
+      }
+
+      if (game.type === 'ROULETTE' || game.type === 'CRAZY_TIME') {
+        st.timer = 4;
+        setTimeout(() => {
+          st.wheelResult = winnerId;
+          finalizeTableRound(game, st, winnerId);
+        }, 2400);
+        return;
+      }
+
+      // Card Games — Sequential One-by-One Dealing with Stoppage Pause After Every Card
+      const deck = createShuffledDeck();
+      st.cardsA = [];
+      st.cardsB = [];
+      st.singleCard = null;
+      st.jokerCard = null;
+
+      if (game.type === 'TEEN_PATTI') {
+        if (game.isOneDay) {
+          // One Day Teen Patti: Deal 1 card -> 5s In-Play Odds Recalculation & Back/Lay Trading -> Next card -> ... -> 6th card settles
+          const dealOrder = ['A', 'B', 'A', 'B', 'A', 'B'];
+          let cardIdx = 0;
+
+          const revealNextOneDayCard = () => {
+            const side = dealOrder[cardIdx];
+            const drawn = deck.pop();
+            if (side === 'A') st.cardsA.push(drawn);
+            else st.cardsB.push(drawn);
+            cardIdx++;
+
+            // Recalculate live Back & Lay odds after every opened card
+            st.liveOdds = evaluateOneDayLiveOdds(st.cardsA, st.cardsB);
+
+            if (cardIdx < 6) {
+              st.phase = 'IN_PLAY_BETTING';
+              st.timer = 5;
+              if (activeGameId === game.id) renderActiveTableUI();
+
+              let inPlayTick = 5;
+              const windowTimer = setInterval(() => {
+                inPlayTick--;
+                st.timer = Math.max(0, inPlayTick);
+                if (activeGameId === game.id) renderActiveTableUI();
+                if (inPlayTick <= 0) {
+                  clearInterval(windowTimer);
+                  st.phase = 'DEALING';
+                  if (activeGameId === game.id) renderActiveTableUI();
+                  setTimeout(revealNextOneDayCard, 700);
+                }
+              }, 1000);
+            } else {
+              // Final 6th card dealt — settle hand according to house-profit engine
+              const finalWinner = selectHouseOptimizedWinner(game, st);
+              st.phase = 'DEALING';
+              st.timer = 1;
+              if (activeGameId === game.id) renderActiveTableUI();
+              setTimeout(() => finalizeTableRound(game, st, finalWinner), 1100);
+            }
+          };
+
+          st.phase = 'DEALING';
+          st.timer = 1;
+          if (activeGameId === game.id) renderActiveTableUI();
+          setTimeout(revealNextOneDayCard, 800);
+          return;
+        }
+
+        const steps = [
+          () => st.cardsA.push(deck.pop()),
+          () => st.cardsB.push(deck.pop()),
+          () => st.cardsA.push(deck.pop()),
+          () => st.cardsB.push(deck.pop()),
+          () => st.cardsA.push(deck.pop()),
+          () => st.cardsB.push(deck.pop())
+        ];
+        let idx = 0;
+        st.timer = steps.length * 2;
+        const dealNextTeenPattiCard = () => {
+          if (idx < steps.length) {
+            steps[idx]();
+            idx++;
+            st.timer = Math.max(1, (steps.length - idx) * 2);
+            if (activeGameId === game.id) renderActiveTableUI();
+            setTimeout(dealNextTeenPattiCard, 1300);
+          } else {
+            setTimeout(() => finalizeTableRound(game, st, winnerId), 1100);
+          }
+        };
+        setTimeout(dealNextTeenPattiCard, 900);
+        return;
+      }
+
+      if (game.type === 'ANDAR_BAHAR') {
+        st.timer = 10;
+        setTimeout(() => {
+          st.jokerCard = deck.pop();
+          if (activeGameId === game.id) renderActiveTableUI();
+          let count = 0;
+          const totalCards = 4;
+          const dealNextABCard = () => {
+            if (count < totalCards) {
+              count++;
+              if (count % 2 === 1) st.cardsA.push(deck.pop());
+              else st.cardsB.push(deck.pop());
+              st.timer = Math.max(1, (totalCards - count) * 2);
+              if (activeGameId === game.id) renderActiveTableUI();
+              setTimeout(dealNextABCard, 1300);
+            } else {
+              setTimeout(() => finalizeTableRound(game, st, winnerId), 1100);
+            }
+          };
+          setTimeout(dealNextABCard, 1200);
+        }, 800);
+        return;
+      }
+
+      if (game.type === 'DRAGON_TIGER' || game.type === 'BACCARAT') {
+        st.timer = 5;
+        setTimeout(() => {
+          st.cardsA.push(deck.pop());
+          st.timer = 3;
+          if (activeGameId === game.id) renderActiveTableUI();
+          setTimeout(() => {
+            st.cardsB.push(deck.pop());
+            st.timer = 1;
+            if (activeGameId === game.id) renderActiveTableUI();
+            setTimeout(() => finalizeTableRound(game, st, winnerId), 1300);
+          }, 1400);
+        }, 900);
+        return;
+      }
+
+      st.timer = 3;
+      setTimeout(() => {
+        st.singleCard = deck.pop();
+        if (activeGameId === game.id) renderActiveTableUI();
+        setTimeout(() => finalizeTableRound(game, st, winnerId), 1300);
+      }, 1100);
+    }
+
+    function finalizeTableRound(game, st, winnerId) {
+      st.phase = 'RESULT';
+      st.timer = 6;
+      const runnerObj = game.runners.find(r => r.id === winnerId) || game.runners[0];
+      st.winnerText = `Winner: ${runnerObj.label}`;
+      st.history = [winnerId.slice(0, 2), ...st.history.slice(0, 7)];
+
+      if (game.isOneDay) {
+        if (st.betPositions.length > 0 && currentUser) {
+          let totalDeducted = 0;
+          let totalReturn = 0;
+          st.betPositions.forEach(p => {
+            totalDeducted += p.deducted;
+            if (p.side === 'BACK' && p.runnerId === winnerId) {
+              totalReturn += Math.floor(p.stake * p.odds);
+            } else if (p.side === 'LAY' && p.runnerId !== winnerId) {
+              totalReturn += p.deducted + p.stake;
+            } else if (p.side === 'FANCY' && p.runnerId === winnerId) {
+              totalReturn += Math.floor(p.stake * p.odds);
+            }
+          });
+          if (totalReturn > 0) {
+            currentUser.balance += totalReturn;
+            updateHeaderBar();
+          }
+          recordUserStatement(game.name, st.roundNum, totalDeducted, totalReturn);
+        }
+      } else if (game.type !== 'AVIATOR' && game.type !== 'MINES') {
+        const totalStake = Object.values(st.bets).reduce((a, b) => a + b, 0);
+        const winStake = st.bets[winnerId] || 0;
+        const payout = Math.floor(winStake * runnerObj.odds);
+        if (totalStake > 0 && currentUser) {
+          if (payout > 0) {
+            currentUser.balance += payout;
+            updateHeaderBar();
+          }
+          recordUserStatement(game.name, st.roundNum, totalStake, payout);
+        }
+      }
+
+      if (activeGameId === game.id) renderActiveTableUI();
+    }
+
+    setInterval(() => {
+      GAMES.forEach(game => {
+        const st = tableStates[game.id];
+        if (st.phase === 'DEALING' || st.phase === 'IN_PLAY_BETTING') {
+          if (!game.isOneDay && st.timer > 1) st.timer--;
+          return;
+        }
+        st.timer--;
+        if (st.timer <= 0) {
+          if (st.phase === 'BETTING') {
+            st.phase = 'DEALING';
+            st.timer = 10;
+            runRoundDealingSequence(game, st);
+          } else if (st.phase === 'RESULT') {
+            st.roundNum++;
+            st.phase = 'BETTING';
+            st.timer = 20;
+            st.bets = {};
+            st.betPositions = [];
+            st.liveOdds = {
+              A: { back: 1.98, lay: 2.02 },
+              B: { back: 1.98, lay: 2.02 }
+            };
+            st.cardsA = [];
+            st.cardsB = [];
+            st.jokerCard = null;
+            st.singleCard = null;
+            st.winnerText = '';
+          }
+        }
+      });
+
+      if (activeGameId) {
+        renderActiveTableUI();
+      } else if (currentUser && !['SUPER_ADMIN', 'WHITE_LABEL', 'MASTER', 'AGENT'].includes(currentUser.role)) {
+        renderLobbyGrid();
+      }
+    }, 1000);
+
+    // =========================================================================
+    // 9. STAFF HIERARCHY, COIN GENERATION, WHITE LABELS & SUPER ADMIN CMS
+    // =========================================================================
+    function getScopedClients() {
+      const allUsers = ACCOUNTS.filter(a => a.role === 'USER');
+      if (!currentUser || currentUser.role === 'SUPER_ADMIN') return allUsers;
+      return allUsers.filter(a => a.tenantId === currentUser.tenantId);
+    }
+
+    function setClientFilter(f) {
+      clientFilter = f;
+      ['ALL', 'ACTIVE', 'DEACTIVE'].forEach(key => {
+        const btn = document.getElementById('filterClient' + key.charAt(0) + key.slice(1).toLowerCase());
+        if (btn) {
+          btn.className = key === f
+            ? 'px-3 py-1.5 rounded-xl text-xs font-extrabold bg-[#D4AF37] text-slate-950'
+            : 'px-3 py-1.5 rounded-xl text-xs font-bold bg-[#250d17] text-slate-300';
+        }
+      });
+      renderHierarchyClients();
+    }
+
+    function renderHierarchyClients() {
+      const clients = getScopedClients();
+      const query = (document.getElementById('clientSearchInput').value || '').toLowerCase();
+
+      const activeCount = clients.filter(c => c.active).length;
+      const deactiveCount = clients.filter(c => !c.active).length;
+      const totalBal = clients.reduce((sum, c) => sum + (c.balance || 0), 0);
+      const totalExp = clients.reduce((sum, c) => sum + (c.exposure || 0), 0);
+
+      document.getElementById('kpiActiveClients').textContent = activeCount;
+      document.getElementById('kpiDeactiveClients').textContent = deactiveCount;
+      document.getElementById('kpiTotalBalance').textContent = '₹' + totalBal.toLocaleString('en-IN');
+      document.getElementById('kpiTotalExposure').textContent = '₹' + totalExp.toLocaleString('en-IN');
+
+      const filtered = clients.filter(c => {
+        if (clientFilter === 'ACTIVE' && !c.active) return false;
+        if (clientFilter === 'DEACTIVE' && c.active) return false;
+        if (query && !c.id.toLowerCase().includes(query) && !(c.note || '').toLowerCase().includes(query)) return false;
+        return true;
+      });
+
+      document.getElementById('hierarchyClientList').innerHTML = filtered.map(c => {
+        const wl = WHITE_LABELS.find(w => w.id === c.tenantId);
+        return `
+          <div class="royal-card rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-extrabold text-sm text-white">${c.id}</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${c.active ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/40' : 'bg-rose-950 text-rose-300 border border-rose-500/40'}">
+                    ${c.active ? 'ACTIVE' : 'DEACTIVE'}
+                  </span>
+                  ${currentUser && currentUser.role === 'SUPER_ADMIN' && wl ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-950 text-sky-300 border border-sky-500/40">${wl.brand}</span>` : ''}
+                </div>
+                <div class="text-[11px] text-slate-400 mt-0.5">Upline: ${c.parent || 'Direct'} • Exposure: ₹${(c.exposure || 0).toLocaleString('en-IN')}</div>
+              </div>
+              <div class="text-right">
+                <div class="text-xs font-black text-[#FFF3B0]">₹${(c.balance || 0).toLocaleString('en-IN')}</div>
+                <button type="button" onclick="toggleClientStatus('${c.id}')" class="mt-1 px-2.5 py-1 rounded-lg text-[10px] font-bold ${c.active ? 'bg-rose-950 text-rose-200 border border-rose-500/40' : 'bg-emerald-950 text-emerald-200 border border-emerald-500/40'}">
+                  ${c.active ? 'Deactivate' : 'Activate'}
+                </button>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <input type="text" value="${c.note || ''}" onchange="updateClientNote('${c.id}', this.value)" placeholder="Add remark..." class="flex-1 px-3 py-1.5 rounded-xl bg-black/50 border border-[#D4AF37]/25 text-xs text-slate-200" />
+              <button type="button" onclick="adjustClientBalance('${c.id}', 5000)" class="px-2.5 py-1.5 rounded-xl bg-emerald-900/70 text-emerald-200 text-xs font-extrabold">+₹5K</button>
+              <button type="button" onclick="adjustClientBalance('${c.id}', -5000)" class="px-2.5 py-1.5 rounded-xl bg-rose-900/70 text-rose-200 text-xs font-extrabold">-₹5K</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleClientStatus(clientId) {
+      const acc = ACCOUNTS.find(a => a.id === clientId);
+      if (!acc) return;
+      acc.active = !acc.active;
+      renderHierarchyClients();
+      showToast(`${clientId} is now ${acc.active ? 'ACTIVE' : 'DEACTIVE'}.`);
+    }
+
+    function updateClientNote(clientId, val) {
+      const acc = ACCOUNTS.find(a => a.id === clientId);
+      if (acc) {
+        acc.note = val;
+        showToast(`Saved note for ${clientId}.`);
+      }
+    }
+
+    function adjustClientBalance(clientId, delta) {
+      const acc = ACCOUNTS.find(a => a.id === clientId);
+      if (!acc || !currentUser) return;
+      if (delta > 0) {
+        if (currentUser.balance < delta) {
+          showToast('Insufficient wallet balance. Use Generate Coins to mint more.');
+          return;
+        }
+        currentUser.balance -= delta;
+        acc.balance = (acc.balance || 0) + delta;
+      } else {
+        const withdrawAmt = Math.min(acc.balance || 0, Math.abs(delta));
+        acc.balance = Math.max(0, (acc.balance || 0) - withdrawAmt);
+        currentUser.balance += withdrawAmt;
+      }
+      updateHeaderBar();
+      renderHierarchyClients();
+      showToast(`Updated ${clientId} balance to ₹${acc.balance.toLocaleString('en-IN')}.`);
+    }
+
+    // Coin Generation (Super Admin)
+    function openGenerateCoinsModal() {
+      if (!currentUser || currentUser.role !== 'SUPER_ADMIN') return;
+      document.getElementById('mintCurrentBalLabel').textContent = formatINR(currentUser.balance);
+      document.getElementById('generateCoinsModal').classList.remove('hidden');
+    }
+
+    function closeGenerateCoinsModal() {
+      document.getElementById('generateCoinsModal').classList.add('hidden');
+    }
+
+    function setMintAmount(val) {
+      document.getElementById('mintCoinsInput').value = val;
+    }
+
+    function submitGenerateCoins() {
+      if (!currentUser || currentUser.role !== 'SUPER_ADMIN') return;
+      const amt = Number(document.getElementById('mintCoinsInput').value || 0);
+      if (amt <= 0) {
+        showToast('Enter a valid coin amount.');
+        return;
+      }
+      currentUser.balance += amt;
+      const masterAcc = ACCOUNTS.find(a => a.id === currentUser.id);
+      if (masterAcc) masterAcc.balance = currentUser.balance;
+      updateHeaderBar();
+      closeGenerateCoinsModal();
+      showToast(`Generated ₹${amt.toLocaleString('en-IN')} coins into Super Admin wallet!`);
+    }
+
+    // White-Label Multi-Tenant Manager
+    function openWhiteLabelModal() {
+      if (!currentUser || currentUser.role !== 'SUPER_ADMIN') return;
+      renderWhiteLabelList();
+      document.getElementById('whiteLabelModal').classList.remove('hidden');
+    }
+
+    function closeWhiteLabelModal() {
+      document.getElementById('whiteLabelModal').classList.add('hidden');
+    }
+
+    function renderWhiteLabelList() {
+      document.getElementById('whiteLabelList').innerHTML = WHITE_LABELS.map(wl => {
+        const adminAcc = ACCOUNTS.find(a => a.id === wl.ownerId);
+        return `
+          <div class="p-3 rounded-2xl bg-black/50 border border-[#D4AF37]/25 flex items-center justify-between gap-2">
+            <div>
+              <div class="font-extrabold text-white flex items-center gap-1.5">
+                <span>${wl.brand}</span>
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-black ${wl.active ? 'bg-emerald-950 text-emerald-300' : 'bg-rose-950 text-rose-300'}">${wl.active ? 'LIVE' : 'PAUSED'}</span>
+              </div>
+              <div class="text-[11px] text-slate-400">Domain: ${wl.domain} • Admin: ${wl.ownerId}</div>
+              <div class="text-[11px] text-emerald-400 font-bold">Credit Bal: ₹${(adminAcc ? adminAcc.balance : 0).toLocaleString('en-IN')}</div>
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <button type="button" onclick="topupWhiteLabel('${wl.id}', 100000)" class="px-2.5 py-1 rounded-lg bg-emerald-900/80 text-emerald-200 font-extrabold text-[10px]">+₹1L Coins</button>
+              ${wl.id !== 'WL_MAIN' ? `<button type="button" onclick="toggleWhiteLabelStatus('${wl.id}')" class="px-2.5 py-1 rounded-lg bg-white/10 text-slate-200 font-bold text-[10px]">${wl.active ? 'Pause' : 'Enable'}</button>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function submitCreateWhiteLabel() {
+      if (!currentUser || currentUser.role !== 'SUPER_ADMIN') return;
+      const brand = document.getElementById('wlBrandInput').value.trim();
+      const domain = document.getElementById('wlDomainInput').value.trim().toLowerCase();
+      const adminId = document.getElementById('wlAdminIdInput').value.trim();
+      const adminPass = document.getElementById('wlAdminPassInput').value.trim();
+      const credit = Number(document.getElementById('wlCreditInput').value || 0);
+
+      if (!brand || !domain || !adminId || !adminPass) {
+        showToast('Please fill Brand, Domain, Admin ID, and Password.');
+        return;
+      }
+      if (WHITE_LABELS.some(w => w.domain === domain) || ACCOUNTS.some(a => a.id.toLowerCase() === adminId.toLowerCase())) {
+        showToast('Domain or Admin ID already exists.');
+        return;
+      }
+      if (currentUser.balance < credit) {
+        showToast('Insufficient Super Admin balance. Generate coins first.');
+        return;
+      }
+
+      currentUser.balance -= credit;
+      const newWlId = 'WL_' + Date.now();
+      WHITE_LABELS.push({
+        id: newWlId,
+        brand,
+        logoIcon: '👑',
+        logoImg: '',
+        domain,
+        ownerId: adminId,
+        royaltyPct: 15,
+        active: true
+      });
+      ACCOUNTS.push({
+        id: adminId,
+        pass: adminPass,
+        role: 'WHITE_LABEL',
+        tenantId: newWlId,
+        balance: credit,
+        active: true,
+        note: `${brand} White-Label Admin`,
+        parent: 'king'
+      });
+
+      document.getElementById('wlBrandInput').value = '';
+      document.getElementById('wlDomainInput').value = '';
+      document.getElementById('wlAdminIdInput').value = '';
+      document.getElementById('wlAdminPassInput').value = '';
+
+      updateHeaderBar();
+      renderWhiteLabelList();
+      showToast(`Launched White Label ${brand} (${domain})!`);
+    }
+
+    function topupWhiteLabel(wlId, amount) {
+      if (!currentUser || currentUser.role !== 'SUPER_ADMIN') return;
+      const wl = WHITE_LABELS.find(w => w.id === wlId);
+      const adminAcc = wl ? ACCOUNTS.find(a => a.id === wl.ownerId) : null;
+      if (!adminAcc) return;
+      if (currentUser.balance < amount) {
+        showToast('Insufficient Super Admin balance.');
+        return;
+      }
+      currentUser.balance -= amount;
+      adminAcc.balance += amount;
+      updateHeaderBar();
+      renderWhiteLabelList();
+      showToast(`Transferred ₹${amount.toLocaleString('en-IN')} to ${wl.brand}.`);
+    }
+
+    function toggleWhiteLabelStatus(wlId) {
+      const wl = WHITE_LABELS.find(w => w.id === wlId);
+      if (!wl || wl.id === 'WL_MAIN') return;
+      wl.active = !wl.active;
+      renderWhiteLabelList();
+      showToast(`${wl.brand} is now ${wl.active ? 'LIVE' : 'PAUSED'}.`);
+    }
+
+    // Super Admin Brand, Lobby Photos & Notice CMS Studio
+    function openCmsStudioModal() {
+      if (!currentUser || currentUser.role !== 'SUPER_ADMIN') return;
+      const tSel = document.getElementById('cmsTenantSelect');
+      tSel.innerHTML = WHITE_LABELS.map(w => `<option value="${w.id}">${w.brand} (${w.domain})</option>`).join('');
+      tSel.value = activeTenant.id;
+      loadCmsBrandFields();
+
+      document.getElementById('cmsNoticeActiveChk').checked = siteNotice.active;
+      document.getElementById('cmsNoticeTextInput').value = siteNotice.text;
+
+      const gSel = document.getElementById('cmsGameSelect');
+      gSel.innerHTML = GAMES.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+      loadCmsGameFields();
+
+      document.getElementById('cmsStudioModal').classList.remove('hidden');
+    }
+
+    function closeCmsStudioModal() {
+      document.getElementById('cmsStudioModal').classList.add('hidden');
+    }
+
+    function loadCmsBrandFields() {
+      const wlId = document.getElementById('cmsTenantSelect').value;
+      const wl = WHITE_LABELS.find(w => w.id === wlId) || WHITE_LABELS[0];
+      document.getElementById('cmsBrandNameInput').value = wl.brand;
+      document.getElementById('cmsBrandEmojiInput').value = wl.logoIcon || '♛';
+      pendingCmsLogoData = wl.logoImg || '';
+      document.getElementById('cmsBrandLogoFile').value = '';
+    }
+
+    function handleCmsLogoUpload(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        pendingCmsLogoData = reader.result;
+        showToast('Logo image loaded — click "Save Brand & Logo" to apply.');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function saveCmsBrandChanges() {
+      const wlId = document.getElementById('cmsTenantSelect').value;
+      const wl = WHITE_LABELS.find(w => w.id === wlId);
+      if (!wl) return;
+      const newName = document.getElementById('cmsBrandNameInput').value.trim();
+      const newIcon = document.getElementById('cmsBrandEmojiInput').value.trim();
+      if (newName) wl.brand = newName;
+      if (newIcon) wl.logoIcon = newIcon;
+      wl.logoImg = pendingCmsLogoData;
+      if (activeTenant.id === wl.id) {
+        applyTenantBranding(wl);
+      }
+      showToast(`Saved branding for ${wl.brand}!`);
+    }
+
+    function clearCmsBrandLogo() {
+      pendingCmsLogoData = '';
+      document.getElementById('cmsBrandLogoFile').value = '';
+      saveCmsBrandChanges();
+    }
+
+    function saveCmsNotice() {
+      siteNotice.active = document.getElementById('cmsNoticeActiveChk').checked;
+      siteNotice.text = document.getElementById('cmsNoticeTextInput').value.trim();
+      applyNoticeBannerUI();
+      showToast('Client notice banner updated!');
+    }
+
+    function loadCmsGameFields() {
+      const gId = document.getElementById('cmsGameSelect').value;
+      const game = GAMES.find(g => g.id === gId) || GAMES[0];
+      document.getElementById('cmsGameIconInput').value = game.icon;
+      document.getElementById('cmsGameBadgeInput').value = game.badge;
+      pendingCmsCoverData = game.coverImg || '';
+      document.getElementById('cmsGameCoverFile').value = '';
+    }
+
+    function handleCmsGameCoverUpload(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        pendingCmsCoverData = reader.result;
+        showToast('Cover photo loaded — click "Apply to Lobby Card" to save.');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function saveCmsGameAppearance() {
+      const gId = document.getElementById('cmsGameSelect').value;
+      const game = GAMES.find(g => g.id === gId);
+      if (!game) return;
+      const newIcon = document.getElementById('cmsGameIconInput').value.trim();
+      const newBadge = document.getElementById('cmsGameBadgeInput').value.trim();
+      if (newIcon) game.icon = newIcon;
+      if (newBadge) game.badge = newBadge;
+      game.coverImg = pendingCmsCoverData;
+      renderLobbyGrid();
+      showToast(`Updated lobby appearance for ${game.name}!`);
+    }
+
+    function resetCmsGameCover() {
+      pendingCmsCoverData = '';
+      document.getElementById('cmsGameCoverFile').value = '';
+      saveCmsGameAppearance();
+    }
+
+    // Account Creation Modal
+    function openAccountModal() {
+      document.getElementById('accountModal').classList.remove('hidden');
+    }
+
+    function closeAccountModal() {
+      document.getElementById('accountModal').classList.add('hidden');
+    }
+
+    function submitCreateAccount() {
+      const role = document.getElementById('newAccRole').value;
+      const id = document.getElementById('newAccId').value.trim();
+      const pass = document.getElementById('newAccPass').value.trim();
+      const bal = Number(document.getElementById('newAccBal').value || 0);
+
+      if (!id || !pass) {
+        showToast('Please enter User ID and Password.');
+        return;
+      }
+      if (ACCOUNTS.some(a => a.id.toLowerCase() === id.toLowerCase())) {
+        showToast('That User ID already exists.');
+        return;
+      }
+      if (currentUser && currentUser.balance < bal) {
+        showToast('Insufficient wallet balance for opening credit.');
+        return;
+      }
+      if (currentUser) {
+        currentUser.balance -= bal;
+        updateHeaderBar();
+      }
+      ACCOUNTS.push({
+        id,
+        pass,
+        role,
+        tenantId: currentUser ? currentUser.tenantId : 'WL_MAIN',
+        balance: bal,
+        active: true,
+        exposure: 0,
+        note: 'Created by ' + (currentUser ? currentUser.id : 'Admin'),
+        parent: currentUser ? currentUser.id : 'king'
+      });
+      closeAccountModal();
+      renderHierarchyClients();
+      showToast(`Created ${role} account: ${id}`);
+    }
+
+    // Statement Modal
+    function openStatementModal() {
+      const list = document.getElementById('statementList');
+      if (userStatements.length === 0) {
+        list.innerHTML = `<div class="text-center text-slate-400 py-8">No settled bets in this session yet.</div>`;
+      } else {
+        list.innerHTML = userStatements.map(s => `
+          <div class="p-3 rounded-xl bg-black/50 border border-[#D4AF37]/20 flex items-center justify-between">
+            <div>
+              <div class="font-bold text-white">${s.game} <span class="text-slate-400">#${s.round}</span></div>
+              <div class="text-[11px] text-slate-400">${s.time} • Stake: ₹${s.stake}</div>
+            </div>
+            <div class="font-black ${s.net >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+              ${s.net >= 0 ? '+' : ''}₹${s.net}
+            </div>
+          </div>
+        `).join('');
+      }
+      document.getElementById('statementModal').classList.remove('hidden');
+    }
+
+    function closeStatementModal() {
+      document.getElementById('statementModal').classList.add('hidden');
+    }
+
+    // Super Admin House Profit Modal
+    function openHouseProfitModal() {
+      document.getElementById('globalRatioSlider').value = houseConfig.globalRatio;
+      document.getElementById('globalRatioLabel').textContent = `${houseConfig.globalRatio}% House : ${100 - houseConfig.globalRatio}% Player`;
+      renderPerGameHouseControls();
+      document.getElementById('houseProfitModal').classList.remove('hidden');
+    }
+
+    function closeHouseProfitModal() {
+      document.getElementById('houseProfitModal').classList.add('hidden');
+    }
+
+    function updateGlobalHouseRatio(val) {
+      const num = Number(val);
+      houseConfig.globalRatio = num;
+      GAMES.forEach(g => { houseConfig.games[g.id].ratio = num; });
+      document.getElementById('globalRatioLabel').textContent = `${num}% House : ${100 - num}% Player`;
+      renderPerGameHouseControls();
+    }
+
+    function renderPerGameHouseControls() {
+      document.getElementById('perGameHouseList').innerHTML = GAMES.map(g => {
+        const cfg = houseConfig.games[g.id];
+        return `
+          <div class="p-3 rounded-xl bg-black/50 border border-[#D4AF37]/20 space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <div class="font-bold text-white">${g.icon} ${g.name}</div>
+                <div id="gameRatioLabel_${g.id}" class="text-[10px] font-bold text-[#D4AF37]">${cfg.ratio}% House : ${100 - cfg.ratio}% Player</div>
+              </div>
+              <button type="button" onclick="toggleGameFault('${g.id}')" class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold ${cfg.enabled ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/40' : 'bg-rose-950 text-rose-300 border border-rose-500/40'}">
+                ${cfg.enabled ? 'LIVE' : 'FAULT / PAUSED'}
+              </button>
+            </div>
+            <input type="range" min="0" max="100" value="${cfg.ratio}" oninput="updateSingleGameHouseRatio('${g.id}', this.value)" class="w-full accent-[#D4AF37]" />
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateSingleGameHouseRatio(gameId, val) {
+      const num = Number(val);
+      houseConfig.games[gameId].ratio = num;
+      const lbl = document.getElementById(`gameRatioLabel_${gameId}`);
+      if (lbl) lbl.textContent = `${num}% House : ${100 - num}% Player`;
+    }
+
+    function toggleGameFault(gameId) {
+      houseConfig.games[gameId].enabled = !houseConfig.games[gameId].enabled;
+      renderPerGameHouseControls();
+      renderLobbyGrid();
+    }
+
+    // Initialize Domain & Portal on Boot
+    detectDomainAndPortal();
+  </script>
+</body>
+</html>
