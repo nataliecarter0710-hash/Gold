@@ -41,3 +41,7 @@ This report distinguishes completed limited constraint probes from tests not run
 
 ## Repeatable test harness added
 A branch-only repeatable test specification/checklist has been added at `docs/virtual-bets-staging-repeatable-test-harness.md` (commit f3cad22f0071b84a0a554635aeb01cc673b796e1). It defines full round graph checks, invalid transitions, REVIEW-based result correction and append-only history, retry reuse/conflict semantics, concurrent duplicate-write tests, and RLS/grant tests across roles. It remains a test plan; no runtime tests were executed in this commit.
+
+
+## Database-free executable contract model added
+Added `tests/virtual-bets-staging-contract-tests.py` with standard-library unittest checks and `tests/README-virtual-bets-staging-contract-tests.md` describing execution and limitations. The script models contract behaviors only; it is not a real PostgreSQL, RLS, grants, or database-concurrency test. It has not yet been executed in this work session. Real database tests remain NOT RUN.
