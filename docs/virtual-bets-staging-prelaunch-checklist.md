@@ -19,9 +19,9 @@
 ## 3. Full RLS, idempotency, and concurrency verification
 - [ ] Test restricted-role and cross-tenant isolation across relevant tables, views, and endpoints.
 - [ ] Verify anonymous access denial and direct client write blocks where writes are restricted.
-- [ ] Test idempotency: retrying an identical payload/key should reuse the expected result; changed-payload reuse should be rejected as a conflict.
+- [ ] Test idempotency with controlled synthetic fixtures: retrying the same key and payload must reuse the original outcome (no duplicate record/action); reusing that key with a changed payload must return a conflict and leave the original unchanged.
 - [ ] Test invalid round transitions, duplicate submissions, and reconciliation/review behavior.
-- [ ] Perform broader multi-user, concurrency, and load checks beyond the initial isolated probes; record reproducible evidence and limitations.
+- [ ] Perform broader multi-user, concurrency, and load checks beyond the initial isolated probes (including overlapping requests, retry bursts, and restricted-role interactions); record reproducible evidence, metrics, and limitations.
 - [ ] Obtain independent security review; source inspection or UI checks alone do not prove database protections.
 
 ## 4. Release and compliance notices / scope protection
