@@ -181,3 +181,9 @@ This checkpoint is not a legal opinion, security certification, or production ap
 - Added a visually hidden polite live status announcement that reports the number of saved favorites after a favorite toggle.
 - Commit `c47d48e584599fe0d0cabf887cd4d569e4b0cc0a`.
 - Deployment pending.
+
+
+## Live-region announcement refinement (2026-11-27)
+- Favorite-count status now announces only when a favorite is changed, not during every search/filter redraw, to reduce unnecessary assistive-technology announcements.
+- Code commit: `cd47bd5190cefc55e2b637bac291cae37f95e197`.
+- Deployment pending verification.
