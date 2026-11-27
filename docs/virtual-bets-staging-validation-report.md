@@ -1,36 +1,29 @@
-# Disposable PostgreSQL validation report — blocked at runtime
+# Disposable PostgreSQL validation report — static review and documentation reconciliation
 
-Date: 2026-11-28
-Branch: feat/virtual-bets-staging
-Source reviewed: docs/simulation-persistence-architecture-plan.md on plan/simulation-persistence-architecture
+Date: 2026-11-28. Branch: feat/virtual-bets-staging.
 
-## Scope and isolation
-This report is a static review only. No Goldbet9-Staging database was connected. No Render service was changed. No edits were made to main or feat/sim-api-staging. public.transfer_virtual_coins was not called.
+## Isolation
+No Goldbet9-Staging connection or mutation; no Render changes; main and feat/sim-api-staging untouched; public.transfer_virtual_coins not called.
 
-## Runtime validation status
-A disposable PostgreSQL server/client was not available in the execution environment (psql, postgres, docker and podman were not found). No separate disposable database was provisioned. Therefore actual PostgreSQL DDL execution, FK enforcement, delete behavior, CHECK/UNIQUE enforcement and concurrency tests are **not verified**.
+## Runtime status
+No disposable PostgreSQL server/client available (psql, postgres, docker and podman absent); none provisioned. Therefore SQL execution, constraints, FK/delete behavior, status transitions, result immutability, concurrency/idempotency and RLS execution remain NOT VERIFIED.
 
-## Static review findings
-- The cited architecture plan is a specification, not executable SQL. Its rounds and bets definitions are descriptive and require a migration draft.
-- Existing audited platform_users and coin_ledger use UUID identifiers; platform_users.virtual_balance and coin_ledger.amount use NUMERIC(18,2), as recorded in the prior audit.
-- A draft in docs/virtual-bets-staging-schema-review.md exists on this branch, but it is not a faithful translation of the plan: it uses a different bet-status vocabulary (RECORDED, WON_SIMULATION, etc. rather than PENDING/ACCEPTED_SIMULATION/...), and omits the plan's payout_rule_snapshot and simulated outcome/payout fields. This needs reconciliation before a test.
-- rounds result checks require result data for RESULT_RECORDED, REVIEW and COMPLETE; status progression is not enforced as a transition graph. The draft does not enforce result immutability/version correction rules.
-- Foreign keys use ON DELETE RESTRICT in the draft; actual behavior has not been tested.
-- stake > 0 and idempotency uniqueness are declared in the draft, but enforcement and concurrent behavior remain unverified until PostgreSQL tests.
-- The draft uses unique(platform_user_id, idempotency_key); whether that is the correct scope is a product/security decision requiring review.
-- A unique ledger_entry_id reference is included; reconciliation with existing ledger entries and their key scope remains pending.
+## Reconciled documentation rules
+- Bet statuses unified: PENDING, ACCEPTED_SIMULATION, CANCELLED, RESULT_RECORDED, WON_SIMULATION, LOST_SIMULATION, VOID_SIMULATION.
+- Snapshots: selection_snapshot, payout_rule_snapshot, result_snapshot, plus explicitly non-operational simulation payout/return fields.
+- Idempotency: UNIQUE(platform_user_id, idempotency_key); same request retry should reuse record, changed payload should conflict; untested.
+- Round transition graph documented; COMPLETE and CANCELLED terminal. Results immutable per version; corrections require REVIEW, strictly increasing version and append-only audit trail.
+- RLS expectations are default-deny and concrete: own-bet SELECT, separately scoped round visibility, direct client writes denied by default, no direct UPDATE/DELETE, tightly scoped elevated access, command-specific policies/grants and role-based testing. RLS enablement alone is insufficient.
 
-## Test checklist — not run
-- [ ] Execute migration in disposable PostgreSQL
-- [ ] Confirm both tables create successfully
-- [ ] Confirm FK failures for missing round/user/ledger references
-- [ ] Confirm ON DELETE RESTRICT for referenced round/user/ledger rows
-- [ ] Validate status constraints and lifecycle consistency constraints
-- [ ] Reject zero, negative and invalid NUMERIC(18,2) stakes
-- [ ] Validate uniqueness: round identifiers, user idempotency key, ledger_entry_id
-- [ ] Duplicate and concurrent insert test against PostgreSQL
-- [ ] Verify index and RLS definitions
-- [ ] Test rollback on disposable database
+## Checklist — NOT RUN
+- [ ] disposable PG migration/table/index creation
+- [ ] FK missing references and ON DELETE RESTRICT
+- [ ] positive stake and NUMERIC checks
+- [ ] statuses and transition graph enforcement
+- [ ] result immutability/version correction audit
+- [ ] idempotency uniqueness/retry/payload conflict
+- [ ] concurrent duplicates
+- [ ] RLS/grants/policies across roles
+- [ ] rollback
 
-## Next safe action
-Reconcile the SQL draft with the architecture specification, then run this checklist only on a separately provisioned disposable PostgreSQL instance. This report does not provide or implement bet debit, payout, or settlement execution.
+This was documentation reconciliation only, not runtime testing or operational wager/settlement implementation.
