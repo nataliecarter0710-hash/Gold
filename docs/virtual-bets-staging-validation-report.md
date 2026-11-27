@@ -45,3 +45,7 @@ A branch-only repeatable test specification/checklist has been added at `docs/vi
 
 ## Database-free executable contract model added
 Added `tests/virtual-bets-staging-contract-tests.py` with standard-library unittest checks and `tests/README-virtual-bets-staging-contract-tests.md` describing execution and limitations. The script models contract behaviors only; it is not a real PostgreSQL, RLS, grants, or database-concurrency test. It has not yet been executed in this work session. Real database tests remain NOT RUN.
+
+
+## Real PostgreSQL integration probes (new isolated project)
+A separate new disposable project `goldbet9-rounds-bets-integration-test` (ref `sngrsnvwbucsljwtykpa`, $0/month) was provisioned for limited real PostgreSQL tests. See `docs/virtual-bets-staging-postgres-integration-report.md` for PASS/FAIL and limitations. Schema fixtures and SQL assertions are stored under `tests/sql/`. The test schema was dropped and this project paused. RLS isolation was not proven; retry reuse/conflict semantics remain incomplete.
