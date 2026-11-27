@@ -31,10 +31,11 @@ Protected assets (must remain untouched): `Index.htm`, `Goldbet9-Staging` (`qoas
 - Folded/portrait: catalog cards appear stacked vertically; simulation-only badge, simulation notice, lobby panel and catalog are visible. No obvious horizontal overflow or clipping in the screenshot's captured area.
 - Unfolded/wider: catalog is arranged in three columns; notice and lobby panel span the wider content area. No obvious horizontal overflow or clipping in the captured area.
 - Overflow/clipping/wrapping: no obvious issue visible in the supplied screenshots, but this is limited to the captured viewport and not a full scroll test. Catalog labels/tags appear contained in their cards in the visible area.
-- Lower history area: screenshot shows the status message “Synthetic feed loaded and validated.”, Search records field, Bet status selector (default “All bet statuses”), Round state selector (default “All round states”), and “28 of 28 sample records shown.” These controls are visible, but were not interacted with.
-- First visible history card: Teen Patti (sample) • TP-S-1042, with Selection snapshot “Player A (fictional)”, Payout-rule snapshot “Illustrative rule: sample payout 2×”, and Result snapshot “Player A • sample result”. Its badge reads “WON_SIMULATION / COMPLETE”.
-- Second visible card header: Dragon Tiger (sample) • DT-S-2088 with badge “PENDING / REVIEW”; the card is partly cut off by the bottom of the screenshot, so its snapshots and REVIEW history contents are not recorded.
-- This screenshot visibly presents combined status labels in the badges and separate filter headings for Bet status and Round state; actual filtering and the semantic distinction beyond the labels have not been tested.
+- Lower history area: screenshot shows “Synthetic feed loaded and validated.”, Search records field, Bet status selector (default “All bet statuses”), Round state selector (default “All round states”), and “28 of 28 sample records shown.” Controls were visible but not interacted with.
+- First visible history card: Teen Patti (sample) • TP-S-1042; selection “Player A (fictional)”; payout rule “Illustrative rule: sample payout 2×”; result “Player A • sample result”; badge “WON_SIMULATION / COMPLETE”.
+- Later screenshots show Dragon Tiger (sample) • DT-S-2088 with selection “Dragon (fictional)”, rule “Illustrative rule: sample payout 1.95×”, result “Result withheld during review”, badge “PENDING / REVIEW”, and REVIEW history entries v1 (19:40, initial sample result flagged for review) and v2 (19:44, record retained; no simulated settlement action).
+- A Seven Up Down (sample) card shows selection “Up (fictional)”, rule “Snapshot v1: illustrative payout 1.9×”, result “Result held for review • sample only”, badge “PENDING / REVIEW”, and three REVIEW history entries (v1 09:30 metadata mismatch; v2 09:34 display-label correction confirmed; v3 09:38 audit-trail example finalized). The text explicitly says record remains pending and round remains REVIEW.
+- The combined badge presentation visibly pairs bet-status labels with round-state labels, including “PENDING / REVIEW”; filters have separate headings. Actual filter interaction remains untested.
 - Notice: simulation-only badge and simulation/fictional-data, age, regional/legal and responsible-use text are visible in the captured screenshots. No broader contrast/readability assessment recorded.
 
 ## 1. Phone and Foldable Visual Verification
@@ -43,7 +44,8 @@ Protected assets (must remain untouched): `Index.htm`, `Goldbet9-Staging` (`qoas
 - [x] Lower-section controls and initial counter recorded from screenshot: Search records, Bet status (All bet statuses), Round state (All round states), and 28 of 28 sample records shown. Interactions/change behavior remain untested.
 - [x] First history-card snapshots recorded from screenshot: Teen Patti (sample), TP-S-1042; selection “Player A (fictional)”; payout rule “Illustrative rule: sample payout 2×”; result “Player A • sample result”; badge “WON_SIMULATION / COMPLETE”. Second card header shows Dragon Tiger (sample), DT-S-2088, badge “PENDING / REVIEW”; lower details/history are cut off and remain unverified.
 - [x] Screenshot observation: simulation-only label and simulation/fictional-data, age, regional/legal and responsible-use notice are visible in the captured lobby view. Contrast/readability beyond the captured screens is not independently assessed.
-- [ ] REVIEW version entries, filter interactions, counter updates after filtering, and snapshot stacking beyond the visible first card remain unverified.
+- [x] User screenshots show REVIEW history entries for Dragon Tiger and Seven Up Down, with REVIEW presented as round state alongside PENDING bet status. This is a visual observation only.
+- [ ] Search/filter interaction and counter updates after filtering remain unverified.
 - [ ] If any issue is found, fix only `simulation-lobby-history.html` when explicitly requested; keep `Index.htm` untouched.
 
 ## 2. Read-Only / Simulation Backend and API Wiring
@@ -89,3 +91,16 @@ This is a non-blocking planning note, not an implementation or security verifica
 4. **Future test plan:** synthetic fixtures for User/Admin self-change, permitted upline-to-downline reset, denied peer/other-tenant/out-of-branch attempts, role changes, rate limiting, and audit logging. No such tests were run as part of this defect recording.
 
 Status: logged for a future implementation pass; does not block Phase A synthetic feed review. No Render, auth, database, live account, or production resource was changed.
+
+
+## Additional lower-history Fold 8 observations (user screenshots; 28 Nov 2026)
+
+- [x] Dragon Tiger card details visible: selection “Dragon (fictional)”; payout rule “Illustrative rule: sample payout 1.95×”; result “Result withheld during review”; badge “PENDING / REVIEW”.
+- [x] Dragon Tiger REVIEW history visible: v1 • 19:40 • Initial sample result flagged for review; v2 • 19:44 • Record retained; no simulated settlement action.
+- [x] Seven Up Down card details visible: selection “Up (fictional)”; rule “Snapshot v1: illustrative payout 1.9×”; result “Result held for review • sample only”; badge “PENDING / REVIEW”.
+- [x] Seven Up Down REVIEW history visible: v1 • 09:30 • sample result metadata did not match displayed record; v2 • 09:34 • second-pass review confirmed display-label correction; v3 • 09:38 • audit trail example finalized; record remains pending and round remains REVIEW.
+- [x] Other visible cards in screenshots demonstrate snapshot layout: Muflis Teen Patti (selection “Muflis Player B (fictional)”, payout 2×, “Awaiting sample outcome”, ACCEPTED_SIMULATION / OPEN); Football Studio (selection “Home (fictional)”, payout 1.95×, result area partly below viewport); Bollywood Casino (selection “Film title slot 3 (fictional)”, payout 3×, “Slot 3 • sample result”); 32 Cards A (selection “High-card group (fictional)”, payout 2×, “Alternate group • sample result”); Andar Bahar 2 (selection “Bahar side (fictional)”, payout 1.9×, cancelled-before-result sample); Andar Bahar (selection “Andar side (fictional)”, illustrative 1.9×; “Not yet recorded • round remains open”); Poker One Day (pair of fictional cards; illustrative payout schedule 4×; awaiting sample round opening); Lucky 7 (selection “Seven (fictional)”, payout 5×; result pending after sample betting window closed); Sic Bo (selection “Small (fictional)”, payout 1×; round cancelled); Baccarat (selection “Player (fictional)”, payout 1×; “Player • sample result”); Race 20 (selection “Runner 2 (fictional)”, payout 3×; cancelled sample); Roulette (selection “Red (fictional)”, payout 2×; result “Black • sample result”).
+- [x] Screenshots show the history cards' snapshot blocks and REVIEW history text fitting within card boundaries in the captured views. No obvious horizontal side-scrolling or clipping of card content was observed in those captures; screenshots are not a full-page overflow audit.
+- [x] The page status text “Synthetic feed loaded and validated.” and counter “28 of 28 sample records shown” were observed. Search and filters were shown at defaults (“All bet statuses” and “All round states”), but were not operated; behavior and counter changes remain unverified.
+- [x] Some screenshots include the Android volume overlay over the right side of filter controls; this is a phone OS overlay, not evidence of page clipping.
+- [ ] Full-page scroll/overflow audit, interaction tests for search and both filters, and any counter changes remain unverified.
