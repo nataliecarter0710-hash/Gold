@@ -10,14 +10,14 @@ Protected assets (must remain untouched): `Index.htm`, `Goldbet9-Staging` (`qoas
 - [x] All 7 defined bet statuses and all 7 defined round states are represented; `REVIEW` is a round state, not a bet status.
 - [x] Snapshot fields (selection, rule, result) are present for each record; review histories are arrays of strings. Four records have review histories, with 10 notes total.
 - [x] Feed loader source audit: one fetch to the branch-specific raw GitHub synthetic JSON feed; no XHR or database/API integration identified.
-- [x] Bug fix: loader previously silently fell back without telling the viewer and only checked the mode marker plus records array. It now displays an accessible status message for loading, validated feed success, and fallback, and validates required fields, allowed status/state values, and review-array contents before accepting the feed.
-- [x] Source-level fallback paths reviewed: non-OK/offline/JSON parse/validation errors enter the embedded-sample fallback. Scenario behavior was reasoned/simulated from the loader code, not exercised in a browser.
+- [x] Bug fix: loader previously silently fell back without telling the viewer and only checked the mode marker plus records array. It now displays an accessible status message for loading, validated feed success, and fallback, and validates non-empty records, required fields, allowed status/state values, and review-array contents before accepting the feed.
+- [x] Source-level fallback paths reviewed for feed success, non-OK/offline, JSON parse error, validation error, and empty records; the latter was found to be accepted and fixed to reject empty feed records. Scenario logic was checked in a small non-browser simulation against valid, non-synthetic, malformed, and empty fixtures. This is not browser/runtime testing.
 - [x] Audit found no reference to `public.transfer_virtual_coins`, Supabase, XHR, or live database endpoints in the UI/feed. UI-only `innerHTML` rendering uses the escaping helper for record values. No real wagering or balance mutation action is present.
 - [ ] Browser/runtime tests of feed success, offline failure, invalid/non-synthetic response, and visible status/fallback remain pending. No physical-device or browser test is claimed.
 
 ## Status summary (28 Nov 2026)
 
-- **Synthetic feed and source wiring:** source-level review confirms the UI uses a synthetic feed with an embedded fallback and validates the feed's synthetic mode/record shape. The feed content was fetched and inspected. The fallback behavior for offline, unreachable, or invalid-feed cases is not yet runtime-tested in this pass.
+- **Phase A feed/UI:** static source review and small fixture simulation checked the valid-feed, offline/non-OK, invalid/non-synthetic, malformed, and empty-feed paths. A fix rejects empty feeds so they fall back. Browser/runtime behavior remains untested.
 - **Historical isolated security probes:** a report documents anon SELECT denial and authenticated direct INSERT/UPDATE/DELETE denial, plus simultaneous same-key/same-payload reuse and changed-payload conflict rejection. These probes used a separate disposable project that was subsequently dropped/paused. This report is historical evidence, not a fresh test, and no throwaway project is to be resumed or modified now.
 - **Not verified yet:** cross-user read isolation; independent anon write-denial probes; per-user key isolation; broader multi-user and repeated/overlapping concurrency testing; and production security/grants or operational paths.
 - **Phone spot-check:** user reports having performed folded and unfolded phone checks, but detailed findings have not been supplied here; this checklist does not claim specific visual outcomes.
@@ -32,7 +32,7 @@ Protected assets (must remain untouched): `Index.htm`, `Goldbet9-Staging` (`qoas
 
 ## 2. Read-Only / Simulation Backend and API Wiring
 - [x] Source review: data source is the synthetic feed (`simulation-feed.json`) or embedded synthetic fallback; feed has a synthetic-mode marker and records array.
-- [ ] Runtime-test fallback to embedded synthetic sample records when feed is offline, unreachable, or fails synthetic validation.
+- [x] Source path and simulated fixtures reviewed for fallback conditions; browser/runtime confirmation remains pending.
 - [x] Source-scope review confirms this prototype is separate from live balance/ledger operations; `public.transfer_virtual_coins` has not been called or exposed in this work.
 - [x] Keep `Goldbet9-Staging`, Render services, `main`, and `feat/sim-api-staging` disconnected.
 
