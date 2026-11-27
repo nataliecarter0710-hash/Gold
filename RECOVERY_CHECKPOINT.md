@@ -32,3 +32,8 @@ This checkpoint is not a legal opinion, security certification, or production ap
 - Dialog keyboard focus is contained while open.
 - Escape key closes dialog only while it is open.
 - Reduced-motion preference support added.
+
+## Latest deployment status
+- Render deployment for commit `45efc87a4ff3a117a35fc541c1047f5688c2e3ff` is LIVE.
+- Checkpoint documentation commit `982f7ec9d1f94d638e539ad1efb2efe80d2f3238` is LIVE.
+- Supabase health advisor returned no health lint findings at the time of review. Security advisor's four informational notices remain as previously documented.
