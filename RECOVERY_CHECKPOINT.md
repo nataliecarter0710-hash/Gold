@@ -138,3 +138,9 @@ This checkpoint is not a legal opinion, security certification, or production ap
 - Nov 27: Further varied tile artwork badge backgrounds, symbol sizing and decorative ring rotations. Commit b3d004d8a83d19f17eaf49dee8e840e76997cf07. Deployment pending at checkpoint write.
 
 - Preview-modal status text clarified on Nov 27 to explicitly state visual preview only, category context, and that gameplay/wagering/settlement are unavailable. Commit 1f86de4e9e9fe3f3248da78a883778cd6f0044b2.
+
+
+## Modal interaction refinement (2026-11-27)
+- Opening the preview dialog now locks background page scrolling; closing the dialog restores normal scrolling.
+- Commit `399b4f4a71e8f5939ae1ead65afe1cc792ba0459`.
+- Deployment verification pending.
