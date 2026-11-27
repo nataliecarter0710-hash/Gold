@@ -26,3 +26,9 @@ This checkpoint is not a legal opinion, security certification, or production ap
 - Favorites persist locally in browser storage; search has an accessible label.
 - Footer underage notice remains present.
 - Render deployment for latest preview clarification is live.
+
+
+## Accessibility follow-up (2026-11-27)
+- Dialog keyboard focus is contained while open.
+- Escape key closes dialog only while it is open.
+- Reduced-motion preference support added.
