@@ -77,3 +77,8 @@ This checkpoint is not a legal opinion, security certification, or production ap
 ## Semantic game preview controls (2026-11-27)
 - Replaced clickable/group card containers with a dedicated native preview button and a separate favorite button, avoiding nested controls and making the preview action semantically keyboard-accessible.
 - Commit: aad34feea46d6aca1d67d5408d4e43c8891fb2b8; deployment verification pending.
+
+
+## Focus indicator visibility refinement (2026-11-27)
+- Preview button keyboard focus indicator changed to an inset outline/shadow to avoid clipping by the card's overflow boundary.
+- Commit: 82a2c7eb4f099bed3e0ac02a81fc2d5f76a8f42b; deployment pending verification.
