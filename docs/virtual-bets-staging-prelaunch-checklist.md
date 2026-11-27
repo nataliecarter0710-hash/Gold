@@ -10,14 +10,17 @@ Protected assets (must remain untouched): `Index.htm`, `Goldbet9-Staging` (`qoas
 - [x] All 7 defined bet statuses and all 7 defined round states are represented; `REVIEW` is a round state, not a bet status.
 - [x] Snapshot fields (selection, rule, result) are present for each record; review histories are arrays of strings. Four records have review histories, with 10 notes total.
 - [x] Feed loader source audit: one fetch to the branch-specific raw GitHub synthetic JSON feed; no XHR or database/API integration identified.
-- [x] Bug fix: loader previously silently fell back without telling the viewer and only checked the mode marker plus records array. It now displays an accessible status message for loading, validated feed success, and fallback, and validates non-empty records, required fields, allowed status/state values, and review-array contents before accepting the feed.
-- [x] Source-level fallback paths reviewed for feed success, non-OK/offline, JSON parse error, validation error, and empty records; the latter was found to be accepted and fixed to reject empty feed records. Scenario logic was checked in a small non-browser simulation against valid, non-synthetic, malformed, and empty fixtures. This is not browser/runtime testing.
+- [x] Bug fix: loader displays accessible status messages for loading, validated-feed success, and fallback; it validates non-empty records, required fields, allowed status/state values, and review-array contents.
+- [x] Source-level fallback paths reviewed for feed success, non-OK/offline, JSON parse error, validation error, and empty records. Scenario logic was checked in a small non-browser simulation. This is not browser/runtime testing.
 - [x] Audit found no reference to `public.transfer_virtual_coins`, Supabase, XHR, or live database endpoints in the UI/feed. UI-only `innerHTML` rendering uses the escaping helper for record values. No real wagering or balance mutation action is present.
-- [ ] Browser/runtime tests of feed success, offline failure, invalid/non-synthetic response, and visible status/fallback remain pending. No physical-device or browser test is claimed.
+- [ ] Browser/runtime tests of feed success, offline failure, invalid/non-synthetic response, and visible status/fallback remain pending. **Attempted in this work session but not run:** a Chromium executable is present, but the browser automation/source staging could not be completed; network retrieval of the repository's raw source failed. No browser observations are claimed.
+- [ ] Search, Bet-status filter, Round-state filter, counter, snapshot display, REVIEW history, and notice visibility are not browser-verified in this pass.
 
 ## Status summary (28 Nov 2026)
 
-- **Phase A feed/UI:** static source review and small fixture simulation checked the valid-feed, offline/non-OK, invalid/non-synthetic, malformed, and empty-feed paths. A fix rejects empty feeds so they fall back. Browser/runtime behavior remains untested.
+- **Phase A feed/UI:** static source review and small fixture simulation checked valid-feed, offline/non-OK, invalid/non-synthetic, malformed, and empty-feed paths. Browser runtime remains unverified.
+- **Browser test attempt:** no actual browser-level assertions or visual observations were completed. The requested mocked-response scenarios (valid synthetic feed, offline/failure, invalid/non-synthetic, and empty records) remain pending. No browser results should be inferred from source inspection.
+- **Physical Android:** folded/unfolded phone verification is separate and not performed as part of this browser test attempt; do not treat desktop/browser availability as phone verification.
 - **Historical isolated security probes:** a report documents anon SELECT denial and authenticated direct INSERT/UPDATE/DELETE denial, plus simultaneous same-key/same-payload reuse and changed-payload conflict rejection. These probes used a separate disposable project that was subsequently dropped/paused. This report is historical evidence, not a fresh test, and no throwaway project is to be resumed or modified now.
 - **Not verified yet:** cross-user read isolation; independent anon write-denial probes; per-user key isolation; broader multi-user and repeated/overlapping concurrency testing; and production security/grants or operational paths.
 - **Phone spot-check:** user reports having performed folded and unfolded phone checks, but detailed findings have not been supplied here; this checklist does not claim specific visual outcomes.
@@ -59,7 +62,6 @@ Protected assets (must remain untouched): `Index.htm`, `Goldbet9-Staging` (`qoas
 - [ ] Record/confirm clear simulation labels on lobby and history screens.
 - [ ] Record/confirm age, regional, and responsible-use notices are present and legible.
 - [ ] Verify protected assets remain untouched until an explicit promotion step is approved.
-
 
 ## Non-blocking UI/account-flow defect log (28 Nov 2026)
 
