@@ -1,182 +1,130 @@
 import { supabaseAdmin } from '../db/supabaseAdmin.js';
+import { DB_SCHEMA } from '../db/schemaMapping.js';
 
 /**
- * SCHEMA CONTRACT TO VERIFY BEFORE ANY LIVE WRITE:
+ * Requires the mappings and constraints in schemaMapping.js to be checked against
+ * Goldbet9-Staging first. All amounts are integer virtual coins. No currency,
+ * payment, deposit, withdrawal, or public signup behavior exists here.
  *
- * The exact Goldbet9-Staging column definitions have not been supplied. These are
- * proposed mappings, not claims about the deployed schema. Compare them with
- * information_schema using `npm run schema:check` and adjust these mappings and
- * this service before enabling write traffic. Never run migrations blindly.
- *
- * game_sessions: id, tenant_id, user_id, game_id, status, stake_amount
- * virtual_coin_ledger: id, tenant_id, user_id, round_id, amount, entry_type,
- *   idempotency_key (unique), created_at
- * round_settlements: id, round_id, user_id, payout_amount, created_at;
- *   unique(round_id, user_id)
- *
- * Keep values in virtual coins (integer units), not currency. The known
- * public.transfer_virtual_coins RPC is intentionally not called by this service.
+ * Required database uniqueness: virtual_coin_ledger(idempotency_key) and
+ * round_settlements(round_id,user_id). REST requests below are not one transaction;
+ * this implementation is retry-safe for expected partial failures, but not atomic.
+ * A reviewed transactional RPC would be required for strict all-or-nothing behavior.
+ * public.transfer_virtual_coins is deliberately never called by this service.
  */
-export const DB_SCHEMA = Object.freeze({
-  rounds: {
-    table: 'game_sessions',
-    id: 'id', tenantId: 'tenant_id', userId: 'user_id', gameId: 'game_id',
-    status: 'status', stake: 'stake_amount',
-    openStatus: 'in_progress', settledStatus: 'settled',
-  },
-  ledger: {
-    table: 'virtual_coin_ledger',
-    id: 'id', tenantId: 'tenant_id', userId: 'user_id', roundId: 'round_id',
-    amount: 'amount', type: 'entry_type', idempotencyKey: 'idempotency_key',
-    createdAt: 'created_at',
-  },
-  settlements: {
-    table: 'round_settlements',
-    id: 'id', roundId: 'round_id', userId: 'user_id', payout: 'payout_amount',
-    createdAt: 'created_at',
-  },
-});
-
+export { DB_SCHEMA };
+const { rounds: R, ledger: L, settlements: S } = DB_SCHEMA;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const invalid = (message) => Object.assign(new TypeError(message), { statusCode: 400 });
 const requireUuid = (value, label) => {
-  if (typeof value !== 'string' || !UUID.test(value)) throw new TypeError(`${label} must be a UUID.`);
-  return value;
+  if (typeof value !== 'string' || !UUID.test(value)) throw invalid(`${label} must be a UUID.`);
 };
 const requireAmount = (value, label, { allowZero = true } = {}) => {
-  if (!Number.isSafeInteger(value) || value < (allowZero ? 0 : 1)) {
-    throw new TypeError(`${label} must be a ${allowZero ? 'non-negative' : 'positive'} safe integer in virtual coins.`);
-  }
-  return value;
+  if (!Number.isSafeInteger(value) || value < (allowZero ? 0 : 1)) throw invalid(`${label} must be a ${allowZero ? 'non-negative' : 'positive'} safe integer in virtual coins.`);
 };
 const throwDb = (error, operation) => {
-  if (error) {
-    const wrapped = new Error(`Database operation failed: ${operation}`);
-    wrapped.cause = error;
-    wrapped.code = error.code;
-    throw wrapped;
-  }
+  if (!error) return;
+  const wrapped = new Error(`Database operation failed: ${operation}`);
+  wrapped.cause = error;
+  wrapped.code = error.code;
+  throw wrapped;
 };
-const insertReturning = async (table, payload, operation) => {
-  const { data, error } = await supabaseAdmin.from(table).insert(payload).select('*').single();
-  throwDb(error, operation);
+const loadRound = async (roundId) => {
+  const { data, error } = await supabaseAdmin.from(R.table).select('*').eq(R.id, roundId).maybeSingle();
+  throwDb(error, 'load round');
+  if (!data) { const e = new Error('Round not found.'); e.statusCode = 404; throw e; }
   return data;
 };
+const assertRoundOwner = (round, { tenantId, userId }) => {
+  if (round[R.tenantId] !== tenantId || round[R.userId] !== userId) {
+    const e = new Error('Round does not belong to the supplied tenant and user.'); e.statusCode = 409; throw e;
+  }
+};
+const setRoundSettled = async (roundId) => {
+  const { error } = await supabaseAdmin.from(R.table).update({ [R.status]: R.settledStatus }).eq(R.id, roundId);
+  throwDb(error, 'mark round settled');
+};
 
-/** Create a game session. Does not debit stake; record that separately as an entry. */
 export async function createRound({ tenantId, userId, gameId, stakeAmount = 0 }) {
-  requireUuid(tenantId, 'tenantId');
-  requireUuid(userId, 'userId');
-  requireUuid(gameId, 'gameId');
+  requireUuid(tenantId, 'tenantId'); requireUuid(userId, 'userId'); requireUuid(gameId, 'gameId');
   requireAmount(stakeAmount, 'stakeAmount');
-  const c = DB_SCHEMA.rounds;
-  return insertReturning(c.table, {
-    [c.tenantId]: tenantId,
-    [c.userId]: userId,
-    [c.gameId]: gameId,
-    [c.status]: c.openStatus,
-    [c.stake]: stakeAmount,
-  }, 'create round');
+  const { data, error } = await supabaseAdmin.from(R.table).insert({
+    [R.tenantId]: tenantId, [R.userId]: userId, [R.gameId]: gameId,
+    [R.status]: R.openStatus, [R.stake]: stakeAmount,
+  }).select('*').single();
+  throwDb(error, 'create round');
+  return data;
 }
 
 /**
- * Record a virtual coin ledger row exactly once per caller-supplied key.
- * On PostgreSQL unique violation (23505), read and return the existing row.
- * Ensure a UNIQUE constraint/index exists on virtual_coin_ledger.idempotency_key.
+ * Insert one ledger event per idempotency key. A 23505 is treated as a retry only
+ * when the same key can be read back and its entire payload matches; unrelated
+ * unique violations are not hidden.
  */
 export async function recordCoinLedgerEntry({ tenantId, userId, roundId, amount, entryType, idempotencyKey }) {
-  requireUuid(tenantId, 'tenantId');
-  requireUuid(userId, 'userId');
-  requireUuid(roundId, 'roundId');
-  if (!Number.isSafeInteger(amount) || amount === 0) throw new TypeError('amount must be a non-zero safe integer in virtual coins.');
-  if (typeof entryType !== 'string' || !/^[a-z][a-z0-9_]{1,39}$/.test(entryType)) throw new TypeError('entryType must be 2-40 lowercase letters, digits, or underscores.');
-  if (typeof idempotencyKey !== 'string' || idempotencyKey.length < 8 || idempotencyKey.length > 128) throw new TypeError('idempotencyKey must be 8-128 characters.');
-  const c = DB_SCHEMA.ledger;
+  requireUuid(tenantId, 'tenantId'); requireUuid(userId, 'userId'); requireUuid(roundId, 'roundId');
+  if (!Number.isSafeInteger(amount) || amount === 0) throw invalid('amount must be a non-zero safe integer in virtual coins.');
+  if (typeof entryType !== 'string' || !/^[a-z][a-z0-9_]{1,39}$/.test(entryType)) throw invalid('entryType must be 2-40 lowercase letters, digits, or underscores.');
+  if (typeof idempotencyKey !== 'string' || idempotencyKey.length < 8 || idempotencyKey.length > 128) throw invalid('idempotencyKey must be 8-128 characters.');
+
+  const round = await loadRound(roundId);
+  assertRoundOwner(round, { tenantId, userId });
+  if (round[R.status] === R.settledStatus) { const e = new Error('Cannot add a ledger entry to a settled round.'); e.statusCode = 409; throw e; }
+
   const payload = {
-    [c.tenantId]: tenantId,
-    [c.userId]: userId,
-    [c.roundId]: roundId,
-    [c.amount]: amount,
-    [c.type]: entryType,
-    [c.idempotencyKey]: idempotencyKey,
+    [L.tenantId]: tenantId, [L.userId]: userId, [L.roundId]: roundId,
+    [L.amount]: amount, [L.type]: entryType, [L.idempotencyKey]: idempotencyKey,
   };
-  const { data, error } = await supabaseAdmin.from(c.table).insert(payload).select('*').single();
+  const { data, error } = await supabaseAdmin.from(L.table).insert(payload).select('*').single();
   if (!error) return { entry: data, deduplicated: false };
   if (error.code !== '23505') throwDb(error, 'record virtual coin ledger entry');
 
-  const { data: existing, error: readError } = await supabaseAdmin
-    .from(c.table).select('*').eq(c.idempotencyKey, idempotencyKey).maybeSingle();
+  const { data: existing, error: readError } = await supabaseAdmin.from(L.table)
+    .select('*').eq(L.idempotencyKey, idempotencyKey).maybeSingle();
   throwDb(readError, 'read duplicate virtual coin ledger entry');
-  if (!existing) throw new Error('Idempotency conflict was reported, but the existing ledger row could not be found.');
-  if (existing[c.tenantId] !== tenantId || existing[c.userId] !== userId || existing[c.roundId] !== roundId || existing[c.amount] !== amount || existing[c.type] !== entryType) {
-    const conflict = new Error('Idempotency key is already associated with a different ledger payload.');
-    conflict.statusCode = 409;
-    throw conflict;
-  }
+  if (!existing) throwDb(error, 'ledger unique conflict without matching idempotency row');
+  const matches = existing[L.tenantId] === tenantId && existing[L.userId] === userId &&
+    existing[L.roundId] === roundId && Number(existing[L.amount]) === amount && existing[L.type] === entryType;
+  if (!matches) { const e = new Error('Idempotency key is already associated with a different ledger payload.'); e.statusCode = 409; throw e; }
   return { entry: existing, deduplicated: true };
 }
 
-/**
- * Insert payout ledger entry first (with deterministic idempotency key), then the
- * settlement row, then mark the round settled. This ordering allows retry after
- * partial failure without duplicating payout. Required DB constraints:
- * unique virtual_coin_ledger.idempotency_key and unique(round_id,user_id) on
- * round_settlements. For strict all-or-nothing semantics, replace with a reviewed
- * PostgreSQL transaction/RPC after schema review; PostgREST calls are not a txn.
- */
 export async function settleRoundIdempotent({ roundId, tenantId, userId, payoutAmount }) {
-  requireUuid(roundId, 'roundId');
-  requireUuid(tenantId, 'tenantId');
-  requireUuid(userId, 'userId');
+  requireUuid(roundId, 'roundId'); requireUuid(tenantId, 'tenantId'); requireUuid(userId, 'userId');
   requireAmount(payoutAmount, 'payoutAmount');
-  const r = DB_SCHEMA.rounds;
-  const s = DB_SCHEMA.settlements;
-  const l = DB_SCHEMA.ledger;
+  const round = await loadRound(roundId);
+  assertRoundOwner(round, { tenantId, userId });
 
-  const { data: round, error: roundError } = await supabaseAdmin.from(r.table)
-    .select('*').eq(r.id, roundId).maybeSingle();
-  throwDb(roundError, 'load round for settlement');
-  if (!round) {
-    const error = new Error('Round not found.'); error.statusCode = 404; throw error;
-  }
-  if (round[r.tenantId] !== tenantId || round[r.userId] !== userId) {
-    const error = new Error('Round does not belong to the supplied tenant and user.'); error.statusCode = 409; throw error;
-  }
-
-  const { data: prior, error: priorError } = await supabaseAdmin.from(s.table)
-    .select('*').eq(s.roundId, roundId).eq(s.userId, userId).maybeSingle();
+  const { data: prior, error: priorError } = await supabaseAdmin.from(S.table)
+    .select('*').eq(S.roundId, roundId).eq(S.userId, userId).maybeSingle();
   throwDb(priorError, 'check existing settlement');
   if (prior) {
-    if (prior[s.payout] !== payoutAmount) {
-      const error = new Error('Round has already been settled with a different payout.'); error.statusCode = 409; throw error;
-    }
+    if (Number(prior[S.payout]) !== payoutAmount) { const e = new Error('Round has already been settled with a different payout.'); e.statusCode = 409; throw e; }
+    // Recover status if a previous request inserted settlement but failed before status update.
+    if (round[R.status] !== R.settledStatus) await setRoundSettled(roundId);
     return { settlement: prior, deduplicated: true };
   }
-  if (round[r.status] === r.settledStatus) {
-    const error = new Error('Round is marked settled but has no matching settlement row; manual review is required.'); error.statusCode = 409; throw error;
-  }
+  if (round[R.status] === R.settledStatus) { const e = new Error('Round is marked settled but has no matching settlement row; manual review is required.'); e.statusCode = 409; throw e; }
 
-  // A zero payout has no ledger mutation; positive payouts are virtual coin credits.
   if (payoutAmount > 0) {
-    await recordCoinLedgerEntry({
-      tenantId, userId, roundId, amount: payoutAmount, entryType: 'round_payout',
-      idempotencyKey: `round:${roundId}:payout:${userId}`,
-    });
+    await recordCoinLedgerEntry({ tenantId, userId, roundId, amount: payoutAmount, entryType: 'round_payout', idempotencyKey: `round:${roundId}:payout:${userId}` });
   }
 
-  const { data: settlement, error: settlementError } = await supabaseAdmin.from(s.table)
-    .insert({ [s.roundId]: roundId, [s.userId]: userId, [s.payout]: payoutAmount })
-    .select('*').single();
+  const { data: settlement, error: settlementError } = await supabaseAdmin.from(S.table).insert({
+    [S.roundId]: roundId, [S.userId]: userId, [S.payout]: payoutAmount,
+  }).select('*').single();
   if (settlementError?.code === '23505') {
-    const { data: concurrent, error: readError } = await supabaseAdmin.from(s.table)
-      .select('*').eq(s.roundId, roundId).eq(s.userId, userId).maybeSingle();
+    const { data: concurrent, error: readError } = await supabaseAdmin.from(S.table)
+      .select('*').eq(S.roundId, roundId).eq(S.userId, userId).maybeSingle();
     throwDb(readError, 'read concurrent settlement');
-    if (concurrent && concurrent[s.payout] === payoutAmount) return { settlement: concurrent, deduplicated: true };
-    const conflict = new Error('Concurrent settlement used a different payout.'); conflict.statusCode = 409; throw conflict;
+    if (concurrent && Number(concurrent[S.payout]) === payoutAmount) {
+      await setRoundSettled(roundId);
+      return { settlement: concurrent, deduplicated: true };
+    }
+    if (concurrent) { const e = new Error('Concurrent settlement used a different payout.'); e.statusCode = 409; throw e; }
+    throwDb(settlementError, 'settlement unique conflict without matching settlement row');
   }
   throwDb(settlementError, 'insert round settlement');
-
-  const { error: updateError } = await supabaseAdmin.from(r.table)
-    .update({ [r.status]: r.settledStatus }).eq(r.id, roundId);
-  throwDb(updateError, 'mark round settled');
+  await setRoundSettled(roundId);
   return { settlement, deduplicated: false };
 }
