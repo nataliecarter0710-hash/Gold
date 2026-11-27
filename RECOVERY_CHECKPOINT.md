@@ -144,3 +144,9 @@ This checkpoint is not a legal opinion, security certification, or production ap
 - Opening the preview dialog now locks background page scrolling; closing the dialog restores normal scrolling.
 - Commit `399b4f4a71e8f5939ae1ead65afe1cc792ba0459`.
 - Deployment verification pending.
+
+
+## Dialog focus-containment refinement (2026-11-27)
+- Keyboard focus is redirected back inside the preview dialog if it moves outside while the dialog is open.
+- Commit `8f2a18d9b405f748bdfc96c6ff88c7faa534ae8b`.
+- Deployment verification pending.
