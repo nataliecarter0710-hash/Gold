@@ -49,3 +49,8 @@ This checkpoint is not a legal opinion, security certification, or production ap
 - The attempted change to dynamic game-card labels was reverted before finalizing; no incomplete label change remains.
 - Supabase health advisor returned no lint findings on this review.
 - Preview remains isolated; no actual gameplay, wagering, transactions, signup, or settlement.
+
+
+## Code cleanup (2026-11-27)
+- Review identified and corrected a duplicate class attribute on the favorites button in the lobby HTML.
+- Commit: `e48c237656c72b99fa4c55474ee4b166436eaac9`; deployment pending verification.
