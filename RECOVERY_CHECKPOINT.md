@@ -129,3 +129,8 @@ This checkpoint is not a legal opinion, security certification, or production ap
 ## Varied tile medallion styles (2026-11-27)
 - CSS now cycles among four distinct medallion silhouette/symbol treatments across card positions, using category glow colors and gold ornamental styling. Still a CSS artwork prototype, not final commissioned HD game imagery.
 - Commit: e6b83fdd55ca8f4f78fca7ad531533ad03c634d4.
+
+
+## Themed badge artwork update (Nov 27)
+- Replaced emoji-based tile icon rendering with themed compact badges and game-name caption artwork for the 24 catalogue entries; decorative rings, luminous backgrounds and unique symbols. Not yet bespoke HD image assets; awaiting visual browser review.
+- Sequential commits: 3752680835f646e884a093c95a63471e4e72d977 (badge renderer), 625ba018db794707926bedcd713760f166b70a66 (obsolete emoji CSS removed).
