@@ -2,10 +2,10 @@
 """Small dependency-free checks for the isolated Goldbet9 visual preview."""
 from pathlib import Path
 import re
-import sys
+import sys\nfrom collections import Counter
 
 html = Path("index.html").read_text(encoding="utf-8")
-checks = {
+ids = re.findall(r\'\\b id="([^"]+)"\', html)\nchecks = {
     "24 game catalog entries": len(re.findall(r'\["[^"]+","[^"]+","(?:Cards|Table|Wheel|Special)"\]', html)) == 24,
     "underage footer notice": "Underage gaming is not allowed" in html,
     "preview-only label": "PREVIEW ONLY" in html,
@@ -14,7 +14,7 @@ checks = {
     "keyboard Escape close": "e.key==='Escape'" in html,
     "favorite persistence": "goldbet9-favorites" in html,
     "skip navigation link": 'href="#main-content"' in html,
-    "reduced motion preference": "prefers-reduced-motion:reduce" in html,
+    "reduced motion preference": "prefers-reduced-motion:reduce" in html,\n    "unique static HTML IDs": all(count == 1 for count in Counter(ids).values()),\n    "favorite buttons have pressed-state support": "aria-pressed" in html,\n    "main content landmark": "<main" in html and "id=\\"main-content\\" " in html,
 }
 failed = False
 for name, ok in checks.items():
