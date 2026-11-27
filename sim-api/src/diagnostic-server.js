@@ -10,7 +10,12 @@ const port = Number(process.env.PORT || 3000);
 const diagnosticToken = process.env.DIAGNOSTIC_TOKEN || '';
 if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('PORT must be an integer from 1 to 65535.');
 app.disable('x-powered-by');
-// Keep liveness independent of the diagnostic token and database configuration.
+
+// Only GET endpoints are intentionally exposed (Express otherwise maps HEAD to GET).
+app.use((req, res, next) => {
+  if (req.method !== 'GET') return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Route not found.' } });
+  return next();
+});
 app.get('/api/health', (_req, res) => res.status(200).json({ status: 'ok', service: 'goldbet9-schema-diagnostic', mode: 'read-only' }));
 app.get('/api/diagnostics/schema', async (req, res) => {
   if (!diagnosticToken) return res.status(503).json({ error: { code: 'DIAGNOSTICS_DISABLED', message: 'Schema diagnostics are not configured.' } });

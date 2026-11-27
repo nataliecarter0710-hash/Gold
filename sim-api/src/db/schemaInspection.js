@@ -6,7 +6,7 @@ const FORBIDDEN_ROLE_NAMES = /^(postgres|service_role|supabase_admin|admin|root)
 
 /**
  * Requires an explicitly enabled diagnostic connection and a separately named
- * read-only credential. The database transaction is forced read-only and role
+ * read-only credential. The transaction is started read-only and role
  * attributes/table privileges are checked before metadata is returned.
  */
 export async function inspectTableColumns(tableNames = DIAGNOSTIC_TABLES, { schema = 'public' } = {}) {
@@ -20,12 +20,11 @@ export async function inspectTableColumns(tableNames = DIAGNOSTIC_TABLES, { sche
   try {
     parsed = new URL(connectionString);
     if (!['postgres:', 'postgresql:'].includes(parsed.protocol)) throw new Error('Unsupported database protocol.');
-    if (FORBIDDEN_ROLE_NAMES.test(decodeURIComponent(parsed.username || ''))) {
-      throw new Error('A privileged database role is not permitted for diagnostics.');
-    }
-  } catch (error) {
-    if (error.message === 'A privileged database role is not permitted for diagnostics.') throw error;
+  } catch {
     throw new Error('Diagnostic connection configuration is invalid.');
+  }
+  if (FORBIDDEN_ROLE_NAMES.test(decodeURIComponent(parsed.username || ''))) {
+    throw new Error('A privileged database role is not permitted for diagnostics.');
   }
 
   const client = new pg.Client({
@@ -36,7 +35,6 @@ export async function inspectTableColumns(tableNames = DIAGNOSTIC_TABLES, { sche
   });
   try {
     await client.connect();
-    // PostgreSQL enforces read-only atomically from transaction start.
     await client.query('BEGIN READ ONLY');
     const safety = await client.query(`SELECT current_user AS role_name,
       current_setting('transaction_read_only') AS transaction_read_only,
