@@ -20,7 +20,7 @@ DO $$ DECLARE id uuid:=gen_random_uuid(); BEGIN
  UPDATE test_validation.rounds SET status='REVIEW' WHERE rounds.id=id;
  SET LOCAL test.correction_reason='test reviewed correction';
  UPDATE test_validation.rounds SET result_payload='{"winner":"B"}',result_version=2,status='RESULT_RECORDED' WHERE rounds.id=id;
- IF (SELECT count(*) FROM test_validation.result_history WHERE round_id=id AND version IN (1,2))<>2 THEN RAISE EXCEPTION 'history versions not preserved'; END IF;
+ IF (SELECT count(*) FROM test_validation.result_history WHERE result_history.round_id=id AND version IN (1,2))<>2 THEN RAISE EXCEPTION 'history versions not preserved'; END IF;
  INSERT INTO test_results VALUES('result immutable/review correction','PASS','Direct overwrite rejected; REVIEW correction increments version and retains history');
  EXCEPTION WHEN OTHERS THEN INSERT INTO test_results VALUES('result immutable/review correction','FAIL',SQLERRM); END $$;
 DO $$ DECLARE rid uuid:=gen_random_uuid(); uid uuid:=gen_random_uuid(); au uuid:=gen_random_uuid(); b uuid; BEGIN
