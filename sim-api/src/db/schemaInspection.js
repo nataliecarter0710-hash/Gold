@@ -40,7 +40,7 @@ export async function inspectTableColumns(tableNames = DIAGNOSTIC_TABLES, { sche
       has_database_privilege(current_user, current_database(), 'TEMP') AS db_temp,
       has_schema_privilege(current_user, $1, 'CREATE') AS schema_create,
       COALESCE(bool_or(has_table_privilege(current_user, format('%I.%I', $1, t), p)), false) AS table_write,
-      COALESCE(bool_or(has_table_privilege(current_user, format('%I.%I', $1, t), 'SELECT')), false) AS target_select,
+      COALESCE(bool_and(has_table_privilege(current_user, format('%I.%I', $1, t), 'SELECT')), false) AS target_select,
       EXISTS (SELECT 1 FROM information_schema.tables x WHERE x.table_schema=$1
         AND x.table_name NOT IN (SELECT unnest($2::text[]))
         AND (has_table_privilege(current_user, format('%I.%I', x.table_schema, x.table_name), 'SELECT')
