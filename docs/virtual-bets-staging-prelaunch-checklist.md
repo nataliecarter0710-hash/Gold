@@ -144,3 +144,12 @@ Status: logged for a future implementation pass; does not block Phase A syntheti
 - [x] Filter headings remain separately labeled `Bet status` and `Round state` in the UI; this screenshot documents the RESULT_RECORDED/CLOSED combination and its count.
 - [ ] Standalone `REVIEW` selection and resulting count/card list remain unverified. Search combined with other filters and zero-match handling require separate evidence unless already documented above.
 - [x] Screenshot capture shows Android picker overlay obscuring part of the card area; no conclusion about page clipping/overflow is drawn from the overlay itself.
+
+
+## Fold 8 REVIEW filter observation (user screenshot; 28 Nov 2026)
+
+- [x] Screenshot shows Round state selected as `REVIEW` and Bet status selected as `RESULT_RECORDED` simultaneously.
+- [x] Counter displays **0 of 28 sample records shown** and the UI displays **No matching sample records.** This confirms the observed combined-filter empty-match presentation for that combination on the Fold 8.
+- [x] The controls remain separately labeled `Bet status` and `Round state`; the selected values are visibly distinct (`RESULT_RECORDED` versus `REVIEW`).
+- [ ] This screenshot does not establish the count or cards for `REVIEW` alone (Bet status must be reset to All bet statuses to test that independently).
+- [ ] Other combined-filter permutations and search-plus-filter combinations remain unverified.
