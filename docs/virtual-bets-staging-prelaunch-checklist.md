@@ -23,14 +23,24 @@ Protected assets (must remain untouched): `Index.htm`, `Goldbet9-Staging` (`qoas
 - **Physical Android:** folded/unfolded phone verification is separate and not performed as part of this browser test attempt; do not treat desktop/browser availability as phone verification.
 - **Historical isolated security probes:** a report documents anon SELECT denial and authenticated direct INSERT/UPDATE/DELETE denial, plus simultaneous same-key/same-payload reuse and changed-payload conflict rejection. These probes used a separate disposable project that was subsequently dropped/paused. This report is historical evidence, not a fresh test, and no throwaway project is to be resumed or modified now.
 - **Not verified yet:** cross-user read isolation; independent anon write-denial probes; per-user key isolation; broader multi-user and repeated/overlapping concurrency testing; and production security/grants or operational paths.
-- **Phone spot-check:** user reports having performed folded and unfolded phone checks, but detailed findings have not been supplied here; this checklist does not claim specific visual outcomes.
+- **Phone spot-check (user screenshots):** folded portrait screenshot shows vertically stacked catalog cards and the simulation notice/lobby panel; unfolded screenshot shows a three-column catalog layout. No obvious horizontal overflow/clipping is visible in the captured areas. Search/filter/counter interactions, snapshot details, REVIEW history, and full-page scrolling remain unobserved.
+
+
+
+**User-supplied visual observations (screenshots; 28 Nov 2026):**
+- Folded/portrait: catalog cards appear stacked vertically; simulation-only badge, simulation notice, lobby panel and catalog are visible. No obvious horizontal overflow or clipping in the screenshot's captured area.
+- Unfolded/wider: catalog is arranged in three columns; notice and lobby panel span the wider content area. No obvious horizontal overflow or clipping in the captured area.
+- Overflow/clipping/wrapping: no obvious issue visible in the supplied screenshots, but this is limited to the captured viewport and not a full scroll test. Catalog labels/tags appear contained in their cards in the visible area.
+- Search, Bet status, Round state, counter: not shown/interacted with in screenshots; no result recorded.
+- REVIEW history and snapshot stacking: not inspected; screenshot only shows the history heading and a partial top edge of the history area. Round-state vs bet-status distinction not visually checked.
+- Notice: simulation-only badge and simulation/fictional-data, age, regional/legal and responsible-use text are visible in the captured screenshots. No broader contrast/readability assessment recorded.
 
 ## 1. Phone and Foldable Visual Verification
-- [ ] Record the user's folded-view findings (overflow/clipping, layout, badges).
-- [ ] Record the user's unfolded-view findings (overflow/clipping, layout, badges).
-- [ ] Record search, `Bet status`, `Round state`, and counter behavior.
-- [ ] Record snapshots and `REVIEW` version-history readability.
-- [ ] Record contrast and simulation, age, regional, and responsible-use notice visibility.
+- [x] Folded-view observation recorded from user screenshots: portrait layout shows catalog cards stacked vertically; the simulation-only badge, notice, lobby panel, and sample catalog are visible. No obvious horizontal overflow/clipping in the captured area; this is limited to the screenshots.
+- [x] Unfolded-view observation recorded from user screenshots: wider layout shows catalog cards arranged in three columns; notice and lobby panel span the content width. No obvious horizontal overflow/clipping in the captured area; this is limited to the screenshots.
+- [ ] Search, `Bet status`, `Round state`, and counter behavior remain unobserved; controls were not visible/interacted with in the supplied screenshots.
+- [ ] Snapshots and `REVIEW` version-history readability remain unobserved; only the history section heading/top edge is visible in the screenshot.
+- [x] Screenshot observation: simulation-only label and simulation/fictional-data, age, regional/legal and responsible-use notice are visible in the captured lobby view. Contrast/readability beyond the captured screens is not independently assessed.
 - [ ] If any issue is found, fix only `simulation-lobby-history.html` when explicitly requested; keep `Index.htm` untouched.
 
 ## 2. Read-Only / Simulation Backend and API Wiring
