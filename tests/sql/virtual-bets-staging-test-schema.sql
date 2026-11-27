@@ -1,75 +1,29 @@
--- Disposable test-only schema; never install in application schemas.
+-- Disposable test-only schema. Never install in application schemas.
 CREATE SCHEMA test_validation;
-CREATE TABLE test_validation.platform_users (
- id uuid PRIMARY KEY, auth_uid uuid UNIQUE NOT NULL
-);
-CREATE TABLE test_validation.rounds (
- id uuid PRIMARY KEY DEFAULT gen_random_uuid(), game_code text NOT NULL, round_code text NOT NULL,
- status text NOT NULL DEFAULT 'CREATED' CHECK(status IN ('CREATED','OPEN','CLOSED','RESULT_RECORDED','REVIEW','COMPLETE','CANCELLED')),
- result_payload jsonb, result_version int NOT NULL DEFAULT 0, created_at timestamptz NOT NULL DEFAULT now(),
- UNIQUE(game_code,round_code)
-);
-CREATE TABLE test_validation.result_history(
- round_id uuid NOT NULL REFERENCES test_validation.rounds(id) ON DELETE RESTRICT,
- version int NOT NULL, payload jsonb NOT NULL, actor_uid uuid NOT NULL, reason text NOT NULL,
- recorded_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY(round_id,version)
-);
-CREATE TABLE test_validation.bets(
- id uuid PRIMARY KEY DEFAULT gen_random_uuid(), round_id uuid NOT NULL REFERENCES test_validation.rounds(id) ON DELETE RESTRICT,
- platform_user_id uuid NOT NULL REFERENCES test_validation.platform_users(id) ON DELETE RESTRICT,
- game_code text NOT NULL, selection_code text NOT NULL, selection_snapshot jsonb NOT NULL,
- stake numeric(18,2) NOT NULL CHECK(stake>0), status text NOT NULL CHECK(status IN
- ('PENDING','ACCEPTED_SIMULATION','CANCELLED','RESULT_RECORDED','WON_SIMULATION','LOST_SIMULATION','VOID_SIMULATION')),
- payout_rule_snapshot jsonb NOT NULL,result_snapshot jsonb, idempotency_key text NOT NULL,
- request_payload jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now(),
- UNIQUE(platform_user_id,idempotency_key)
-);
-CREATE FUNCTION test_validation.round_transition_guard() RETURNS trigger LANGUAGE plpgsql AS $$
-BEGIN
- IF NEW.status=OLD.status THEN RETURN NEW; END IF;
- IF NOT ((OLD.status='CREATED' AND NEW.status IN ('OPEN','CANCELLED')) OR
- (OLD.status='OPEN' AND NEW.status IN ('CLOSED','CANCELLED')) OR
- (OLD.status='CLOSED' AND NEW.status IN ('RESULT_RECORDED','REVIEW','CANCELLED')) OR
- (OLD.status='RESULT_RECORDED' AND NEW.status IN ('REVIEW','COMPLETE')) OR
- (OLD.status='REVIEW' AND NEW.status IN ('RESULT_RECORDED','CANCELLED'))) THEN
- RAISE EXCEPTION 'invalid round transition % -> %',OLD.status,NEW.status;
- END IF;
- RETURN NEW;
-END $$;
-CREATE TRIGGER round_transition BEFORE UPDATE OF status ON test_validation.rounds
- FOR EACH ROW EXECUTE FUNCTION test_validation.round_transition_guard();
-CREATE FUNCTION test_validation.result_guard() RETURNS trigger LANGUAGE plpgsql AS $$
-BEGIN
- IF OLD.result_payload IS NOT NULL AND NEW.result_payload IS DISTINCT FROM OLD.result_payload THEN
-  IF OLD.status <> 'REVIEW' OR NEW.status <> 'RESULT_RECORDED' OR NEW.result_version <= OLD.result_version THEN
-   RAISE EXCEPTION 'result correction requires REVIEW and increasing version';
-  END IF;
- END IF;
- RETURN NEW;
-END $$;
-CREATE TRIGGER result_immutability BEFORE UPDATE ON test_validation.rounds
- FOR EACH ROW EXECUTE FUNCTION test_validation.result_guard();
-CREATE FUNCTION test_validation.capture_result() RETURNS trigger LANGUAGE plpgsql AS $$
-BEGIN
- IF NEW.result_payload IS NOT NULL AND (OLD.result_payload IS DISTINCT FROM NEW.result_payload) THEN
- INSERT INTO test_validation.result_history(round_id,version,payload,actor_uid,reason)
- VALUES(NEW.id,NEW.result_version,NEW.result_payload,coalesce(auth.uid(),gen_random_uuid()),
- coalesce(current_setting('test.correction_reason',true),'initial record'));
- END IF;
- RETURN NEW;
-END $$;
-CREATE TRIGGER result_history_capture AFTER UPDATE ON test_validation.rounds
- FOR EACH ROW EXECUTE FUNCTION test_validation.capture_result();
-ALTER TABLE test_validation.platform_users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE test_validation.rounds ENABLE ROW LEVEL SECURITY;
-ALTER TABLE test_validation.result_history ENABLE ROW LEVEL SECURITY;
-ALTER TABLE test_validation.bets ENABLE ROW LEVEL SECURITY;
-CREATE POLICY own_platform_identity ON test_validation.platform_users FOR SELECT USING(auth_uid=auth.uid());
-CREATE POLICY own_bets_read ON test_validation.bets FOR SELECT USING(platform_user_id IN
- (SELECT id FROM test_validation.platform_users WHERE auth_uid=auth.uid()));
-CREATE POLICY round_read_authenticated ON test_validation.rounds FOR SELECT TO authenticated USING(true);
-CREATE POLICY history_read_authenticated ON test_validation.result_history FOR SELECT TO authenticated USING(true);
+CREATE TABLE test_validation.platform_users(id uuid PRIMARY KEY, auth_uid uuid UNIQUE NOT NULL);
+CREATE TABLE test_validation.rounds(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),game_code text NOT NULL,round_code text NOT NULL,status text NOT NULL DEFAULT 'CREATED' CHECK(status IN ('CREATED','OPEN','CLOSED','RESULT_RECORDED','REVIEW','COMPLETE','CANCELLED')),result_payload jsonb,result_version int NOT NULL DEFAULT 0,created_at timestamptz NOT NULL DEFAULT now(),UNIQUE(game_code,round_code));
+CREATE TABLE test_validation.result_history(round_id uuid NOT NULL REFERENCES test_validation.rounds(id) ON DELETE RESTRICT,version int NOT NULL,payload jsonb NOT NULL,actor_uid uuid NOT NULL,reason text NOT NULL,recorded_at timestamptz NOT NULL DEFAULT now(),PRIMARY KEY(round_id,version));
+CREATE TABLE test_validation.bets(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),round_id uuid NOT NULL REFERENCES test_validation.rounds(id) ON DELETE RESTRICT,platform_user_id uuid NOT NULL REFERENCES test_validation.platform_users(id) ON DELETE RESTRICT,game_code text NOT NULL,selection_code text NOT NULL,selection_snapshot jsonb NOT NULL,stake numeric(18,2) NOT NULL CHECK(stake>0),status text NOT NULL CHECK(status IN ('PENDING','ACCEPTED_SIMULATION','CANCELLED','RESULT_RECORDED','WON_SIMULATION','LOST_SIMULATION','VOID_SIMULATION')),payout_rule_snapshot jsonb NOT NULL,result_snapshot jsonb,idempotency_key text NOT NULL,request_payload jsonb NOT NULL,created_at timestamptz NOT NULL DEFAULT now(),UNIQUE(platform_user_id,idempotency_key));
+CREATE FUNCTION test_validation.round_transition_guard() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.status=OLD.status THEN RETURN NEW; END IF; IF NOT ((OLD.status='CREATED' AND NEW.status IN ('OPEN','CANCELLED')) OR (OLD.status='OPEN' AND NEW.status IN ('CLOSED','CANCELLED')) OR (OLD.status='CLOSED' AND NEW.status IN ('RESULT_RECORDED','REVIEW','CANCELLED')) OR (OLD.status='RESULT_RECORDED' AND NEW.status IN ('REVIEW','COMPLETE')) OR (OLD.status='REVIEW' AND NEW.status IN ('RESULT_RECORDED','CANCELLED'))) THEN RAISE EXCEPTION 'invalid transition'; END IF; RETURN NEW; END $$;
+CREATE TRIGGER round_transition BEFORE UPDATE OF status ON test_validation.rounds FOR EACH ROW EXECUTE FUNCTION test_validation.round_transition_guard();
+CREATE FUNCTION test_validation.result_guard() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF OLD.result_payload IS NOT NULL AND NEW.result_payload IS DISTINCT FROM OLD.result_payload AND (OLD.status<>'REVIEW' OR NEW.status<>'RESULT_RECORDED' OR NEW.result_version<=OLD.result_version) THEN RAISE EXCEPTION 'correction requires REVIEW and increasing version'; END IF; RETURN NEW; END $$;
+CREATE TRIGGER result_immutability BEFORE UPDATE ON test_validation.rounds FOR EACH ROW EXECUTE FUNCTION test_validation.result_guard();
+CREATE FUNCTION test_validation.capture_result() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.result_payload IS NOT NULL AND OLD.result_payload IS DISTINCT FROM NEW.result_payload THEN INSERT INTO test_validation.result_history(round_id,version,payload,actor_uid,reason) VALUES(NEW.id,NEW.result_version,NEW.result_payload,coalesce(auth.uid(),gen_random_uuid()),coalesce(current_setting('test.correction_reason',true),'initial record')); END IF; RETURN NEW; END $$;
+CREATE TRIGGER result_history_capture AFTER UPDATE ON test_validation.rounds FOR EACH ROW EXECUTE FUNCTION test_validation.capture_result();
+CREATE FUNCTION test_validation.resolve_retry(p_round_id uuid,p_game_code text,p_selection_code text,p_selection_snapshot jsonb,p_stake numeric,p_status text,p_payout_snapshot jsonb,p_key text,p_payload jsonb) RETURNS test_validation.bets LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,test_validation AS $$
+DECLARE v_uid uuid; v_row test_validation.bets%ROWTYPE;
+BEGIN IF auth.uid() IS NULL OR p_key IS NULL OR btrim(p_key)='' THEN RAISE EXCEPTION 'identity/key required'; END IF;
+SELECT id INTO v_uid FROM test_validation.platform_users WHERE auth_uid=auth.uid(); IF v_uid IS NULL THEN RAISE EXCEPTION 'mapped identity required'; END IF;
+INSERT INTO test_validation.bets(round_id,platform_user_id,game_code,selection_code,selection_snapshot,stake,status,payout_rule_snapshot,idempotency_key,request_payload) VALUES(p_round_id,v_uid,p_game_code,p_selection_code,p_selection_snapshot,p_stake,p_status,p_payout_snapshot,p_key,p_payload) ON CONFLICT(platform_user_id,idempotency_key) DO NOTHING;
+SELECT * INTO v_row FROM test_validation.bets WHERE platform_user_id=v_uid AND idempotency_key=p_key; IF v_row.request_payload IS DISTINCT FROM p_payload THEN RAISE EXCEPTION 'idempotency payload conflict' USING ERRCODE='22023'; END IF; RETURN v_row; END $$;
+ALTER TABLE test_validation.platform_users ENABLE ROW LEVEL SECURITY; ALTER TABLE test_validation.rounds ENABLE ROW LEVEL SECURITY; ALTER TABLE test_validation.result_history ENABLE ROW LEVEL SECURITY; ALTER TABLE test_validation.bets ENABLE ROW LEVEL SECURITY;
+CREATE POLICY own_identity_read ON test_validation.platform_users FOR SELECT TO authenticated USING(auth_uid=auth.uid());
+CREATE POLICY own_bets_read ON test_validation.bets FOR SELECT TO authenticated USING(platform_user_id=(SELECT id FROM test_validation.platform_users WHERE auth_uid=auth.uid()));
+CREATE POLICY authenticated_round_read ON test_validation.rounds FOR SELECT TO authenticated USING(true);
+CREATE POLICY authenticated_history_read ON test_validation.result_history FOR SELECT TO authenticated USING(true);
 GRANT USAGE ON SCHEMA test_validation TO authenticated,anon;
+REVOKE ALL ON test_validation.platform_users,test_validation.bets,test_validation.rounds,test_validation.result_history FROM anon,authenticated;
 GRANT SELECT ON test_validation.platform_users,test_validation.bets,test_validation.rounds,test_validation.result_history TO authenticated;
-REVOKE ALL ON test_validation.bets,test_validation.rounds,test_validation.result_history,test_validation.platform_users FROM anon;
-REVOKE INSERT,UPDATE,DELETE ON test_validation.bets,test_validation.rounds,test_validation.result_history,test_validation.platform_users FROM authenticated;
+REVOKE INSERT,UPDATE,DELETE ON test_validation.platform_users,test_validation.bets,test_validation.rounds,test_validation.result_history FROM authenticated,anon;
+REVOKE ALL ON FUNCTION test_validation.resolve_retry(uuid,text,text,jsonb,numeric,text,jsonb,text,jsonb) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION test_validation.resolve_retry(uuid,text,text,jsonb,numeric,text,jsonb,text,jsonb) TO authenticated;
