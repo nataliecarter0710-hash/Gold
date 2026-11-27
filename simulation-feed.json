@@ -1,7 +1,7 @@
 {
   "feedVersion": "1.0",
   "mode": "SYNTHETIC_SAMPLE_ONLY",
-  "generatedAt": "2026-11-28T00:00:00Z",
+  "generatedAt": "2026-11-28T09:50:00Z",
   "records": [
     {
       "game": "Teen Patti (sample)",
@@ -76,6 +76,182 @@
       "rule": "Illustrative rule: sample payout 3×",
       "result": "Cancelled • sample",
       "time": "2026-11-27 19:30",
+      "review": []
+    },
+    {
+      "game": "Andar Bahar (sample)",
+      "round": "AB-S-1201",
+      "id": "S-10027",
+      "status": "ACCEPTED_SIMULATION",
+      "roundState": "OPEN",
+      "selection": "Andar side (fictional)",
+      "rule": "Snapshot v1: illustrative 1.9×; sample-only, no value",
+      "result": "Not yet recorded • round remains open",
+      "time": "2026-11-28 09:10",
+      "review": []
+    },
+    {
+      "game": "Poker One Day (sample)",
+      "round": "PK1D-S-220",
+      "id": "S-10028",
+      "status": "PENDING",
+      "roundState": "CREATED",
+      "selection": "Pair of fictional cards (selection example)",
+      "rule": "Snapshot v1: illustrative payout schedule 4× for this sample selection",
+      "result": "Awaiting sample round opening",
+      "time": "2026-11-28 09:12",
+      "review": []
+    },
+    {
+      "game": "Lucky 7 (sample)",
+      "round": "LK7-S-511",
+      "id": "S-10029",
+      "status": "ACCEPTED_SIMULATION",
+      "roundState": "CLOSED",
+      "selection": "Seven (fictional)",
+      "rule": "Snapshot v1: illustrative payout 5×; sample rule only",
+      "result": "Betting window closed in sample timeline; result pending",
+      "time": "2026-11-28 09:15",
+      "review": []
+    },
+    {
+      "game": "Amar Akbar Anthony (sample)",
+      "round": "AAA-S-077",
+      "id": "S-10030",
+      "status": "RESULT_RECORDED",
+      "roundState": "RESULT_RECORDED",
+      "selection": "Akbar (fictional)",
+      "rule": "Snapshot v1: illustrative payout 2.8×",
+      "result": "Anthony • sample result",
+      "time": "2026-11-28 09:17",
+      "review": []
+    },
+    {
+      "game": "Bollywood Casino (sample)",
+      "round": "BL-S-808",
+      "id": "S-10031",
+      "status": "WON_SIMULATION",
+      "roundState": "COMPLETE",
+      "selection": "Film title slot 3 (fictional)",
+      "rule": "Snapshot v1: illustrative payout 3×",
+      "result": "Slot 3 • sample result",
+      "time": "2026-11-28 09:20",
+      "review": []
+    },
+    {
+      "game": "32 Cards A (sample)",
+      "round": "32A-S-410",
+      "id": "S-10032",
+      "status": "LOST_SIMULATION",
+      "roundState": "COMPLETE",
+      "selection": "High-card group (fictional)",
+      "rule": "Snapshot v1: illustrative payout 2×",
+      "result": "Alternate group • sample result",
+      "time": "2026-11-28 09:22",
+      "review": []
+    },
+    {
+      "game": "Andar Bahar 2 (sample)",
+      "round": "AB2-S-342",
+      "id": "S-10033",
+      "status": "CANCELLED",
+      "roundState": "CANCELLED",
+      "selection": "Bahar side (fictional)",
+      "rule": "Snapshot v1: illustrative payout 1.9×",
+      "result": "Sample round cancelled before result",
+      "time": "2026-11-28 09:25",
+      "review": []
+    },
+    {
+      "game": "Lightning Roulette (sample)",
+      "round": "LR-S-088",
+      "id": "S-10034",
+      "status": "VOID_SIMULATION",
+      "roundState": "CANCELLED",
+      "selection": "Number 12 (fictional)",
+      "rule": "Snapshot v1: illustrative payout varies by sample multiplier",
+      "result": "Record voided in sample; round cancelled",
+      "time": "2026-11-28 09:27",
+      "review": []
+    },
+    {
+      "game": "Seven Up Down (sample)",
+      "round": "7UD-S-662",
+      "id": "S-10035",
+      "status": "PENDING",
+      "roundState": "REVIEW",
+      "selection": "Up (fictional)",
+      "rule": "Snapshot v1: illustrative payout 1.9×",
+      "result": "Result held for review • sample only",
+      "time": "2026-11-28 09:30",
+      "review": [
+        "v1 • 09:30 • Reason: sample result metadata did not match the displayed record • Actor: SAMPLE_REVIEWER_A • Previous: result='Up', status='PENDING', roundState='REVIEW' • Updated: result='Held for review', status='PENDING', roundState='REVIEW'",
+        "v2 • 09:34 • Reason: second-pass review confirmed a display-label correction • Actor: SAMPLE_REVIEWER_B • Previous: result='Held for review' • Updated: result='Review hold confirmed; no result published'",
+        "v3 • 09:38 • Reason: audit trail example finalized • Actor: SAMPLE_REVIEWER_A • Previous: review note v2 • Updated: review note v3; record remains pending and round remains REVIEW"
+      ]
+    },
+    {
+      "game": "Muflis Teen Patti (sample)",
+      "round": "MF-S-990",
+      "id": "S-10036",
+      "status": "ACCEPTED_SIMULATION",
+      "roundState": "OPEN",
+      "selection": "Muflis Player B (fictional)",
+      "rule": "Snapshot v1: illustrative payout 2×",
+      "result": "Awaiting sample outcome",
+      "time": "2026-11-28 09:33",
+      "review": []
+    },
+    {
+      "game": "Football Studio (sample)",
+      "round": "FS-S-201",
+      "id": "S-10037",
+      "status": "RESULT_RECORDED",
+      "roundState": "CLOSED",
+      "selection": "Home (fictional)",
+      "rule": "Snapshot v1: illustrative payout 1.95×",
+      "result": "Draw • sample result recorded; round closure shown",
+      "time": "2026-11-28 09:36",
+      "review": []
+    },
+    {
+      "game": "Worli Matka (sample)",
+      "round": "WM-S-005",
+      "id": "S-10038",
+      "status": "PENDING",
+      "roundState": "REVIEW",
+      "selection": "Sample digit pair 24 (fictional)",
+      "rule": "Snapshot v1: illustrative payout 80×; no real value",
+      "result": "Result pending review • sample only",
+      "time": "2026-11-28 09:39",
+      "review": [
+        "v1 • 09:39 • Reason: fictional sample digit pair was flagged for review • Actor: SAMPLE_REVIEWER_C • Previous: result='24', status='PENDING', roundState='REVIEW' • Updated: result='Flagged for review', status='PENDING', roundState='REVIEW'",
+        "v2 • 09:42 • Reason: review note expanded for clarity • Actor: SAMPLE_REVIEWER_A • Previous: review reason abbreviated • Updated: reason documented; result remains withheld",
+        "v3 • 09:46 • Reason: reviewer confirmed no simulated outcome action • Actor: SAMPLE_REVIEWER_C • Previous: review status note v2 • Updated: explicit confirmation that record remains pending and review state unchanged"
+      ]
+    },
+    {
+      "game": "Crazy Time (sample)",
+      "round": "CT-S-144",
+      "id": "S-10039",
+      "status": "WON_SIMULATION",
+      "roundState": "COMPLETE",
+      "selection": "Bonus segment (fictional)",
+      "rule": "Snapshot v1: illustrative payout 7×",
+      "result": "Bonus segment • sample result",
+      "time": "2026-11-28 09:43",
+      "review": []
+    },
+    {
+      "game": "Aviator (sample)",
+      "round": "AV-S-320",
+      "id": "S-10040",
+      "status": "VOID_SIMULATION",
+      "roundState": "CANCELLED",
+      "selection": "Sample multiplier display 1.50×",
+      "rule": "Snapshot v1: multiplier is display-only sample data",
+      "result": "Sample record voided; no settlement or payout",
+      "time": "2026-11-28 09:45",
       "review": []
     }
   ]
