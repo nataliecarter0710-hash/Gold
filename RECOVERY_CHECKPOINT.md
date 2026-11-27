@@ -100,3 +100,9 @@ This checkpoint is not a legal opinion, security certification, or production ap
 - Favorites view now explains how to save a game when the list is empty; search/category empty results retain their existing guidance.
 - Commit: 7a5b4ce889d3a0974976abf26bf62637e5a802c8.
 - Deployment verification pending.
+
+
+## Accessible category/result announcement (2026-11-27)
+- Lobby heading now politely announces selected category and matching game count to assistive technology users as filters change.
+- Commit: 3be364e6cf1a4da5bdfb36c94267c7966ea1daa2.
+- Deployment verification pending.
