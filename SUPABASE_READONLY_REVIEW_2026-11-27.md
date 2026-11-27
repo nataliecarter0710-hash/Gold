@@ -27,3 +27,11 @@ All eight public tables previously confirmed RLS enabled; FORCE RLS was not enab
 
 ## Scope / limitations
 This is a point-in-time metadata review, not a penetration test or legal/compliance certification. No wagering, settlement, payout, or gambling-operation functionality was changed or activated.
+
+
+## Additional metadata checked
+- Event trigger `ensure_rls` is enabled for DDL command end and owned by postgres; tags CREATE TABLE, CREATE TABLE AS, SELECT INTO. The registration was observed.
+- Other Supabase-managed event triggers in the listing were enabled.
+- public schema CREATE privilege was false for anon, authenticated, and service_role; USAGE was true for those roles.
+- All eight public tables are owned by postgres.
+- These findings are metadata only; role membership/inherited permissions and all default privileges still need a separate review.
