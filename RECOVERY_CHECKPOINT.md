@@ -156,3 +156,9 @@ This checkpoint is not a legal opinion, security certification, or production ap
 - Closing a preview now restores focus to the invoking control only if that element remains connected; otherwise it safely focuses the search field, avoiding a lost-focus edge case if the grid changes while the dialog is open.
 - Commit `146e0a469ed8ce7aa8a32b5a587ecaceea71d461`.
 - Deployment verification pending.
+
+
+## Game grid accessible context (2026-11-27)
+- The rendered game grid now receives an aria-label indicating the number of displayed games, updating with filtering/search rendering.
+- Commit `b801e302ef7f7774833b6e4184a220bc41283939`.
+- Deployment pending verification.
