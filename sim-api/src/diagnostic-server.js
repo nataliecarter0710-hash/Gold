@@ -13,7 +13,7 @@ app.disable('x-powered-by');
 app.get('/api/health', (_req, res) => res.status(200).json({ status: 'ok', service: 'goldbet9-schema-diagnostic', mode: 'read-only' }));
 app.get('/api/diagnostics/schema', async (req, res) => {
   if (!diagnosticToken) return res.status(503).json({ error: { code: 'DIAGNOSTICS_DISABLED', message: 'Schema diagnostics are not configured.' } });
-  const supplied = req.get('authorization')?.match(/^Bearer\s+(.+)$/i)?.[1] || '';
+  const supplied = req.get('authorization')?.match(/^Bearer\\s+(.+)$/i)?.[1] || '';
   const expectedBuffer = Buffer.from(diagnosticToken);
   const suppliedBuffer = Buffer.from(supplied);
   const authorized = expectedBuffer.length === suppliedBuffer.length && timingSafeEqual(expectedBuffer, suppliedBuffer);
