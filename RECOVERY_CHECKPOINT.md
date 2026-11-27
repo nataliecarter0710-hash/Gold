@@ -150,3 +150,9 @@ This checkpoint is not a legal opinion, security certification, or production ap
 - Keyboard focus is redirected back inside the preview dialog if it moves outside while the dialog is open.
 - Commit `8f2a18d9b405f748bdfc96c6ff88c7faa534ae8b`.
 - Deployment verification pending.
+
+
+## Dialog focus restoration edge-case (2026-11-27)
+- Closing a preview now restores focus to the invoking control only if that element remains connected; otherwise it safely focuses the search field, avoiding a lost-focus edge case if the grid changes while the dialog is open.
+- Commit `146e0a469ed8ce7aa8a32b5a587ecaceea71d461`.
+- Deployment verification pending.
