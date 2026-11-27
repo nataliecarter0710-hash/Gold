@@ -1,35 +1,30 @@
-# Pre-launch Readiness Checklist — Simulation Staging
+# Pre-Launch Readiness Checklist (`feat/virtual-bets-staging`)
 
-**Scope:** Synthetic sample data only. This is a readiness gate, not release approval. Real wagering, balance debits, credits, payouts, and live ledger paths must remain disabled and isolated.
+Scope: Simulation and synthetic sample data only. No real wagering, real funds, balance debits, or payouts.
+Protected assets (must remain untouched): `Index.htm`, `Goldbet9-Staging` (`qoasttmttjiwjvmznoir`), paused throwaway Supabase projects, Render services, `main`, `feat/sim-api-staging`, and `public.transfer_virtual_coins`.
 
-## 1. Phone and foldable visual verification
-- [ ] Verify phone-sized viewports and foldable device layouts both folded and unfolded, including real-device Android checks.
-- [ ] Confirm no horizontal clipping or overflow in badges, filters, selection/result/payout snapshots, long labels, or REVIEW history.
-- [ ] Check search/filter controls and result counter readability, usability, and empty/loading/error states.
-- [ ] Confirm REVIEW version-history display is readable and clearly shows withheld/fictional information without implying settlement.
-- [ ] Confirm simulation/virtual-coin, age-restriction, regional-restriction, and responsible-use notices are visible and readable.
+## 1. Phone and Foldable Visual Verification
+- [ ] Open `simulation-lobby-history.html` on mobile in both folded and unfolded states.
+- [ ] Confirm zero horizontal overflow and zero text or ID clipping across round cards, status badges, and snapshot boxes.
+- [ ] Verify status badges wrap cleanly and snapshot fields stack readably on narrow screens.
+- [ ] Check search input, `Bet status` filter, `Round state` filter, and result count (`X of Y sample records shown`) for legibility and accurate filtering.
+- [ ] Verify `REVIEW` version history displays clearly and keeps `REVIEW` as a round state rather than a bet status.
+- [ ] Confirm obsidian/gold contrast and visible simulation, age-restriction, regional-restriction, and responsible-use notices.
 
-## 2. Read-only / simulation backend and API wiring
-- [ ] Verify the UI uses only the synthetic feed or a clearly isolated staging endpoint, never a production/live source.
-- [ ] Confirm feed validation, loading, network-error, invalid-response, and embedded fallback behavior.
-- [ ] Verify environment/configuration separation and fail-closed behavior.
-- [ ] Confirm live/real coin, wallet, transfer, or ledger paths are isolated and disabled; no real balance changes, debits, credits, or payouts.
-- [ ] Review route, permission, and logging behavior using synthetic test fixtures only.
+## 2. Read-Only / Simulation Backend and API Wiring
+- [ ] Keep data source strictly on the synthetic feed (`simulation-feed.json`) or an isolated simulation-only read endpoint with synthetic fixtures.
+- [ ] Verify clean fallback to embedded synthetic sample records when the feed is offline, unreachable, or fails synthetic validation.
+- [ ] Confirm zero calls or references to `public.transfer_virtual_coins`, live ledgers, or real balance mutation paths.
+- [ ] Keep `Goldbet9-Staging`, Render services, `main`, and `feat/sim-api-staging` disconnected from this prototype.
 
-## 3. Full RLS, idempotency, and concurrency verification
-- [ ] Test restricted-role and cross-tenant isolation across relevant tables, views, and endpoints.
-- [ ] Verify anonymous access denial and direct client write blocks where writes are restricted.
-- [ ] Test idempotency with controlled synthetic fixtures: retrying the same key and payload must reuse the original outcome (no duplicate record/action); reusing that key with a changed payload must return a conflict and leave the original unchanged.
-- [ ] Test invalid round transitions, duplicate submissions, and reconciliation/review behavior.
-- [ ] Perform broader multi-user, concurrency, and load checks beyond the initial isolated probes (including overlapping requests, retry bursts, and restricted-role interactions); record reproducible evidence, metrics, and limitations.
-- [ ] Obtain independent security review; source inspection or UI checks alone do not prove database protections.
+## 3. Full RLS, Idempotency, and Concurrency Verification
+- [ ] Confirm cross-user read isolation under restricted database roles (User A cannot read User B's records and vice versa).
+- [ ] Confirm `anon` access is denied on protected records.
+- [ ] Confirm direct client `INSERT`, `UPDATE`, and `DELETE` are blocked under restricted roles.
+- [ ] Verify idempotency across new keys, same-user/same-key/same-payload reuse, same-user/same-key/changed-payload conflict rejection, and per-user key isolation.
+- [ ] Plan and run broader multi-user and concurrency checks beyond initial simultaneous probes before treating security verification as complete.
 
-## 4. Release and compliance notices / scope protection
-- [ ] Verify explicit simulation/virtual-coin notices so users cannot mistake the experience for real-money wagering.
-- [ ] Verify age-restriction, regional-restriction, and responsible-use notices are displayed and reviewed.
-- [ ] Complete qualified jurisdiction-specific legal/compliance review; this checklist does not itself establish compliance.
-- [ ] Confirm release scope, version, acceptance evidence, rollback plan, monitoring, and sign-off.
-- [ ] Protect `Index.htm`, Goldbet9-Staging, Render services, `main`, and `feat/sim-api-staging`; this task must not modify or deploy to them.
-- [ ] Keep this branch and work simulation-only; production/live wagering, coin, wallet, transfer, or ledger functions remain out of scope.
-
-**Status:** Not launch-approved. All applicable checks require evidence and sign-off before a release decision.
+## 4. Release and Compliance Notices
+- [ ] Keep clear simulation/virtual-coin labels visible on lobby and history screens.
+- [ ] Keep age-restriction, regional-restriction, and responsible-use notices present and legible.
+- [ ] Verify `Index.htm`, `Goldbet9-Staging`, Render, `main`, and `feat/sim-api-staging` remain untouched until an explicit promotion step is approved.
