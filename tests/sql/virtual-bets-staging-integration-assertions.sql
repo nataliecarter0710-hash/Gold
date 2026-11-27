@@ -1,8 +1,8 @@
 -- Integration assertions run only on isolated project sngrsnvwbucsljwtykpa.
 CREATE TEMP TABLE test_results(name text,result text,detail text);
-DO $$ DECLARE r test_validation.rounds%ROWTYPE; id uuid:=gen_random_uuid(); BEGIN
- INSERT INTO test_validation.rounds(id,game_code,round_code) VALUES(id,'TEST','R1');
- UPDATE test_validation.rounds SET status='OPEN' WHERE id=id;
+DO $$ DECLARE r test_validation.rounds%ROWTYPE; rid uuid:=gen_random_uuid(); BEGIN
+ INSERT INTO test_validation.rounds(id,game_code,round_code) VALUES(rid,'TEST','R1');
+ UPDATE test_validation.rounds SET status='OPEN' WHERE rounds.id=rid;
  UPDATE test_validation.rounds SET status='CLOSED' WHERE id=id;
  UPDATE test_validation.rounds SET result_payload='{"winner":"A"}',result_version=1,status='RESULT_RECORDED' WHERE id=id;
  UPDATE test_validation.rounds SET status='COMPLETE' WHERE id=id;
@@ -39,7 +39,7 @@ DO $$ DECLARE rid uuid:=gen_random_uuid(); uid uuid:=gen_random_uuid(); au uuid:
  RAISE EXCEPTION 'changed payload duplicate key not rejected'; EXCEPTION WHEN unique_violation THEN END;
  INSERT INTO test_results VALUES('unique key/snapshots','PASS','Unique key prevents duplicate insert; snapshot columns preserved (retry reuse/conflict semantics not implemented)');
  EXCEPTION WHEN OTHERS THEN INSERT INTO test_results VALUES('unique key/snapshots','FAIL',SQLERRM); END $$;
-DO $$ DECLARE rid uuid:=gen_random_uuid(); uid uuid:=gen_random_uuid(); au uuid:=gen_random_uuid(); BEGIN
+DO $$ DECLARE rid uuid:=gen_random_uuid(); uid uuid:=gen_random_uuid(); au uuid:=gen_random_uuid(); s text; BEGIN
  INSERT INTO test_validation.platform_users VALUES(uid,au);
  INSERT INTO test_validation.rounds(id,game_code,round_code,status) VALUES(rid,'TEST','R5','OPEN');
  FOREACH s IN ARRAY ARRAY['PENDING','ACCEPTED_SIMULATION','CANCELLED','RESULT_RECORDED','WON_SIMULATION','LOST_SIMULATION','VOID_SIMULATION'] LOOP
