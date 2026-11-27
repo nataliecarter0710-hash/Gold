@@ -17,3 +17,12 @@ This isolated branch and Render preview are for a non-transactional visual/train
 
 ## Caution
 This checkpoint is not a legal opinion, security certification, or production approval. Continue with isolated preview and review. Keep the main branch and original deployment unchanged.
+
+
+## Lobby checkpoint update (2026-11-27)
+- Preview label replaces displayed credit balance; no credit balance shown.
+- Game selection dialogs explicitly state gameplay, wagering, and settlement are disabled.
+- Navigation active-state styling and modal focus accessibility improvements are committed.
+- Favorites persist locally in browser storage; search has an accessible label.
+- Footer underage notice remains present.
+- Render deployment for latest preview clarification is live.
