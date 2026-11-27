@@ -1,7 +1,7 @@
 import { compareRequiredColumns, inspectSimulationSchema } from '../db/schemaInspection.js';
 
 /**
- * Safe, read-only metadata report. Returns column names/types and missing expected
+ * Read-only metadata report. Returns column names/types and missing expected
  * columns only; never returns row data, connection details, secrets, or balances.
  */
 export async function getSchemaReport() {
