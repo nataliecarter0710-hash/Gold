@@ -15,3 +15,15 @@ jobs:
       - uses: actions/checkout@v4
       - name: Verify lobby safeguards and structure
         run: python3 .github/scripts/check_preview.py
+      - name: Extract JavaScript and check syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path("index.html").read_text(encoding="utf-8")
+          scripts = re.findall(r"<script>(.*?)</script>", html, flags=re.S)
+          if not scripts:
+              raise SystemExit("No inline script found")
+          Path("/tmp/goldbet9-preview.js").write_text("\\n".join(scripts), encoding="utf-8")
+          PY
+          node --check /tmp/goldbet9-preview.js
