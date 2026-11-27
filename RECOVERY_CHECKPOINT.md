@@ -72,3 +72,8 @@ This checkpoint is not a legal opinion, security certification, or production ap
 - Game cards use group semantics instead of button semantics because each contains a separate favorite button (avoids nested interactive controls).
 - Keyboard activation of the card preview is preserved, while favorite-button keyboard interaction is excluded from the card handler.
 - Commit: 5b191f66e3f0f9554fd7573fc8a940dc087f50ea; deployment verification pending.
+
+
+## Semantic game preview controls (2026-11-27)
+- Replaced clickable/group card containers with a dedicated native preview button and a separate favorite button, avoiding nested controls and making the preview action semantically keyboard-accessible.
+- Commit: aad34feea46d6aca1d67d5408d4e43c8891fb2b8; deployment verification pending.
