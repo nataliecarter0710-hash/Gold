@@ -114,3 +114,12 @@ Status: logged for a future implementation pass; does not block Phase A syntheti
 - [x] The opened Android selection overlays appear as tall grey panels over the page in the captured views. This is recorded as observed overlay appearance, not a confirmed page overflow defect.
 - [ ] Search-result narrowing, combined search/status/state filtering, empty-match behavior, and counter updates after selections remain unverified. The screenshots do not prove these interactions work.
 
+
+
+## Fold 8 live search interaction observation (user screenshot; 28 Nov 2026)
+
+- [x] Search field was populated with the text `Dragon tiger`.
+- [x] Visible counter changed from the initial 28 of 28 to **2 of 28 sample records shown** in the screenshot.
+- [x] The top of a matching Dragon Tiger (sample) card is visible below the controls; its header shows `DT-S-2088` and `PENDING / REVIEW`.
+- [x] This screenshot is direct user-supplied visual evidence of search narrowing and counter updating for this query. It does not establish the exact identity/content of the second matching record beyond the count, nor the behavior of status/state filters, combined filtering, or empty-match handling.
+- [ ] Bet-status and round-state selection behavior, combined filtering, and zero-match search behavior remain unverified.
