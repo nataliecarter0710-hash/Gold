@@ -41,3 +41,11 @@ This checkpoint is not a legal opinion, security certification, or production ap
 ## Lobby UX improvement (2026-11-27)
 - Search/category results grid announces updates via aria-live.
 - Clear empty-results message displayed when filtering returns no games.
+
+
+## Latest recovery deployment checkpoint (2026-11-27)
+- Latest recovery-branch commit: `b6750bfc945320d6649d7a5d21cf4a8b627635dd` (live on Render).
+- Live deployment includes the search/filter accessibility announcement and empty state, and a live status announcement in the game preview dialog.
+- The attempted change to dynamic game-card labels was reverted before finalizing; no incomplete label change remains.
+- Supabase health advisor returned no lint findings on this review.
+- Preview remains isolated; no actual gameplay, wagering, transactions, signup, or settlement.
