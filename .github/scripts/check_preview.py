@@ -31,11 +31,11 @@ checks = {
     "no remote script imports": not re.search(r"<script[^>]+src=", html, re.I),
     "no external iframe embeds": "<iframe" not in html.lower(),
     "no outbound links": not re.search(r"<a[^>]+href=\"https?://", html, re.I),
-    "no fetch requests": not re.search(r"\\bfetch\\s*\\(", html),
+    "no fetch requests": not re.search(r"\bfetch\s*\(", html),
     "no XMLHttpRequest": "XMLHttpRequest" not in html,
     "no WebSocket": "WebSocket" not in html,
     "no form submission flow": "<form" not in html.lower(),
-    "no payment integration hooks": not re.search(r"\\b(?:payment|checkout|deposit|withdraw)\\s*(?:\\(|=)", html, re.I),
+    "no payment integration hooks": not re.search(r"\b(?:payment|checkout|deposit|withdraw)\s*(?:\(|=)", html, re.I),
 }
 failed = False
 for name, ok in checks.items():
