@@ -17,9 +17,15 @@ export async function inspectTableColumns(tableNames = DIAGNOSTIC_TABLES, { sche
     throw new TypeError('tableNames must be a non-empty array of table names.');
   }
   let parsed;
-  try { parsed = new URL(connectionString); } catch { throw new Error('Diagnostic connection configuration is invalid.'); }
-  if (FORBIDDEN_ROLE_NAMES.test(decodeURIComponent(parsed.username || ''))) {
-    throw new Error('A privileged database role is not permitted for diagnostics.');
+  try {
+    parsed = new URL(connectionString);
+    if (!['postgres:', 'postgresql:'].includes(parsed.protocol)) throw new Error('Unsupported database protocol.');
+    if (FORBIDDEN_ROLE_NAMES.test(decodeURIComponent(parsed.username || ''))) {
+      throw new Error('A privileged database role is not permitted for diagnostics.');
+    }
+  } catch (error) {
+    if (error.message === 'A privileged database role is not permitted for diagnostics.') throw error;
+    throw new Error('Diagnostic connection configuration is invalid.');
   }
 
   const client = new pg.Client({
@@ -30,8 +36,8 @@ export async function inspectTableColumns(tableNames = DIAGNOSTIC_TABLES, { sche
   });
   try {
     await client.connect();
-    await client.query('BEGIN');
-    await client.query('SET TRANSACTION READ ONLY');
+    // Start read-only atomically; any inability to enforce this aborts inspection.
+    await client.query('BEGIN READ ONLY');
     const safety = await client.query(`SELECT current_user AS role_name,
       current_setting('transaction_read_only') AS transaction_read_only,
       r.rolsuper, r.rolcreaterole, r.rolcreatedb,
@@ -43,7 +49,13 @@ export async function inspectTableColumns(tableNames = DIAGNOSTIC_TABLES, { sche
       GROUP BY r.rolname, r.rolsuper, r.rolcreaterole, r.rolcreatedb, current_setting('transaction_read_only')`,
       [schema, tableNames, WRITE_PRIVILEGES]);
     const verified = safety.rows[0];
-    if (!verified || verified.transaction_read_only !== 'on' || verified.rolsuper || verified.rolcreaterole || verified.rolcreatedb || verified.has_write_privilege) {
+    if (!verified
+      || typeof verified.role_name !== 'string'
+      || verified.transaction_read_only !== 'on'
+      || verified.rolsuper !== false
+      || verified.rolcreaterole !== false
+      || verified.rolcreatedb !== false
+      || verified.has_write_privilege !== false) {
       throw new Error('Database role or transaction failed read-only verification.');
     }
     const result = await client.query(

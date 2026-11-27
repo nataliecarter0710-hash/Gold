@@ -5,9 +5,11 @@ import { compareRequiredColumns, inspectSimulationSchema } from '../db/schemaIns
  * columns only; never returns row data, connection details, secrets, or balances.
  */
 export async function getSchemaReport() {
+  // Inspection returns only after transaction and role read-only checks succeed.
   const rows = await inspectSimulationSchema();
   return {
     mode: 'read-only-schema-diagnostic',
+    readOnlyVerified: true,
     schema: 'public',
     tables: rows.map(({ table_name, column_name, data_type, udt_name, is_nullable }) => ({
       table: table_name,
