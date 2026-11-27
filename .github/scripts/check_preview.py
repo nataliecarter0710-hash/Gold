@@ -22,6 +22,12 @@ checks = {
     "unique static HTML IDs": all(count == 1 for count in Counter(ids).values()),
     "favorite buttons have pressed-state support": "aria-pressed" in html,
     "main content landmark": "<main" in html and 'id="main-content"' in html,
+    "search field accessible label": 'aria-label="Search games by name"' in html,
+    "modal focus restoration": "lastFocus.focus()" in html,
+    "modal scroll lock CSS": "overflow:hidden" in html and "modal-open" in html,
+    "backdrop click handling": "e.target.id===\'modal\'" in html,
+    "favorites pressed-state": "aria-pressed" in html and "data-f" in html,
+    "modal tab focus containment": "e.shiftKey&&document.activeElement===first" in html,
 }
 failed = False
 for name, ok in checks.items():
