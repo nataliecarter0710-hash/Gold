@@ -169,3 +169,9 @@ This checkpoint is not a legal opinion, security certification, or production ap
 - Main content is now focusable as the skip-link target.
 - Commit `aeea7f51b89e25c5c62d4f792c4fe2377302b3e0`.
 - Deployment pending.
+
+
+## Favorite-button touch target (2026-11-27)
+- Enlarged tile favorite controls to 40×40 px with centered icon for improved mobile touch accuracy.
+- Commit `12d8e1e5cf0f05fc9144085dd438e424cb4ab1b3`.
+- Deployment pending.
