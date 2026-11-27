@@ -134,3 +134,13 @@ Status: logged for a future implementation pass; does not block Phase A syntheti
 - [x] With Bet status `RESULT_RECORDED` and Round state `CLOSED`: **2 of 28** records shown; Football Studio and Teen Patti One Day cards visible, each tagged RESULT_RECORDED / CLOSED.
 - [x] Video shows the filtered count and no-match text updating across the selections above. This is user-provided Fold 8 video evidence; no code or backend was changed as part of this observation.
 - [ ] Round-state options such as REVIEW and their standalone filtering/count behavior remain untested in this video.
+
+
+## Fold 8 filter-picker screenshots (user screenshots; 28 Nov 2026)
+
+- [x] Screenshot shows Bet status set to `RESULT_RECORDED` and Round state set to `CLOSED`; counter reads **2 of 28 sample records shown**.
+- [x] Two matching cards are visible: Football Studio (sample) • FS-S-201 and Teen Patti One Day (sample) • TP1D-S-601. Their visible snapshots show fictional selections and illustrative payout rules; results shown are sample-only.
+- [x] The Round state picker was opened in the screenshots; options including `REVIEW` and `COMPLETE` are visible in the captured picker. This is evidence of the option's presence, **not** evidence that `REVIEW` was selected or its filtering behavior tested.
+- [x] Filter headings remain separately labeled `Bet status` and `Round state` in the UI; this screenshot documents the RESULT_RECORDED/CLOSED combination and its count.
+- [ ] Standalone `REVIEW` selection and resulting count/card list remain unverified. Search combined with other filters and zero-match handling require separate evidence unless already documented above.
+- [x] Screenshot capture shows Android picker overlay obscuring part of the card area; no conclusion about page clipping/overflow is drawn from the overlay itself.
