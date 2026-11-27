@@ -1,0 +1,82 @@
+{
+  "feedVersion": "1.0",
+  "mode": "SYNTHETIC_SAMPLE_ONLY",
+  "generatedAt": "2026-11-28T00:00:00Z",
+  "records": [
+    {
+      "game": "Teen Patti (sample)",
+      "round": "TP-S-1042",
+      "id": "S-10021",
+      "status": "WON_SIMULATION",
+      "roundState": "COMPLETE",
+      "selection": "Player A (fictional)",
+      "rule": "Illustrative rule: sample payout 2×",
+      "result": "Player A • sample result",
+      "time": "2026-11-27 19:42",
+      "review": []
+    },
+    {
+      "game": "Dragon Tiger (sample)",
+      "round": "DT-S-2088",
+      "id": "S-10022",
+      "status": "PENDING",
+      "roundState": "REVIEW",
+      "selection": "Dragon (fictional)",
+      "rule": "Illustrative rule: sample payout 1.95×",
+      "result": "Result withheld during review",
+      "time": "2026-11-27 19:40",
+      "review": [
+        "v1 • 19:40 • Initial sample result flagged for review",
+        "v2 • 19:44 • Record retained; no simulated settlement action"
+      ]
+    },
+    {
+      "game": "Roulette (sample)",
+      "round": "RO-S-331",
+      "id": "S-10023",
+      "status": "LOST_SIMULATION",
+      "roundState": "COMPLETE",
+      "selection": "Red (fictional)",
+      "rule": "Illustrative rule: sample payout 2×",
+      "result": "Black • sample result",
+      "time": "2026-11-27 19:38",
+      "review": []
+    },
+    {
+      "game": "Sic Bo (sample)",
+      "round": "SB-S-901",
+      "id": "S-10024",
+      "status": "VOID_SIMULATION",
+      "roundState": "CANCELLED",
+      "selection": "Small (fictional)",
+      "rule": "Illustrative rule: sample payout 1×",
+      "result": "Round cancelled • sample",
+      "time": "2026-11-27 19:35",
+      "review": []
+    },
+    {
+      "game": "Baccarat (sample)",
+      "round": "BA-S-771",
+      "id": "S-10025",
+      "status": "RESULT_RECORDED",
+      "roundState": "RESULT_RECORDED",
+      "selection": "Player (fictional)",
+      "rule": "Illustrative rule: sample payout 1×",
+      "result": "Player • sample result",
+      "time": "2026-11-27 19:32",
+      "review": []
+    },
+    {
+      "game": "Race 20 (sample)",
+      "round": "RC-S-519",
+      "id": "S-10026",
+      "status": "CANCELLED",
+      "roundState": "CANCELLED",
+      "selection": "Runner 2 (fictional)",
+      "rule": "Illustrative rule: sample payout 3×",
+      "result": "Cancelled • sample",
+      "time": "2026-11-27 19:30",
+      "review": []
+    }
+  ]
+}
