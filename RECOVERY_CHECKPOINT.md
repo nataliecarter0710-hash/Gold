@@ -60,3 +60,9 @@ This checkpoint is not a legal opinion, security certification, or production ap
 - Game-card preview labels now include each game name.
 - Favorite buttons announce add/remove favorite intent and expose aria-pressed state.
 - Change commit: `6e18b4319671f152fe1841a8885bee99d7343267`; deployment pending.
+
+
+## Search accessibility refinement (2026-11-27)
+- Search uses a native search input, autocomplete disabled, and explicit grid control relationship.
+- Empty-result text now has a polite live announcement role.
+- Commit `b32084f88178c962ee29ca0c1564627d3116ef12`; deployment pending.
