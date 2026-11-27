@@ -153,3 +153,19 @@ Status: logged for a future implementation pass; does not block Phase A syntheti
 - [x] The controls remain separately labeled `Bet status` and `Round state`; the selected values are visibly distinct (`RESULT_RECORDED` versus `REVIEW`).
 - [ ] This screenshot does not establish the count or cards for `REVIEW` alone (Bet status must be reset to All bet statuses to test that independently).
 - [ ] Other combined-filter permutations and search-plus-filter combinations remain unverified.
+
+
+## Fold 8 verified search/filter/reset observations (user screenshots; 28 Nov 2026)
+
+- [x] Search `Dragon tiger`: counter showed **2 of 28 sample records shown**.
+- [x] Bet status `RESULT_RECORDED` + Round state `CLOSED`: **2 of 28**; Football Studio `FS-S-201` and Teen Patti One Day `TP1D-S-601` visible.
+- [x] Bet status `RESULT_RECORDED` + Round state `REVIEW`: **0 of 28**, with the empty-state notice “No matching sample records.”
+- [x] Bet status set to `All bet statuses` + Round state `REVIEW`: **4 of 28**. Dragon Tiger `DT-S-2088` was visible with `PENDING / REVIEW`, result withheld, and review history v1/v2; Seven Up Down was visible below.
+- [x] Reset to defaults (search cleared; both selectors returned to defaults): **28 of 28**. Teen Patti `TP-S-1042` was visible first.
+- [ ] These are screenshot-based UI observations, not backend tests or broader browser certification. They do not establish full-page scrolling, all filter permutations, or live integration.
+
+## Read-only test-target inventory check (28 Nov 2026)
+
+- [x] Supabase project inventory was checked read-only. The only listed Goldbet9 projects were the protected Goldbet9-Staging project and inactive/paused throwaway test projects. No eligible, separately verified safe non-protected test target was identified; no project was queried beyond inventory, resumed, or modified.
+- [x] Render workspace/service inventory was checked read-only. The inventory includes the prohibited Goldbet9 API staging service and other services, but no separately verified, approved isolated test target was established. No service details beyond inventory were used to run tests, and no service was modified, deployed, paused, resumed, or otherwise acted upon.
+- [x] No tests were run as part of this target-inventory check. No writes, migrations, deployments, or protected-resource operations occurred.
