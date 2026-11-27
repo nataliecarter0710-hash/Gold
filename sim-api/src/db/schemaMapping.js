@@ -1,46 +1,76 @@
-/**
- * Goldbet9-Staging diagnostic contract. Every column below is a CONSERVATIVE,
- * UNVERIFIED assumption until scripts/check-schema-columns.sql is run against
- * the intended live project. This mapping is for metadata diagnostics only; it
- * does not authorize or enable round/ledger/settlement writes.
- */
-export const DB_SCHEMA = Object.freeze({
-  rounds: Object.freeze({
-    table: 'game_sessions',
-    id: 'id', tenantId: 'tenant_id', userId: 'user_id', gameId: 'game_id',
-    status: 'status', stake: 'stake_amount',
-    openStatus: 'in_progress', settledStatus: 'settled',
-  }),
-  coinLedger: Object.freeze({
-    // Tentative conventional names only; inspect before relying on them.
-    table: 'coin_ledger',
-    id: 'id', userId: 'user_id', amount: 'amount', type: 'entry_type', createdAt: 'created_at',
-  }),
-  virtualCoinLedger: Object.freeze({
-    // Tentative conventional names only; no ledger writes occur in diagnostic mode.
-    table: 'virtual_coin_ledger',
-    id: 'id', tenantId: 'tenant_id', userId: 'user_id', roundId: 'round_id',
-    amount: 'amount', type: 'entry_type', idempotencyKey: 'idempotency_key', createdAt: 'created_at',
-  }),
-  settlements: Object.freeze({
-    table: 'round_settlements',
-    id: 'id', roundId: 'round_id', userId: 'user_id', payout: 'payout_amount', createdAt: 'created_at',
-  }),
-});
+// Read-only schema mapping for Goldbet9-Staging (feat/sim-api-staging).
+// Non-monetary simulation diagnostics only; no writes or RPC calls.
 
-// One canonical diagnostic table list is shared by the read-only inspector.
-export const DIAGNOSTIC_TABLES = Object.freeze([
-  DB_SCHEMA.rounds.table,
-  DB_SCHEMA.coinLedger.table,
-  DB_SCHEMA.virtualCoinLedger.table,
-  DB_SCHEMA.settlements.table,
-]);
+export const DIAGNOSTIC_TABLES = [
+  "game_sessions",
+  "coin_ledger",
+  "virtual_coin_ledger",
+  "round_settlements",
+];
 
-// Expected columns are diagnostic comparison candidates, not verified DDL.
-// A mismatch is reported and must be reviewed; the checker never alters schema.
-export const REQUIRED_SCHEMA_COLUMNS = Object.freeze({
-  game_sessions: Object.freeze(['id', 'tenant_id', 'user_id', 'game_id', 'status', 'stake_amount']),
-  coin_ledger: Object.freeze(['id', 'user_id', 'amount', 'entry_type', 'created_at']),
-  virtual_coin_ledger: Object.freeze(['id', 'tenant_id', 'user_id', 'round_id', 'amount', 'entry_type', 'idempotency_key', 'created_at']),
-  round_settlements: Object.freeze(['id', 'round_id', 'user_id', 'payout_amount', 'created_at']),
-});
+export const SCHEMA_MAPPING = {
+  game_sessions: {
+    verifiedColumns: [
+      "tenant_id",
+      "game_id",
+      "rules_version",
+      "status",
+      "result_public",
+    ],
+    unverifiedOrAbsentColumns: {
+      absentFromLiveSchema: ["user_id", "stake_amount"],
+      pendingExactColumnNames: ["timestamps (exact column names unverified)"],
+    },
+  },
+  coin_ledger: {
+    verifiedColumns: [
+      "from_user_id",
+      "to_user_id",
+      "amount",
+      "entry_type",
+      "round_id",
+      "idempotency_key",
+      "note",
+      "created_at",
+    ],
+    unverifiedRules: [
+      "exact positive-amount check constraint definition",
+      "exact allowed entry_type literals",
+      "exact unique/idempotency index definitions",
+    ],
+  },
+  virtual_coin_ledger: {
+    verifiedColumns: [
+      "tenant_id",
+      "user_id",
+      "amount_delta",
+      "reason",
+      "reference_id",
+      "actor_user_id",
+      "created_at",
+    ],
+    unverifiedRules: [
+      "exact primary key, foreign key, check, and index definitions",
+      "whether idempotency/deduplication is enforced via reference_id or a separate index",
+    ],
+  },
+  round_settlements: {
+    verifiedColumns: [
+      "round_id",
+      "game_code",
+      "winner_outcome",
+      "settled_at",
+    ],
+    unverifiedOrAbsentColumns: {
+      absentOrUnmatchedAssumedColumns: ["id", "user_id", "payout_amount", "created_at"],
+      unverifiedRules: ["exact primary key, foreign key, unique, and index definitions"],
+    },
+  },
+};
+
+export const REQUIRED_SCHEMA_COLUMNS = Object.fromEntries(
+  Object.entries(SCHEMA_MAPPING).map(([tableName, spec]) => [
+    tableName,
+    spec.verifiedColumns,
+  ])
+);
