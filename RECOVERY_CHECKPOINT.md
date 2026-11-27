@@ -82,3 +82,9 @@ This checkpoint is not a legal opinion, security certification, or production ap
 ## Focus indicator visibility refinement (2026-11-27)
 - Preview button keyboard focus indicator changed to an inset outline/shadow to avoid clipping by the card's overflow boundary.
 - Commit: 82a2c7eb4f099bed3e0ac02a81fc2d5f76a8f42b; deployment pending verification.
+
+
+## Lobby-wide keyboard and touch polish (2026-11-27)
+- Added consistent visible focus indicators to search, category, navigation, mobile navigation, and modal buttons.
+- Added touch-action: manipulation to buttons to reduce double-tap delay behavior on touch devices.
+- Commit: 638b31cf004fca9d891134f6a13cc1c883126837; deployment verification pending.
