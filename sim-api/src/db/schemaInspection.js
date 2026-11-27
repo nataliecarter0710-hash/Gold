@@ -41,15 +41,24 @@ export async function inspectTableColumns(tableNames = DIAGNOSTIC_TABLES, { sche
       has_schema_privilege(current_user, $1, 'CREATE') AS schema_create,
       COALESCE(bool_or(has_table_privilege(current_user, format('%I.%I', $1, t), p)), false) AS table_write,
       COALESCE(bool_and(has_table_privilege(current_user, format('%I.%I', $1, t), 'SELECT')), false) AS target_select,
-      EXISTS (SELECT 1 FROM information_schema.tables x WHERE x.table_schema=$1
-        AND x.table_name NOT IN (SELECT unnest($2::text[]))
-        AND (has_table_privilege(current_user, format('%I.%I', x.table_schema, x.table_name), 'SELECT')
-          OR has_table_privilege(current_user, format('%I.%I', x.table_schema, x.table_name), 'INSERT')
-          OR has_table_privilege(current_user, format('%I.%I', x.table_schema, x.table_name), 'UPDATE')
-          OR has_table_privilege(current_user, format('%I.%I', x.table_schema, x.table_name), 'DELETE')
-          OR has_table_privilege(current_user, format('%I.%I', x.table_schema, x.table_name), 'TRUNCATE'))) AS other_table_access,
-      EXISTS (SELECT 1 FROM pg_proc f JOIN pg_namespace n ON n.oid=f.pronamespace
-        WHERE n.nspname=$1 AND has_function_privilege(current_user, f.oid, 'EXECUTE')) AS function_execute
+      EXISTS (SELECT 1 FROM pg_catalog.pg_class x
+        JOIN pg_catalog.pg_namespace xn ON xn.oid=x.relnamespace
+        WHERE xn.nspname=$1 AND x.relkind IN ('r','p','v','m','f')
+          AND x.relname NOT IN (SELECT unnest($2::text[]))
+          AND (has_table_privilege(current_user, x.oid, 'SELECT')
+            OR has_table_privilege(current_user, x.oid, 'INSERT')
+            OR has_table_privilege(current_user, x.oid, 'UPDATE')
+            OR has_table_privilege(current_user, x.oid, 'DELETE')
+            OR has_table_privilege(current_user, x.oid, 'TRUNCATE')
+            OR has_table_privilege(current_user, x.oid, 'REFERENCES')
+            OR has_table_privilege(current_user, x.oid, 'TRIGGER'))) AS other_table_access,
+      EXISTS (SELECT 1 FROM pg_catalog.pg_proc f JOIN pg_catalog.pg_namespace n ON n.oid=f.pronamespace
+        WHERE n.nspname=$1 AND (
+          f.proname ILIKE '%transfer_virtual_coins%'
+          OR f.proname ILIKE '%coin_transfer%'
+          OR EXISTS (SELECT 1 FROM pg_catalog.aclexplode(
+            COALESCE(f.proacl, pg_catalog.acldefault('f', f.proowner))) a
+            WHERE a.grantee <> 0 AND a.privilege_type='EXECUTE'))) AS function_execute
       FROM pg_roles r CROSS JOIN unnest($2::text[]) AS t CROSS JOIN unnest($3::text[]) AS p
       WHERE r.rolname=current_user
       GROUP BY r.oid, r.rolname, r.rolcanlogin, r.rolsuper, r.rolcreaterole, r.rolcreatedb,
