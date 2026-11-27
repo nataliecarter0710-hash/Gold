@@ -28,6 +28,14 @@ export const DB_SCHEMA = Object.freeze({
   }),
 });
 
+// One canonical diagnostic table list is shared by the read-only inspector.
+export const DIAGNOSTIC_TABLES = Object.freeze([
+  DB_SCHEMA.rounds.table,
+  DB_SCHEMA.coinLedger.table,
+  DB_SCHEMA.virtualCoinLedger.table,
+  DB_SCHEMA.settlements.table,
+]);
+
 // Expected columns are diagnostic comparison candidates, not verified DDL.
 // A mismatch is reported and must be reviewed; the checker never alters schema.
 export const REQUIRED_SCHEMA_COLUMNS = Object.freeze({

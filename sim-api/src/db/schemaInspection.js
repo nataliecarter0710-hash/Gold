@@ -1,8 +1,12 @@
 import pg from 'pg';
-import { REQUIRED_SCHEMA_COLUMNS } from './schemaMapping.js';
+import { DIAGNOSTIC_TABLES, REQUIRED_SCHEMA_COLUMNS } from './schemaMapping.js';
 
-/** Read-only metadata inspection. Use a least-privilege read-only DATABASE_URL. */
-export async function inspectTableColumns(tableNames = Object.keys(REQUIRED_SCHEMA_COLUMNS), { schema = 'public' } = {}) {
+/**
+ * Read-only information_schema inspection. Use a least-privilege read-only
+ * DATABASE_URL. This module runs metadata SELECTs only: no DDL, application-row
+ * writes, RPC invocation, or calls to public.transfer_virtual_coins.
+ */
+export async function inspectTableColumns(tableNames = DIAGNOSTIC_TABLES, { schema = 'public' } = {}) {
   if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required for information_schema inspection. No schema changes were made.');
   if (!Array.isArray(tableNames) || !tableNames.length || tableNames.some((name) => typeof name !== 'string')) {
     throw new TypeError('tableNames must be a non-empty array of table names.');
@@ -44,6 +48,5 @@ export function compareRequiredColumns(rows, required = REQUIRED_SCHEMA_COLUMNS)
 }
 
 export async function inspectSimulationSchema() {
-  // Includes all four diagnostic-scope tables, from the shared mapping contract.
-  return inspectTableColumns(Object.keys(REQUIRED_SCHEMA_COLUMNS));
+  return inspectTableColumns(DIAGNOSTIC_TABLES);
 }
