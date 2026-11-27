@@ -36,7 +36,7 @@ export async function inspectTableColumns(tableNames = DIAGNOSTIC_TABLES, { sche
   });
   try {
     await client.connect();
-    // Start read-only atomically; any inability to enforce this aborts inspection.
+    // PostgreSQL enforces read-only atomically from transaction start.
     await client.query('BEGIN READ ONLY');
     const safety = await client.query(`SELECT current_user AS role_name,
       current_setting('transaction_read_only') AS transaction_read_only,
