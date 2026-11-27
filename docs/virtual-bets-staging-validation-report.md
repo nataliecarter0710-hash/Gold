@@ -1,4 +1,4 @@
-# Throwaway PostgreSQL validation — provisioning blocked
+# Throwaway PostgreSQL validation — partial isolated checks
 
 Date: 2026-11-28
 Branch: feat/virtual-bets-staging
@@ -6,30 +6,34 @@ Branch: feat/virtual-bets-staging
 ## Isolation boundaries
 This run did not connect to or modify Goldbet9-Staging (qoasttmttjiwjvmznoir). Render services, main and feat/sim-api-staging were not changed. public.transfer_virtual_coins was not called or exposed.
 
-## Outcome
-The requested runtime validation could not begin because no disposable PostgreSQL server/target was available in the execution environment. Earlier environment checks found no psql, postgres, docker or podman. A separate Supabase throwaway project could be provisioned, but doing so requires choosing an organization and checking/confirming any cost. No project was created and no SQL was applied.
+## Provisioning and cost
+Connected organization: nataliecarter0710-hash's Org (qqflcpiucjmybbvdgeeo), Free plan. One existing project was listed. Supabase quoted the throwaway project's cost at $0/month. The isolated project goldbet9-schema-test-throwaway was created in ap-south-1 (Mumbai), project ref ouocegahvxrqusnmctmy.
 
-## Requested test results
-All runtime tests below are BLOCKED / NOT RUN, not failed and not passed:
-- [ ] Apply reconciled rounds/bets structure to throwaway database
-- [ ] Fake-data checks for all seven bet status labels and snapshot fields (selection_snapshot, payout_rule_snapshot, result_snapshot and simulation-only fields)
-- [ ] Round happy path CREATED -> OPEN -> CLOSED -> RESULT_RECORDED -> COMPLETE
-- [ ] REVIEW and CANCELLED paths
-- [ ] Invalid transition rejection
-- [ ] Result immutability and version corrections
-- [ ] Idempotency key reuse for same user/same payload
-- [ ] Same key/different payload conflict
+## Checks actually performed
+A disposable test schema was created and then dropped:
+- [x] Round table basic fields/status CHECK and unique (game_code, round_code) probe.
+- [x] Bet table FK, positive-stake CHECK, status CHECK and per-user idempotency uniqueness.
+- [x] Fake transaction probes for duplicate round, invalid round status, bad FK, duplicate user idempotency key, and zero stake rejection; transaction rolled back.
+- [x] Test schema dropped after probes.
+- [x] Test project paused after checks.
+
+These are limited constraint probes, not a full implementation of the reconciled design. The schema was a minimal test harness based on the documentation, not a migration of a complete production-ready schema.
+
+## NOT RUN / NOT VERIFIED
+- [ ] All seven bet statuses and snapshot-field semantics end-to-end
+- [ ] Full round lifecycle transition graph and REVIEW/CANCELLED paths
+- [ ] Invalid transition rejection via graph enforcement (no transition trigger/function tested)
+- [ ] Result immutability and audited version correction
+- [ ] Same-key/same-payload retry semantics versus changed-payload conflict (only unique-key rejection was probed)
 - [ ] Concurrent duplicate behavior
-- [ ] RLS role tests (anonymous, own user, cross-user, privileged/elevated roles as applicable)
-- [ ] Rollback and disposable target cleanup
-
-## Rules under test
-Use the reconciled rules in docs/simulation-persistence-architecture-plan.md and docs/virtual-bets-staging-schema-review.md as the test specification. Fake data only. Any test target must be distinct from Goldbet9-Staging and must not contain copied user data or secrets.
+- [ ] RLS tests across anonymous, own user, cross-user, hierarchy/admin, elevated/service roles; scaffold creation was not included in the actual probes
+- [ ] Complete grants/policy review
+- [ ] Full cleanup/deletion of project
 
 ## Cleanup
-No test database was created, so there was no database to reset or delete. Cleanup is therefore not applicable.
+The disposable test schema was dropped and the throwaway project was paused. A delete-project action was not available in the connected tool set, so the project has NOT been deleted. Pausing was confirmed successful. No further SQL was run after pausing.
 
-## Next prerequisite
-To provision a separate disposable Supabase/PostgreSQL target safely, the user must specify which Supabase organization to use. Before creation, obtain and disclose the cost quote and require explicit agreement if it is non-zero. Do not use the prohibited Goldbet9-Staging project or its branches for this test.
+## Rules under test
+Use the reconciled rules in docs/simulation-persistence-architecture-plan.md and docs/virtual-bets-staging-schema-review.md as the specification. Fake data only. No existing Goldbet9 database or data was used.
 
-This report is honest status documentation: it records blocked provisioning, not completed PostgreSQL validation.
+This report distinguishes completed limited constraint probes from tests not run; it does not claim full validation.
