@@ -28,5 +28,3 @@ Protected assets (must remain untouched): `Index.htm`, `Goldbet9-Staging` (`qoas
 - [ ] Keep clear simulation/virtual-coin labels visible on lobby and history screens.
 - [ ] Keep age-restriction, regional-restriction, and responsible-use notices present and legible.
 - [ ] Verify `Index.htm`, `Goldbet9-Staging`, Render, `main`, and `feat/sim-api-staging` remain untouched until an explicit promotion step is approved.
-
-**Status:** Checklist only; tests are not claimed complete and this branch is not launch-approved.
