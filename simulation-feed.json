@@ -1,7 +1,7 @@
 {
   "feedVersion": "1.0",
   "mode": "SYNTHETIC_SAMPLE_ONLY",
-  "generatedAt": "2026-11-28T09:50:00Z",
+  "generatedAt": "2026-11-28T10:10:00Z",
   "records": [
     {
       "game": "Teen Patti (sample)",
@@ -252,6 +252,105 @@
       "rule": "Snapshot v1: multiplier is display-only sample data",
       "result": "Sample record voided; no settlement or payout",
       "time": "2026-11-28 09:45",
+      "review": []
+    },
+    {
+      "game": "Poker (sample)",
+      "round": "PO-S-615",
+      "id": "S-10041",
+      "status": "PENDING",
+      "roundState": "CREATED",
+      "selection": "Fictional straight draw",
+      "rule": "Snapshot v1: illustrative payout schedule 6×; sample only",
+      "result": "No result yet • round not opened",
+      "time": "2026-11-28 10:01",
+      "review": []
+    },
+    {
+      "game": "32 Cards B (sample)",
+      "round": "32B-S-411",
+      "id": "S-10042",
+      "status": "ACCEPTED_SIMULATION",
+      "roundState": "OPEN",
+      "selection": "Fictional low-card group",
+      "rule": "Snapshot v1: illustrative payout 2.2×",
+      "result": "Round open • sample result pending",
+      "time": "2026-11-28 10:02",
+      "review": []
+    },
+    {
+      "game": "Teen Patti One Day (sample)",
+      "round": "TP1D-S-601",
+      "id": "S-10043",
+      "status": "RESULT_RECORDED",
+      "roundState": "CLOSED",
+      "selection": "Fictional Player B",
+      "rule": "Snapshot v1: illustrative payout 2×",
+      "result": "Player A • sample result captured; settlement not simulated",
+      "time": "2026-11-28 10:03",
+      "review": []
+    },
+    {
+      "game": "Dragon Tiger Coin Flip (sample)",
+      "round": "DTC-S-550",
+      "id": "S-10044",
+      "status": "LOST_SIMULATION",
+      "roundState": "COMPLETE",
+      "selection": "Fictional Tiger",
+      "rule": "Snapshot v1: illustrative payout 1.95×",
+      "result": "Dragon • fictional sample result",
+      "time": "2026-11-28 10:04",
+      "review": []
+    },
+    {
+      "game": "European Roulette (sample)",
+      "round": "ER-S-900",
+      "id": "S-10045",
+      "status": "VOID_SIMULATION",
+      "roundState": "CANCELLED",
+      "selection": "Fictional even-number wager",
+      "rule": "Snapshot v1: illustrative payout 2×",
+      "result": "Round cancelled • record voided in sample",
+      "time": "2026-11-28 10:05",
+      "review": []
+    },
+    {
+      "game": "Andar Bahar (sample)",
+      "round": "AB-S-1202",
+      "id": "S-10046",
+      "status": "PENDING",
+      "roundState": "REVIEW",
+      "selection": "Fictional Bahar selection",
+      "rule": "Snapshot v1: illustrative payout 1.9×",
+      "result": "Outcome withheld pending review",
+      "time": "2026-11-28 10:06",
+      "review": [
+        "v1 • 10:06 • Reason: fictional result payload was incomplete • Actor: SAMPLE_REVIEWER_D • Previous: result='Bahar', status='PENDING', roundState='REVIEW' • Updated: result withheld",
+        "v2 • 10:09 • Reason: sample review completed • Actor: SAMPLE_REVIEWER_A • Previous: incomplete payload note • Updated: payload noted as incomplete; record remains pending and round remains REVIEW"
+      ]
+    },
+    {
+      "game": "Lucky 7 (sample)",
+      "round": "LK7-S-512",
+      "id": "S-10047",
+      "status": "CANCELLED",
+      "roundState": "CANCELLED",
+      "selection": "Fictional side bet",
+      "rule": "Snapshot v1: illustrative payout 3×",
+      "result": "Sample record cancelled before result",
+      "time": "2026-11-28 10:07",
+      "review": []
+    },
+    {
+      "game": "Sic Bo (sample)",
+      "round": "SB-S-902",
+      "id": "S-10048",
+      "status": "WON_SIMULATION",
+      "roundState": "COMPLETE",
+      "selection": "Fictional triple-dice selection",
+      "rule": "Snapshot v1: illustrative payout 10×",
+      "result": "Matching sample dice • illustrative result only",
+      "time": "2026-11-28 10:08",
       "review": []
     }
   ]
