@@ -112,3 +112,9 @@ This checkpoint is not a legal opinion, security certification, or production ap
 - Selecting a category now clears the prior search query, avoiding confusing empty category results when a previous search was active.
 - Commit: d261026ec794fa75b617ae0fc6ec0705cf841657.
 - Deployment verification pending.
+
+
+## Preview dialog wording refinement (2026-11-27)
+- Preview dialog now immediately states visual-preview-only and that gameplay, wagering and settlement are disabled; button wording changed to Preview information.
+- Commit: e8aa09500ff6e9df13c045c94c522ddcd38a66f5.
+- Deployment verification pending.
