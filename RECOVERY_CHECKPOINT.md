@@ -94,3 +94,9 @@ This checkpoint is not a legal opinion, security certification, or production ap
 - Improved focus ring on the favorite control to remain visible within clipped game cards.
 - Commit: 725e032426381eafb67c2651b97561f0db8b7edf.
 - Deployment verification pending.
+
+
+## Empty-state guidance improvement (2026-11-27)
+- Favorites view now explains how to save a game when the list is empty; search/category empty results retain their existing guidance.
+- Commit: 7a5b4ce889d3a0974976abf26bf62637e5a802c8.
+- Deployment verification pending.
