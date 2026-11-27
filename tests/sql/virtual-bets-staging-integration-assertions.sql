@@ -3,24 +3,24 @@ CREATE TEMP TABLE test_results(name text,result text,detail text);
 DO $$ DECLARE r test_validation.rounds%ROWTYPE; rid uuid:=gen_random_uuid(); BEGIN
  INSERT INTO test_validation.rounds(id,game_code,round_code) VALUES(rid,'TEST','R1');
  UPDATE test_validation.rounds SET status='OPEN' WHERE rounds.id=rid;
- UPDATE test_validation.rounds SET status='CLOSED' WHERE id=id;
- UPDATE test_validation.rounds SET result_payload='{"winner":"A"}',result_version=1,status='RESULT_RECORDED' WHERE id=id;
- UPDATE test_validation.rounds SET status='COMPLETE' WHERE id=id;
+ UPDATE test_validation.rounds SET status='CLOSED' WHERE rounds.id=rid;
+ UPDATE test_validation.rounds SET result_payload='{"winner":"A"}',result_version=1,status='RESULT_RECORDED' WHERE rounds.id=rid;
+ UPDATE test_validation.rounds SET status='COMPLETE' WHERE rounds.id=rid;
  INSERT INTO test_results VALUES('valid lifecycle','PASS','CREATED -> OPEN -> CLOSED -> RESULT_RECORDED -> COMPLETE');
  EXCEPTION WHEN OTHERS THEN INSERT INTO test_results VALUES('valid lifecycle','FAIL',SQLERRM); END $$;
-DO $$ DECLARE id uuid:=gen_random_uuid(); BEGIN
- INSERT INTO test_validation.rounds(id,game_code,round_code,status) VALUES(id,'TEST','R2','CREATED');
- BEGIN UPDATE test_validation.rounds SET status='CLOSED' WHERE rounds.id=id; RAISE EXCEPTION 'expected rejection not raised'; EXCEPTION WHEN others THEN IF SQLERRM='expected rejection not raised' THEN RAISE; END IF; END;
+DO $$ DECLARE rid uuid:=gen_random_uuid(); BEGIN
+ INSERT INTO test_validation.rounds(id,game_code,round_code,status) VALUES(rid,'TEST','R2','CREATED');
+ BEGIN UPDATE test_validation.rounds SET status='CLOSED' WHERE rounds.id=rid; RAISE EXCEPTION 'expected rejection not raised'; EXCEPTION WHEN others THEN IF SQLERRM='expected rejection not raised' THEN RAISE; END IF; END;
  INSERT INTO test_results VALUES('invalid transition','PASS','Skipped state rejected');
  EXCEPTION WHEN OTHERS THEN INSERT INTO test_results VALUES('invalid transition','FAIL',SQLERRM); END $$;
-DO $$ DECLARE id uuid:=gen_random_uuid(); BEGIN
- INSERT INTO test_validation.rounds(id,game_code,round_code,status) VALUES(id,'TEST','R3','CLOSED');
- UPDATE test_validation.rounds SET result_payload='{"winner":"A"}',result_version=1,status='RESULT_RECORDED' WHERE rounds.id=id;
- BEGIN UPDATE test_validation.rounds SET result_payload='{"winner":"B"}' WHERE rounds.id=id; RAISE EXCEPTION 'expected immutable rejection not raised'; EXCEPTION WHEN others THEN IF SQLERRM='expected immutable rejection not raised' THEN RAISE; END IF; END;
- UPDATE test_validation.rounds SET status='REVIEW' WHERE rounds.id=id;
+DO $$ DECLARE rid uuid:=gen_random_uuid(); BEGIN
+ INSERT INTO test_validation.rounds(id,game_code,round_code,status) VALUES(rid,'TEST','R3','CLOSED');
+ UPDATE test_validation.rounds SET result_payload='{"winner":"A"}',result_version=1,status='RESULT_RECORDED' WHERE rounds.id=rid;
+ BEGIN UPDATE test_validation.rounds SET result_payload='{"winner":"B"}' WHERE rounds.id=rid; RAISE EXCEPTION 'expected immutable rejection not raised'; EXCEPTION WHEN others THEN IF SQLERRM='expected immutable rejection not raised' THEN RAISE; END IF; END;
+ UPDATE test_validation.rounds SET status='REVIEW' WHERE rounds.id=rid;
  SET LOCAL test.correction_reason='test reviewed correction';
- UPDATE test_validation.rounds SET result_payload='{"winner":"B"}',result_version=2,status='RESULT_RECORDED' WHERE rounds.id=id;
- IF (SELECT count(*) FROM test_validation.result_history WHERE result_history.round_id=id AND version IN (1,2))<>2 THEN RAISE EXCEPTION 'history versions not preserved'; END IF;
+ UPDATE test_validation.rounds SET result_payload='{"winner":"B"}',result_version=2,status='RESULT_RECORDED' WHERE rounds.id=rid;
+ IF (SELECT count(*) FROM test_validation.result_history WHERE result_history.round_id=rid AND version IN (1,2))<>2 THEN RAISE EXCEPTION 'history versions not preserved'; END IF;
  INSERT INTO test_results VALUES('result immutable/review correction','PASS','Direct overwrite rejected; REVIEW correction increments version and retains history');
  EXCEPTION WHEN OTHERS THEN INSERT INTO test_results VALUES('result immutable/review correction','FAIL',SQLERRM); END $$;
 DO $$ DECLARE rid uuid:=gen_random_uuid(); uid uuid:=gen_random_uuid(); au uuid:=gen_random_uuid(); b uuid; BEGIN
