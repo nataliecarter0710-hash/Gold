@@ -1,32 +1,7 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Goldbet9 | Training & Learning</title>
-<meta name="description" content="A training environment for learning casino game rules, table etiquette, and probability concepts using non-redeemable training points.">
-<style>
-:root{color-scheme:dark;--bg:#090a0c;--panel:#15171a;--gold:#d4b36a;--muted:#a8adb4}
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:radial-gradient(ellipse at top,#25211a,#090a0c 55%);color:#f6f4ef;min-height:100vh}
-main{max-width:960px;margin:auto;padding:40px 22px 80px}header{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:10px 0 30px}
-.brand{font-weight:800;letter-spacing:.12em;color:var(--gold)}.pill{border:1px solid #665533;border-radius:999px;padding:8px 12px;color:var(--gold);font-size:.8rem}
-.hero{padding:48px 26px;border:1px solid #34312a;border-radius:24px;background:linear-gradient(145deg,#1b1b1b,#101113);box-shadow:0 20px 80px #0008}
-h1{font-size:clamp(2rem,6vw,4rem);line-height:1.05;margin:0 0 18px}h1 span{color:var(--gold)}p{color:var(--muted);line-height:1.7}
-.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}.action{padding:12px 16px;border-radius:12px;border:1px solid #4c4536;color:var(--gold);text-decoration:none;font-weight:700}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:22px}.card{padding:20px;border:1px solid #303237;background:var(--panel);border-radius:18px}.card h2{font-size:1.15rem;margin:0 0 8px}
-.notice{margin-top:24px;border-left:3px solid var(--gold);padding:14px 18px;background:#161513;border-radius:8px;color:#c7c3ba;font-size:.9rem}
-footer{margin-top:34px;color:#777d84;font-size:.8rem}
-</style>
-</head>
-<body><main>
-<header><div class="brand">GOLDBET9</div><div class="pill">TRAINING ENVIRONMENT</div></header>
-<section class="hero"><h1>Learn the games.<br><span>Practice with purpose.</span></h1>
-<p>This learning environment is designed to help participants explore game rules, table procedures, probability, and responsible decision-making through practice scenarios.</p>
-<div class="actions"><a class="action" href="#learning">Explore learning areas</a></div></section>
-<section id="learning" class="grid">
-<div class="card"><h2>Rules & Table Procedures</h2><p>Study game mechanics, terminology, and the sequence of play.</p></div>
-<div class="card"><h2>Probability Learning</h2><p>Explore probability concepts and understand how outcomes vary.</p></div>
-<div class="card"><h2>Practice Scenarios</h2><p>Use training exercises and sample scenarios for educational purposes.</p></div>
-</section>
-<div class="notice">Training points are non-redeemable learning units. This environment does not process deposits, withdrawals, payments, or exchanges of points for money or prizes.</div>
-<footer>Goldbet9 Training · Learning use only</footer>
-</main></body></html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Goldbet9 Training Studio</title><style>
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#301321,#09060b 65%);color:#f8f2e6;font-family:system-ui,Arial}header{padding:24px 16px;text-align:center;border-bottom:1px solid #9b7836}h1{color:#e6c46a;margin:4px;font-size:30px}p{color:#c9bca8}.notice{margin:16px auto;max-width:1100px;padding:14px;border:1px solid #c9a54d;border-radius:14px;background:#21111c;color:#ffe8a5}.wrap{max-width:1100px;margin:auto;padding:16px}.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.filters button{background:#32172a;color:#f4dc9a;border:1px solid #85632e;padding:10px 14px;border-radius:10px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px}.game{border:1px solid #74552c;border-radius:16px;background:linear-gradient(145deg,#25111d,#100a11);padding:18px 12px;min-height:118px;text-align:center}.game .ico{font-size:32px}.game h3{font-size:14px;margin:10px 0 4px}.game small{color:#c5a96a}footer{text-align:center;padding:30px;color:#9f958a;font-size:12px}
+</style></head><body><header><div style="font-size:30px">♛</div><h1>Goldbet9 Training Studio</h1><p>Interactive visual catalogue • learning environment</p></header><div class="notice"><b>Training environment only.</b> No real money, deposits, withdrawals, cash prizes, or betting. This page is a visual catalogue and does not run game wagering or settlement.</div><main class="wrap"><div class="filters" id="filters"></div><div class="grid" id="grid"></div></main><footer>Goldbet9 • isolated training preview</footer><script>
+const games=[["Teen Patti 20-20","♠","Cards"],["Poker 2020","♣","Cards"],["Dragon Tiger","🐉","Cards"],["Baccarat","♦","Cards"],["Amar Akbar Anthony","🎴","Cards"],["Lucky 7 A","🍀","Cards"],["Lucky 7 B","⭐","Cards"],["32 Cards Race","🏇","Cards"],["European Roulette","🎡","Wheel"],["Aviator","✈️","Other"],["Teen Patti One Day","🂡","Cards"],["Poker One Day","🃏","Cards"],["Dragon Tiger Coin Flip","🪙","Cards"],["Football Studio","⚽","Other"],["Muflis Teen Patti","🎴","Cards"],["32 Cards A","🃏","Cards"],["32 Cards B","🂱","Cards"],["Andar Bahar 1","🟠","Cards"],["Andar Bahar 2","🔵","Cards"],["Bollywood Casino","🎬","Other"],["Worli Matka","🔢","Other"],["Lightning Roulette","⚡","Wheel"],["Crazy Time","🎉","Wheel"],["Sic Bo","🎲","Wheel"]];
+const cats=["All","Cards","Wheel","Other"];let selected="All";function draw(){document.getElementById("filters").innerHTML=cats.map(c=>'<button data-cat="'+c+'">'+c+'</button>').join("");document.getElementById("grid").innerHTML=games.filter(g=>selected==="All"||g[2]===selected).map(g=>'<article class="game"><div class="ico">'+g[1]+'</div><h3>'+g[0]+'</h3><small>Training catalogue</small></article>').join("");document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{selected=b.dataset.cat;draw()})}draw();
+</script></body></html>
