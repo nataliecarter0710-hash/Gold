@@ -124,3 +124,8 @@ This checkpoint is not a legal opinion, security certification, or production ap
 - Added a CSS-generated circular jewel/medallion motif layered in the game tile icon area to visually suppress the emoji placeholder and test a premium decorative treatment.
 - Commit: 8dcbf794b754fa585bb493e5cc5d5e8a5c76377d.
 - This is a styling experiment, not bespoke game illustration; verify deployment and visual result before calling it final.
+
+
+## Varied tile medallion styles (2026-11-27)
+- CSS now cycles among four distinct medallion silhouette/symbol treatments across card positions, using category glow colors and gold ornamental styling. Still a CSS artwork prototype, not final commissioned HD game imagery.
+- Commit: e6b83fdd55ca8f4f78fca7ad531533ad03c634d4.
