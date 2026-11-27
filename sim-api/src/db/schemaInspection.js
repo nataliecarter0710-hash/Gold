@@ -1,24 +1,51 @@
 import pg from 'pg';
 import { DIAGNOSTIC_TABLES, REQUIRED_SCHEMA_COLUMNS } from './schemaMapping.js';
 
+const WRITE_PRIVILEGES = ['INSERT', 'UPDATE', 'DELETE', 'TRUNCATE', 'REFERENCES', 'TRIGGER'];
+const FORBIDDEN_ROLE_NAMES = /^(postgres|service_role|supabase_admin|admin|root)$/i;
+
 /**
- * Read-only information_schema inspection. Use a least-privilege read-only
- * DATABASE_URL. This module runs metadata SELECTs only: no DDL, application-row
- * writes, RPC invocation, or calls to public.transfer_virtual_coins.
+ * Requires an explicitly enabled diagnostic connection and a separately named
+ * read-only credential. The database transaction is forced read-only and role
+ * attributes/table privileges are checked before metadata is returned.
  */
 export async function inspectTableColumns(tableNames = DIAGNOSTIC_TABLES, { schema = 'public' } = {}) {
-  if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required for information_schema inspection. No schema changes were made.');
+  if (process.env.DIAGNOSTIC_DB_ENABLED !== 'true') throw new Error('Diagnostic database inspection is disabled.');
+  const connectionString = process.env.DIAGNOSTIC_READONLY_DATABASE_URL;
+  if (!connectionString) throw new Error('A dedicated diagnostic read-only connection is required.');
   if (!Array.isArray(tableNames) || !tableNames.length || tableNames.some((name) => typeof name !== 'string')) {
     throw new TypeError('tableNames must be a non-empty array of table names.');
   }
+  let parsed;
+  try { parsed = new URL(connectionString); } catch { throw new Error('Diagnostic connection configuration is invalid.'); }
+  if (FORBIDDEN_ROLE_NAMES.test(decodeURIComponent(parsed.username || ''))) {
+    throw new Error('A privileged database role is not permitted for diagnostics.');
+  }
+
   const client = new pg.Client({
-    connectionString: process.env.DATABASE_URL,
+    connectionString,
     ssl: process.env.PGSSL_REJECT_UNAUTHORIZED === 'false' ? { rejectUnauthorized: false } : { rejectUnauthorized: true },
     connectionTimeoutMillis: 10000,
     query_timeout: 15000,
   });
   try {
     await client.connect();
+    await client.query('BEGIN');
+    await client.query('SET TRANSACTION READ ONLY');
+    const safety = await client.query(`SELECT current_user AS role_name,
+      current_setting('transaction_read_only') AS transaction_read_only,
+      r.rolsuper, r.rolcreaterole, r.rolcreatedb,
+      COALESCE(bool_or(has_table_privilege(current_user, format('%I.%I', $1, t), p)), false) AS has_write_privilege
+      FROM pg_roles r
+      CROSS JOIN unnest($2::text[]) AS t
+      CROSS JOIN unnest($3::text[]) AS p
+      WHERE r.rolname = current_user
+      GROUP BY r.rolname, r.rolsuper, r.rolcreaterole, r.rolcreatedb, current_setting('transaction_read_only')`,
+      [schema, tableNames, WRITE_PRIVILEGES]);
+    const verified = safety.rows[0];
+    if (!verified || verified.transaction_read_only !== 'on' || verified.rolsuper || verified.rolcreaterole || verified.rolcreatedb || verified.has_write_privilege) {
+      throw new Error('Database role or transaction failed read-only verification.');
+    }
     const result = await client.query(
       `SELECT table_schema, table_name, column_name, data_type, udt_name, is_nullable, column_default
        FROM information_schema.columns
@@ -26,7 +53,11 @@ export async function inspectTableColumns(tableNames = DIAGNOSTIC_TABLES, { sche
        ORDER BY table_name, ordinal_position`,
       [schema, tableNames],
     );
+    await client.query('COMMIT');
     return result.rows;
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw error;
   } finally {
     await client.end().catch(() => {});
   }
