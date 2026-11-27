@@ -187,3 +187,10 @@ This checkpoint is not a legal opinion, security certification, or production ap
 - Favorite-count status now announces only when a favorite is changed, not during every search/filter redraw, to reduce unnecessary assistive-technology announcements.
 - Code commit: `cd47bd5190cefc55e2b637bac291cae37f95e197`.
 - Deployment pending verification.
+
+
+## Current review checkpoint (2026-11-27)
+- The favorite-count live region now updates only on a favorite toggle, not on general redraws. Code commit `cd47bd5190cefc55e2b637bac291cae37f95e197`; Render verified LIVE.
+- The documentation update for this code commit is also verified LIVE (`c927728f7e58bba63a2828cb2da25f9b6aebe83e`).
+- Supabase staging health advisor: no findings. Security advisor: four informational RLS-enabled/no-policy notices on activity_audit, agent_relationships, tenants, virtual_coin_ledger; direct client privileges on these sensitive tables remain revoked per prior checkpoint. Do not add permissive policies to silence notices.
+- Review is limited to repository inspection and advisory checks; browser visual testing has not been performed.
