@@ -59,3 +59,18 @@ Protected assets (must remain untouched): `Index.htm`, `Goldbet9-Staging` (`qoas
 - [ ] Record/confirm clear simulation labels on lobby and history screens.
 - [ ] Record/confirm age, regional, and responsible-use notices are present and legible.
 - [ ] Verify protected assets remain untouched until an explicit promotion step is approved.
+
+
+## Non-blocking UI/account-flow defect log (28 Nov 2026)
+
+Observed in the Render-hosted app during viewing (recorded as a defect only; Render/auth/database resources were not modified):
+- **Self-service password change missing:** user and admin account interfaces do not expose a Change Password control.
+- **Authorized hierarchy reset missing:** upline roles lack a Reset Password control for their downline accounts.
+
+This is a non-blocking planning note, not an implementation or security verification. Future implementation expectations:
+1. **Change Password (self-service):** provide a clearly labeled control in user and admin account/profile settings; require the signed-in account's authentication and appropriate password confirmation/re-authentication, enforce password policy, and show success/failure feedback without revealing sensitive details.
+2. **Reset Password (hierarchy):** only authorized upline roles may reset passwords for accounts directly or indirectly beneath them, according to the configured hierarchy and explicit role scope. Enforce permission server-side, not only by hiding UI controls. Prevent cross-tenant, unrelated-branch, self-escalation, and Super Admin/peer resets unless expressly allowed by policy. Log actor, target, timestamp and outcome without recording passwords or reset secrets.
+3. Prefer a secure reset flow (such as a reset link or controlled temporary credential flow requiring immediate change) rather than displaying or storing a target user's existing/new password in plain text. Confirm identity, rate-limit actions, and invalidate or manage sessions according to policy.
+4. **Future test plan:** synthetic fixtures for User/Admin self-change, permitted upline-to-downline reset, denied peer/other-tenant/out-of-branch attempts, role changes, rate limiting, and audit logging. No such tests were run as part of this defect recording.
+
+Status: logged for a future implementation pass; does not block Phase A synthetic feed review. No Render, auth, database, live account, or production resource was changed.
