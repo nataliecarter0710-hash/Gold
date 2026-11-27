@@ -88,3 +88,9 @@ This checkpoint is not a legal opinion, security certification, or production ap
 - Added consistent visible focus indicators to search, category, navigation, mobile navigation, and modal buttons.
 - Added touch-action: manipulation to buttons to reduce double-tap delay behavior on touch devices.
 - Commit: 638b31cf004fca9d891134f6a13cc1c883126837; deployment verification pending.
+
+
+## Favorite-button focus refinement (2026-11-27)
+- Improved focus ring on the favorite control to remain visible within clipped game cards.
+- Commit: 725e032426381eafb67c2651b97561f0db8b7edf.
+- Deployment verification pending.
