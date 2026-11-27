@@ -37,3 +37,7 @@ The disposable test schema was dropped and the throwaway project was paused. A d
 Use the reconciled rules in docs/simulation-persistence-architecture-plan.md and docs/virtual-bets-staging-schema-review.md as the specification. Fake data only. No existing Goldbet9 database or data was used.
 
 This report distinguishes completed limited constraint probes from tests not run; it does not claim full validation.
+
+
+## Repeatable test harness added
+A branch-only repeatable test specification/checklist has been added at `docs/virtual-bets-staging-repeatable-test-harness.md` (commit f3cad22f0071b84a0a554635aeb01cc673b796e1). It defines full round graph checks, invalid transitions, REVIEW-based result correction and append-only history, retry reuse/conflict semantics, concurrent duplicate-write tests, and RLS/grant tests across roles. It remains a test plan; no runtime tests were executed in this commit.
