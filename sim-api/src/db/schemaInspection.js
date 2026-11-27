@@ -1,7 +1,7 @@
 import pg from 'pg';
 import { REQUIRED_SCHEMA_COLUMNS } from './schemaMapping.js';
 
-/** Read-only metadata inspection. Uses a least-privilege, read-only DATABASE_URL. */
+/** Read-only metadata inspection. Use a least-privilege read-only DATABASE_URL. */
 export async function inspectTableColumns(tableNames = Object.keys(REQUIRED_SCHEMA_COLUMNS), { schema = 'public' } = {}) {
   if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required for information_schema inspection. No schema changes were made.');
   if (!Array.isArray(tableNames) || !tableNames.length || tableNames.some((name) => typeof name !== 'string')) {
@@ -44,5 +44,6 @@ export function compareRequiredColumns(rows, required = REQUIRED_SCHEMA_COLUMNS)
 }
 
 export async function inspectSimulationSchema() {
+  // Includes all four diagnostic-scope tables, from the shared mapping contract.
   return inspectTableColumns(Object.keys(REQUIRED_SCHEMA_COLUMNS));
 }
