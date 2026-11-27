@@ -123,3 +123,14 @@ Status: logged for a future implementation pass; does not block Phase A syntheti
 - [x] The top of a matching Dragon Tiger (sample) card is visible below the controls; its header shows `DT-S-2088` and `PENDING / REVIEW`.
 - [x] This screenshot is direct user-supplied visual evidence of search narrowing and counter updating for this query. It does not establish the exact identity/content of the second matching record beyond the count, nor the behavior of status/state filters, combined filtering, or empty-match handling.
 - [ ] Bet-status and round-state selection behavior, combined filtering, and zero-match search behavior remain unverified.
+
+
+## Fold 8 video evidence — filter interactions (user-uploaded video, 28 Nov 2026)
+
+- [x] Search `Dragon tiger` combined with Bet status `PENDING` and Round state `OPEN`: screenshot/video shows **0 of 28** and “No matching sample records.” This is observed combined-filter empty state.
+- [x] Bet status `ACCEPTED_SIMULATION` with Round state `OPEN`: **3 of 28** records shown; cards visible include Andar Bahar, Muflis Teen Patti, and 32 Cards B, all tagged ACCEPTED_SIMULATION / OPEN.
+- [x] Bet status `CANCELLED` with Round state `OPEN`: **0 of 28** and “No matching sample records.”
+- [x] Bet status `RESULT_RECORDED` with Round state `OPEN`: **0 of 28** and “No matching sample records.”
+- [x] With Bet status `RESULT_RECORDED` and Round state `CLOSED`: **2 of 28** records shown; Football Studio and Teen Patti One Day cards visible, each tagged RESULT_RECORDED / CLOSED.
+- [x] Video shows the filtered count and no-match text updating across the selections above. This is user-provided Fold 8 video evidence; no code or backend was changed as part of this observation.
+- [ ] Round-state options such as REVIEW and their standalone filtering/count behavior remain untested in this video.
