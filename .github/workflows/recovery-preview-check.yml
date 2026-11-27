@@ -1,0 +1,17 @@
+name: Recovery preview checks
+
+on:
+  push:
+    branches:
+      - goldbet9-training-recovery
+  pull_request:
+    branches:
+      - goldbet9-training-recovery
+
+jobs:
+  static-preview-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify lobby safeguards and structure
+        run: python3 .github/scripts/check_preview.py
