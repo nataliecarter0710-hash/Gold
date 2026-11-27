@@ -104,3 +104,13 @@ Status: logged for a future implementation pass; does not block Phase A syntheti
 - [x] The page status text “Synthetic feed loaded and validated.” and counter “28 of 28 sample records shown” were observed. Search and filters were shown at defaults (“All bet statuses” and “All round states”), but were not operated; behavior and counter changes remain unverified.
 - [x] Some screenshots include the Android volume overlay over the right side of filter controls; this is a phone OS overlay, not evidence of page clipping.
 - [ ] Full-page scroll/overflow audit, interaction tests for search and both filters, and any counter changes remain unverified.
+
+
+## Fold 8 filter/search interaction observations (user screenshots; 28 Nov 2026)
+
+- [x] Search field was focused on the phone and the on-screen keyboard appeared. No search term/result was shown in the captured screenshot; the counter still displayed “28 of 28 sample records shown”. Filtering behavior after typing remains unverified.
+- [x] Bet-status selector was opened. The screenshot shows “All bet statuses” and an option labelled “PENDING”. No option selection or resulting card/counter change was captured; filtering behavior remains unverified.
+- [x] Round-state selector was opened. The screenshot shows “All round states” and an option labelled “CREATED”. No option selection or resulting card/counter change was captured; filtering behavior remains unverified.
+- [x] The opened Android selection overlays appear as tall grey panels over the page in the captured views. This is recorded as observed overlay appearance, not a confirmed page overflow defect.
+- [ ] Search-result narrowing, combined search/status/state filtering, empty-match behavior, and counter updates after selections remain unverified. The screenshots do not prove these interactions work.
+
