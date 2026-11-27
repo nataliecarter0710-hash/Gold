@@ -106,3 +106,9 @@ This checkpoint is not a legal opinion, security certification, or production ap
 - Lobby heading now politely announces selected category and matching game count to assistive technology users as filters change.
 - Commit: 3be364e6cf1a4da5bdfb36c94267c7966ea1daa2.
 - Deployment verification pending.
+
+
+## Category navigation search reset (2026-11-27)
+- Selecting a category now clears the prior search query, avoiding confusing empty category results when a previous search was active.
+- Commit: d261026ec794fa75b617ae0fc6ec0705cf841657.
+- Deployment verification pending.
