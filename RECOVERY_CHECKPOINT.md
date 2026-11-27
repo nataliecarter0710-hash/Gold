@@ -136,3 +136,5 @@ This checkpoint is not a legal opinion, security certification, or production ap
 - Sequential commits: 3752680835f646e884a093c95a63471e4e72d977 (badge renderer), 625ba018db794707926bedcd713760f166b70a66 (obsolete emoji CSS removed).
 
 - Nov 27: Further varied tile artwork badge backgrounds, symbol sizing and decorative ring rotations. Commit b3d004d8a83d19f17eaf49dee8e840e76997cf07. Deployment pending at checkpoint write.
+
+- Preview-modal status text clarified on Nov 27 to explicitly state visual preview only, category context, and that gameplay/wagering/settlement are unavailable. Commit 1f86de4e9e9fe3f3248da78a883778cd6f0044b2.
