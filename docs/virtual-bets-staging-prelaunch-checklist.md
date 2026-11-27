@@ -23,7 +23,7 @@ Protected assets (must remain untouched): `Index.htm`, `Goldbet9-Staging` (`qoas
 - **Physical Android:** folded/unfolded phone verification is separate and not performed as part of this browser test attempt; do not treat desktop/browser availability as phone verification.
 - **Historical isolated security probes:** a report documents anon SELECT denial and authenticated direct INSERT/UPDATE/DELETE denial, plus simultaneous same-key/same-payload reuse and changed-payload conflict rejection. These probes used a separate disposable project that was subsequently dropped/paused. This report is historical evidence, not a fresh test, and no throwaway project is to be resumed or modified now.
 - **Not verified yet:** cross-user read isolation; independent anon write-denial probes; per-user key isolation; broader multi-user and repeated/overlapping concurrency testing; and production security/grants or operational paths.
-- **Phone spot-check (user screenshots):** folded portrait screenshot shows vertically stacked catalog cards and the simulation notice/lobby panel; unfolded screenshot shows a three-column catalog layout. No obvious horizontal overflow/clipping is visible in the captured areas. Search/filter/counter interactions, snapshot details, REVIEW history, and full-page scrolling remain unobserved.
+- **Phone spot-check (user screenshots):** folded portrait and unfolded catalog layout observations recorded, plus lower-history-section screenshot observations below. Search/filter interactions, REVIEW history details, and full-page scrolling remain unverified.
 
 
 
@@ -31,16 +31,19 @@ Protected assets (must remain untouched): `Index.htm`, `Goldbet9-Staging` (`qoas
 - Folded/portrait: catalog cards appear stacked vertically; simulation-only badge, simulation notice, lobby panel and catalog are visible. No obvious horizontal overflow or clipping in the screenshot's captured area.
 - Unfolded/wider: catalog is arranged in three columns; notice and lobby panel span the wider content area. No obvious horizontal overflow or clipping in the captured area.
 - Overflow/clipping/wrapping: no obvious issue visible in the supplied screenshots, but this is limited to the captured viewport and not a full scroll test. Catalog labels/tags appear contained in their cards in the visible area.
-- Search, Bet status, Round state, counter: not shown/interacted with in screenshots; no result recorded.
-- REVIEW history and snapshot stacking: not inspected; screenshot only shows the history heading and a partial top edge of the history area. Round-state vs bet-status distinction not visually checked.
+- Lower history area: screenshot shows the status message “Synthetic feed loaded and validated.”, Search records field, Bet status selector (default “All bet statuses”), Round state selector (default “All round states”), and “28 of 28 sample records shown.” These controls are visible, but were not interacted with.
+- First visible history card: Teen Patti (sample) • TP-S-1042, with Selection snapshot “Player A (fictional)”, Payout-rule snapshot “Illustrative rule: sample payout 2×”, and Result snapshot “Player A • sample result”. Its badge reads “WON_SIMULATION / COMPLETE”.
+- Second visible card header: Dragon Tiger (sample) • DT-S-2088 with badge “PENDING / REVIEW”; the card is partly cut off by the bottom of the screenshot, so its snapshots and REVIEW history contents are not recorded.
+- This screenshot visibly presents combined status labels in the badges and separate filter headings for Bet status and Round state; actual filtering and the semantic distinction beyond the labels have not been tested.
 - Notice: simulation-only badge and simulation/fictional-data, age, regional/legal and responsible-use text are visible in the captured screenshots. No broader contrast/readability assessment recorded.
 
 ## 1. Phone and Foldable Visual Verification
 - [x] Folded-view observation recorded from user screenshots: portrait layout shows catalog cards stacked vertically; the simulation-only badge, notice, lobby panel, and sample catalog are visible. No obvious horizontal overflow/clipping in the captured area; this is limited to the screenshots.
 - [x] Unfolded-view observation recorded from user screenshots: wider layout shows catalog cards arranged in three columns; notice and lobby panel span the content width. No obvious horizontal overflow/clipping in the captured area; this is limited to the screenshots.
-- [ ] Search, `Bet status`, `Round state`, and counter behavior remain unobserved; controls were not visible/interacted with in the supplied screenshots.
-- [ ] Snapshots and `REVIEW` version-history readability remain unobserved; only the history section heading/top edge is visible in the screenshot.
+- [x] Lower-section controls and initial counter recorded from screenshot: Search records, Bet status (All bet statuses), Round state (All round states), and 28 of 28 sample records shown. Interactions/change behavior remain untested.
+- [x] First history-card snapshots recorded from screenshot: Teen Patti (sample), TP-S-1042; selection “Player A (fictional)”; payout rule “Illustrative rule: sample payout 2×”; result “Player A • sample result”; badge “WON_SIMULATION / COMPLETE”. Second card header shows Dragon Tiger (sample), DT-S-2088, badge “PENDING / REVIEW”; lower details/history are cut off and remain unverified.
 - [x] Screenshot observation: simulation-only label and simulation/fictional-data, age, regional/legal and responsible-use notice are visible in the captured lobby view. Contrast/readability beyond the captured screens is not independently assessed.
+- [ ] REVIEW version entries, filter interactions, counter updates after filtering, and snapshot stacking beyond the visible first card remain unverified.
 - [ ] If any issue is found, fix only `simulation-lobby-history.html` when explicitly requested; keep `Index.htm` untouched.
 
 ## 2. Read-Only / Simulation Backend and API Wiring
