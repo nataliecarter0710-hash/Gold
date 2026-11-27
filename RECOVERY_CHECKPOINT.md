@@ -54,3 +54,9 @@ This checkpoint is not a legal opinion, security certification, or production ap
 ## Code cleanup (2026-11-27)
 - Review identified and corrected a duplicate class attribute on the favorites button in the lobby HTML.
 - Commit: `e48c237656c72b99fa4c55474ee4b166436eaac9`; deployment pending verification.
+
+
+## Accessibility labels (2026-11-27)
+- Game-card preview labels now include each game name.
+- Favorite buttons announce add/remove favorite intent and expose aria-pressed state.
+- Change commit: `6e18b4319671f152fe1841a8885bee99d7343267`; deployment pending.
