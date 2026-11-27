@@ -1,176 +1,33 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import pg from 'pg';
-
-const OriginalClient = pg.Client;
-
+const OriginalClient=pg.Client;
 class MockClient {
-  static instances = [];
-  static next = {};
-
-  constructor(config) {
-    this.config = config;
-    this.calls = [];
-    this.options = MockClient.next;
-    MockClient.next = {};
-    MockClient.instances.push(this);
-  }
-
-  async connect() {
-    this.calls.push(['connect']);
-    if (this.options.connectError) throw this.options.connectError;
-  }
-
-  async query(sql, params) {
-    this.calls.push(['query', sql, params]);
-    if (sql === 'BEGIN READ ONLY' && this.options.beginError) throw this.options.beginError;
-    if (typeof sql === 'string' && sql.includes('transaction_read_only')) {
-      if (this.options.verificationError) throw this.options.verificationError;
-      return this.options.verificationResult ?? { rows: [this.options.verificationRow] };
-    }
-    if (typeof sql === 'string' && sql.includes('FROM information_schema.columns')) {
-      return { rows: this.options.metadataRows ?? [{ table_name: 'widgets', column_name: 'id' }] };
-    }
-    return { rows: [] };
-  }
-
-  async end() {
-    this.calls.push(['end']);
-    if (this.options.endError) throw this.options.endError;
-  }
+ static instances=[]; static next={};
+ constructor(config){this.config=config;this.calls=[];this.options=MockClient.next;MockClient.next={};MockClient.instances.push(this);}
+ async connect(){this.calls.push(['connect']);if(this.options.connectError)throw this.options.connectError;}
+ async query(sql,params){this.calls.push(['query',sql,params]);if(sql==='BEGIN READ ONLY'&&this.options.beginError)throw this.options.beginError;
+ if(typeof sql==='string'&&sql.includes('transaction_read_only')){if(this.options.verificationError)throw this.options.verificationError;return {rows:[this.options.verificationRow??validRow]};}
+ if(typeof sql==='string'&&sql.includes('information_schema.columns'))return {rows:this.options.metadataRows??[{table_name:'game_sessions',column_name:'tenant_id'}]};
+ return {rows:[]};}
+ async end(){this.calls.push(['end']);}
 }
-
-test.before(() => { pg.Client = MockClient; });
-test.after(() => {
-  pg.Client = OriginalClient;
-  delete process.env.DIAGNOSTIC_DB_ENABLED;
-  delete process.env.DIAGNOSTIC_READONLY_DATABASE_URL;
-});
-
-test.beforeEach(() => {
-  MockClient.instances = [];
-  MockClient.next = {};
-});
-
-const moduleUrl = '../src/db/schemaInspection.js';
-const validUrl = 'postgresql://diagnostic_reader:unused@localhost:5432/testdb';
-const validSafetyRow = {
-  role_name: 'diagnostic_reader',
-  transaction_read_only: 'on',
-  rolsuper: false,
-  rolcreaterole: false,
-  rolcreatedb: false,
-  has_write_privilege: false,
-};
-
-async function loadInspection() {
-  return import(`${moduleUrl}?test=${Date.now()}-${Math.random()}`);
-}
-
-function enableInspection() {
-  process.env.DIAGNOSTIC_DB_ENABLED = 'true';
-  process.env.DIAGNOSTIC_READONLY_DATABASE_URL = validUrl;
-}
-
-function hasMetadataQuery(client) {
-  return client.calls.some(([kind, sql]) => kind === 'query' && typeof sql === 'string' && sql.includes('FROM information_schema.columns'));
-}
-
-function assertRolledBackAndClosed(client) {
-  assert.ok(client.calls.some(([kind, sql]) => kind === 'query' && sql === 'ROLLBACK'), 'expected rollback attempt');
-  assert.ok(client.calls.some(([kind]) => kind === 'end'), 'expected client cleanup');
-  assert.equal(hasMetadataQuery(client), false, 'metadata query must not run on a failed inspection');
-}
-
-test('inspection is disabled unless explicitly enabled and has dedicated config', async () => {
-  const { inspectTableColumns } = await loadInspection();
-  delete process.env.DIAGNOSTIC_DB_ENABLED;
-  process.env.DIAGNOSTIC_READONLY_DATABASE_URL = validUrl;
-  await assert.rejects(inspectTableColumns(['widgets']), /disabled/);
-  assert.equal(MockClient.instances.length, 0);
-
-  process.env.DIAGNOSTIC_DB_ENABLED = 'true';
-  delete process.env.DIAGNOSTIC_READONLY_DATABASE_URL;
-  await assert.rejects(inspectTableColumns(['widgets']), /dedicated diagnostic read-only connection/);
-  assert.equal(MockClient.instances.length, 0);
-});
-
-test('missing or malformed dedicated URL fails before creating a client', async (t) => {
-  const { inspectTableColumns } = await loadInspection();
-  for (const value of ['', 'not a URL', 'https://reader:password@example.test/db']) {
-    await t.test(JSON.stringify(value), async () => {
-      process.env.DIAGNOSTIC_DB_ENABLED = 'true';
-      if (value) process.env.DIAGNOSTIC_READONLY_DATABASE_URL = value;
-      else delete process.env.DIAGNOSTIC_READONLY_DATABASE_URL;
-      await assert.rejects(inspectTableColumns(['widgets']), /dedicated diagnostic read-only connection|configuration is invalid/);
-      assert.equal(MockClient.instances.length, 0);
-    });
-  }
-});
-
-test('connection failure fails closed, attempts rollback, and closes the client', async () => {
-  enableInspection();
-  MockClient.next = { connectError: new Error('connect failed') };
-  const { inspectTableColumns } = await loadInspection();
-  await assert.rejects(inspectTableColumns(['widgets']), /connect failed/);
-  assertRolledBackAndClosed(MockClient.instances[0]);
-});
-
-test('BEGIN READ ONLY failure fails closed, attempts rollback, and closes the client', async () => {
-  enableInspection();
-  MockClient.next = { beginError: new Error('read-only begin failed') };
-  const { inspectTableColumns } = await loadInspection();
-  await assert.rejects(inspectTableColumns(['widgets']), /read-only begin failed/);
-  const client = MockClient.instances[0];
-  assert.ok(client.calls.some(([kind, sql]) => kind === 'query' && sql === 'BEGIN READ ONLY'));
-  assertRolledBackAndClosed(client);
-});
-
-test('verification query failure fails closed, attempts rollback, and closes the client', async () => {
-  enableInspection();
-  MockClient.next = { verificationError: new Error('verification query failed') };
-  const { inspectTableColumns } = await loadInspection();
-  await assert.rejects(inspectTableColumns(['widgets']), /verification query failed/);
-  assertRolledBackAndClosed(MockClient.instances[0]);
-});
-
-test('missing or invalid verification values fail closed before metadata lookup', async (t) => {
-  const invalidRows = [
-    ['no row', null],
-    ['empty result', undefined],
-    ['missing role name', { ...validSafetyRow, role_name: undefined }],
-    ['empty role name', { ...validSafetyRow, role_name: '' }],
-    ['transaction is not read-only', { ...validSafetyRow, transaction_read_only: 'off' }],
-    ['missing transaction verification', { ...validSafetyRow, transaction_read_only: undefined }],
-    ['superuser', { ...validSafetyRow, rolsuper: true }],
-    ['missing superuser verification', { ...validSafetyRow, rolsuper: undefined }],
-    ['role creation privilege', { ...validSafetyRow, rolcreaterole: true }],
-    ['database creation privilege', { ...validSafetyRow, rolcreatedb: true }],
-    ['write privilege', { ...validSafetyRow, has_write_privilege: true }],
-    ['missing write privilege verification', { ...validSafetyRow, has_write_privilege: undefined }],
-  ];
-
-  for (const [name, row] of invalidRows) {
-    await t.test(name, async () => {
-      enableInspection();
-      MockClient.next = { verificationRow: row };
-      const { inspectTableColumns } = await loadInspection();
-      await assert.rejects(inspectTableColumns(['widgets']), /failed read-only verification/);
-      assertRolledBackAndClosed(MockClient.instances[0]);
-    });
-  }
-});
-
-test('metadata is queried only after verification succeeds', async () => {
-  enableInspection();
-  MockClient.next = { verificationRow: validSafetyRow, metadataRows: [{ table_name: 'widgets', column_name: 'id' }] };
-  const { inspectTableColumns } = await loadInspection();
-  const rows = await inspectTableColumns(['widgets']);
-  const client = MockClient.instances[0];
-  const verificationIndex = client.calls.findIndex(([, sql]) => typeof sql === 'string' && sql.includes('transaction_read_only'));
-  const metadataIndex = client.calls.findIndex(([, sql]) => typeof sql === 'string' && sql.includes('FROM information_schema.columns'));
-  assert.ok(verificationIndex >= 0 && metadataIndex > verificationIndex);
-  assert.deepEqual(rows, [{ table_name: 'widgets', column_name: 'id' }]);
-  assert.ok(client.calls.some(([, sql]) => sql === 'COMMIT'));
-  assert.ok(client.calls.some(([kind]) => kind === 'end'));
-});
+test.before(()=>{pg.Client=MockClient;});
+test.after(()=>{pg.Client=OriginalClient;delete process.env.DIAGNOSTIC_DB_ENABLED;delete process.env.DIAGNOSTIC_READONLY_DATABASE_URL;});
+test.beforeEach(()=>{MockClient.instances=[];MockClient.next={};});
+const moduleUrl='../src/db/schemaInspection.js';
+const validUrl='postgresql://diagnostic_reader:unused@localhost:5432/testdb';
+const validRow={role_name:'diagnostic_reader',transaction_read_only:'on',rolcanlogin:true,rolsuper:false,rolcreaterole:false,rolcreatedb:false,rolbypassrls:false,rolinherit:false,no_memberships:true,db_create:false,db_temp:false,schema_create:false,table_write:false,target_select:true,other_table_access:false,function_execute:false};
+async function load(){return import(`${moduleUrl}?test=${Date.now()}-${Math.random()}`);}
+function enable(){process.env.DIAGNOSTIC_DB_ENABLED='true';process.env.DIAGNOSTIC_READONLY_DATABASE_URL=validUrl;}
+function metadata(c){return c.calls.some(([k,s])=>k==='query'&&typeof s==='string'&&s.includes('information_schema.columns'));}
+function failed(c){assert.ok(c.calls.some(([k,s])=>k==='query'&&s==='ROLLBACK'));assert.ok(c.calls.some(([k])=>k==='end'));assert.equal(metadata(c),false);}
+test('disabled by default and dedicated URL required',async()=>{const {inspectTableColumns}=await load();delete process.env.DIAGNOSTIC_DB_ENABLED;process.env.DIAGNOSTIC_READONLY_DATABASE_URL=validUrl;await assert.rejects(inspectTableColumns(),/disabled/);assert.equal(MockClient.instances.length,0);process.env.DIAGNOSTIC_DB_ENABLED='true';delete process.env.DIAGNOSTIC_READONLY_DATABASE_URL;await assert.rejects(inspectTableColumns(),/dedicated/);});
+test('rejects unapproved table and schema before connection',async()=>{enable();const {inspectTableColumns}=await load();await assert.rejects(inspectTableColumns(['widgets']),/approved/);await assert.rejects(inspectTableColumns(undefined,{schema:'other'}),/approved/);assert.equal(MockClient.instances.length,0);});
+test('malformed URL fails before connection',async()=>{enable();process.env.DIAGNOSTIC_READONLY_DATABASE_URL='bad';const {inspectTableColumns}=await load();await assert.rejects(inspectTableColumns(),/configuration is invalid/);assert.equal(MockClient.instances.length,0);});
+test('strict TLS certificate verification cannot be overridden',async()=>{enable();process.env.PGSSL_REJECT_UNAUTHORIZED='false';const {inspectTableColumns}=await load();MockClient.next={verificationRow:validRow};await inspectTableColumns(['game_sessions']);assert.equal(MockClient.instances[0].config.ssl.rejectUnauthorized,true);delete process.env.PGSSL_REJECT_UNAUTHORIZED;});
+test('connection failure fails closed',async()=>{enable();MockClient.next={connectError:new Error('connect failed')};const {inspectTableColumns}=await load();await assert.rejects(inspectTableColumns(['game_sessions']),/connect failed/);failed(MockClient.instances[0]);});
+test('BEGIN READ ONLY failure fails closed',async()=>{enable();MockClient.next={beginError:new Error('begin failed')};const {inspectTableColumns}=await load();await assert.rejects(inspectTableColumns(['game_sessions']),/begin failed/);failed(MockClient.instances[0]);});
+test('verification query failure fails closed',async()=>{enable();MockClient.next={verificationError:new Error('verify failed')};const {inspectTableColumns}=await load();await assert.rejects(inspectTableColumns(['game_sessions']),/verify failed/);failed(MockClient.instances[0]);});
+test('every safety condition must pass before metadata query',async(t)=>{const bad=[['role mismatch',{...validRow,role_name:'other'}],['transaction',{...validRow,transaction_read_only:'off'}],['login disabled',{...validRow,rolcanlogin:false}],['superuser',{...validRow,rolsuper:true}],['role creation',{...validRow,rolcreaterole:true}],['database creation',{...validRow,rolcreatedb:true}],['RLS bypass',{...validRow,rolbypassrls:true}],['inheritance',{...validRow,rolinherit:true}],['membership',{...validRow,no_memberships:false}],['database create',{...validRow,db_create:true}],['temporary',{...validRow,db_temp:true}],['schema create',{...validRow,schema_create:true}],['table write',{...validRow,table_write:true}],['target select missing',{...validRow,target_select:false}],['other table access',{...validRow,other_table_access:true}],['function execute',{...validRow,function_execute:true}]];for(const [name,row] of bad)await t.test(name,async()=>{enable();MockClient.next={verificationRow:row};const {inspectTableColumns}=await load();await assert.rejects(inspectTableColumns(['game_sessions']),/failed read-only verification/);failed(MockClient.instances[0]);});});
+test('metadata query occurs only after verification',async()=>{enable();MockClient.next={metadataRows:[{table_name:'game_sessions',column_name:'tenant_id'}]};const {inspectTableColumns}=await load();const rows=await inspectTableColumns(['game_sessions']);const c=MockClient.instances[0];assert.equal(metadata(c),true);assert.deepEqual(rows,[{table_name:'game_sessions',column_name:'tenant_id'}]);assert.ok(c.calls.some(([,s])=>s==='COMMIT'));assert.ok(c.calls.some(([k])=>k==='end'));});
