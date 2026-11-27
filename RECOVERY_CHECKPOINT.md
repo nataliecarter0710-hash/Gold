@@ -66,3 +66,9 @@ This checkpoint is not a legal opinion, security certification, or production ap
 - Search uses a native search input, autocomplete disabled, and explicit grid control relationship.
 - Empty-result text now has a polite live announcement role.
 - Commit `b32084f88178c962ee29ca0c1564627d3116ef12`; deployment pending.
+
+
+## Game-card semantics refinement (2026-11-27)
+- Game cards use group semantics instead of button semantics because each contains a separate favorite button (avoids nested interactive controls).
+- Keyboard activation of the card preview is preserved, while favorite-button keyboard interaction is excluded from the card handler.
+- Commit: 5b191f66e3f0f9554fd7573fc8a940dc087f50ea; deployment verification pending.
