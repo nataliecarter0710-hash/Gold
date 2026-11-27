@@ -162,3 +162,10 @@ This checkpoint is not a legal opinion, security certification, or production ap
 - The rendered game grid now receives an aria-label indicating the number of displayed games, updating with filtering/search rendering.
 - Commit `b801e302ef7f7774833b6e4184a220bc41283939`.
 - Deployment pending verification.
+
+
+## Keyboard skip navigation (2026-11-27)
+- Added a visually-hidden-until-focused skip link that moves keyboard users directly to the game library/main content.
+- Main content is now focusable as the skip-link target.
+- Commit `aeea7f51b89e25c5c62d4f792c4fe2377302b3e0`.
+- Deployment pending.
