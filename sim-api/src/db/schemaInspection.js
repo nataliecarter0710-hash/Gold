@@ -58,7 +58,7 @@ export async function inspectTableColumns(tableNames = DIAGNOSTIC_TABLES, { sche
           OR f.proname ILIKE '%coin_transfer%'
           OR EXISTS (SELECT 1 FROM pg_catalog.aclexplode(
             COALESCE(f.proacl, pg_catalog.acldefault('f', f.proowner))) a
-            WHERE a.grantee <> 0 AND a.privilege_type='EXECUTE'))) AS function_execute
+            WHERE a.grantee <> 0 AND a.grantee <> f.proowner AND a.privilege_type='EXECUTE'))) AS function_execute
       FROM pg_roles r CROSS JOIN unnest($2::text[]) AS t CROSS JOIN unnest($3::text[]) AS p
       WHERE r.rolname=current_user
       GROUP BY r.oid, r.rolname, r.rolcanlogin, r.rolsuper, r.rolcreaterole, r.rolcreatedb,
