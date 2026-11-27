@@ -175,3 +175,9 @@ This checkpoint is not a legal opinion, security certification, or production ap
 - Enlarged tile favorite controls to 40×40 px with centered icon for improved mobile touch accuracy.
 - Commit `12d8e1e5cf0f05fc9144085dd438e424cb4ab1b3`.
 - Deployment pending.
+
+
+## Favorite state announcement (2026-11-27)
+- Added a visually hidden polite live status announcement that reports the number of saved favorites after a favorite toggle.
+- Commit `c47d48e584599fe0d0cabf887cd4d569e4b0cc0a`.
+- Deployment pending.
