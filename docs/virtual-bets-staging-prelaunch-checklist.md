@@ -3,6 +3,18 @@
 Scope: Simulation and synthetic sample data only. No real wagering, real funds, balance debits, or payouts.
 Protected assets (must remain untouched): `Index.htm`, `Goldbet9-Staging` (`qoasttmttjiwjvmznoir`), paused throwaway Supabase projects, Render services, `main`, `feat/sim-api-staging`, and `public.transfer_virtual_coins`.
 
+## Phase A review results (28 Nov 2026; source/static and fixture simulation only)
+
+- [x] Feed JSON parses; `mode` is `SYNTHETIC_SAMPLE_ONLY`; 28 records.
+- [x] Required record fields checked: game, round, id, status, roundState, selection, rule, result, time, review.
+- [x] All 7 defined bet statuses and all 7 defined round states are represented; `REVIEW` is a round state, not a bet status.
+- [x] Snapshot fields (selection, rule, result) are present for each record; review histories are arrays of strings. Four records have review histories, with 10 notes total.
+- [x] Feed loader source audit: one fetch to the branch-specific raw GitHub synthetic JSON feed; no XHR or database/API integration identified.
+- [x] Bug fix: loader previously silently fell back without telling the viewer and only checked the mode marker plus records array. It now displays an accessible status message for loading, validated feed success, and fallback, and validates required fields, allowed status/state values, and review-array contents before accepting the feed.
+- [x] Source-level fallback paths reviewed: non-OK/offline/JSON parse/validation errors enter the embedded-sample fallback. Scenario behavior was reasoned/simulated from the loader code, not exercised in a browser.
+- [x] Audit found no reference to `public.transfer_virtual_coins`, Supabase, XHR, or live database endpoints in the UI/feed. UI-only `innerHTML` rendering uses the escaping helper for record values. No real wagering or balance mutation action is present.
+- [ ] Browser/runtime tests of feed success, offline failure, invalid/non-synthetic response, and visible status/fallback remain pending. No physical-device or browser test is claimed.
+
 ## Status summary (28 Nov 2026)
 
 - **Synthetic feed and source wiring:** source-level review confirms the UI uses a synthetic feed with an embedded fallback and validates the feed's synthetic mode/record shape. The feed content was fetched and inspected. The fallback behavior for offline, unreachable, or invalid-feed cases is not yet runtime-tested in this pass.
