@@ -118,3 +118,9 @@ This checkpoint is not a legal opinion, security certification, or production ap
 - Preview dialog now immediately states visual-preview-only and that gameplay, wagering and settlement are disabled; button wording changed to Preview information.
 - Commit: e8aa09500ff6e9df13c045c94c522ddcd38a66f5.
 - Deployment verification pending.
+
+
+## Ornamental tile-art styling experiment (2026-11-27)
+- Added a CSS-generated circular jewel/medallion motif layered in the game tile icon area to visually suppress the emoji placeholder and test a premium decorative treatment.
+- Commit: 8dcbf794b754fa585bb493e5cc5d5e8a5c76377d.
+- This is a styling experiment, not bespoke game illustration; verify deployment and visual result before calling it final.
