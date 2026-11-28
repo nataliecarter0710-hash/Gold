@@ -1,64 +1,179 @@
-<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Goldbet9 Virtual-Coin Training</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>Goldbet9 — 24-Game Virtual-Coin Live Studio</title>
 <style>
-body{margin:0;font-family:system-ui,sans-serif;background:#0b111e;color:#f1f5f9}.bar{background:#1e293b;padding:10px 14px;font-size:12px;color:#cbd5e1}
-.top{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#0f172a;flex-wrap:wrap;gap:8px}.bal{color:#34d399;font-weight:700;font-size:16px}
-button{background:#2563eb;color:#fff;border:0;border-radius:8px;padding:10px 12px;font-weight:600;cursor:pointer}button:disabled{opacity:.45}
-.chip{background:#1e293b;border:1px solid #475569}.chip.active{background:#059669}.wrap{max-width:920px;margin:0 auto;padding:14px;display:grid;gap:12px}
-.card{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:14px}.games{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;max-height:190px;overflow:auto}
-.gbtn{background:#1e293b;border:1px solid #334155;text-align:left;font-size:12px}.gbtn.active{background:#0c4a6e;border-color:#38bdf8}
-.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:10px}.row{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #1f2937;font-size:13px}
-.tabs{display:flex;gap:8px;margin-bottom:10px}.tab{background:#1e293b;font-size:13px}.tab.active{background:#2563eb}
-</style></head><body>
-<div class="bar"><strong>VIRTUAL-COIN TRAINING ONLY</strong> (No signup, no real money). 18+ (or 21+ where applicable) age restrictions apply.</div>
-<div class="top"><div id="sid">Session...</div><div style="display:flex;gap:8px;align-items:center"><span class="bal" id="bal">10,000 VC</span><button id="refill">Reset 10,000 VC</button></div></div>
-<div class="wrap"><div class="card"><div class="games" id="games"></div></div>
-<div class="card"><div style="display:flex;justify-content:space-between"><div><b id="gname">...</b><div id="rid" style="font-size:12px;color:#94a3b8"></div></div><div><span id="phase">OPEN</span> <b id="timer">--s</b></div></div>
-<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="chip active" data-c="100">100</button><button class="chip" data-c="500">500</button><button class="chip" data-c="1000">1,000</button><button class="chip" data-c="2500">2,500</button></div>
-<div class="opts" id="opts"></div><div id="msg" style="margin-top:8px;font-size:13px;color:#93c5fd"></div><div id="recent" style="margin-top:8px;font-size:12px;color:#cbd5e1"></div></div>
-<div class="card"><div class="tabs"><button class="tab active" id="tBets">Live Bets &amp; Settlements</button><button class="tab" id="tStmt">Account Statement</button></div>
-<div id="hist" style="font-size:13px;color:#94a3b8">None yet.</div><div id="stmt" style="display:none;font-size:12px;color:#cbd5e1"></div></div></div>
+:root{--bg:#070b14;--card:#0f172a;--card2:#162033;--line:#1e293b;--gold:#f59e0b;--emerald:#10b981;--red:#ef4444;--blue:#3b82f6;--text:#f8fafc;--muted:#94a3b8}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);padding-bottom:28px}
+.disc{background:#111827;border-bottom:1px solid #1f2937;padding:7px 12px;font-size:11px;color:#cbd5e1;text-align:center}
+.hdr{position:sticky;top:0;z-index:20;background:rgba(15,23,42,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:16px}
+.brand span{background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#090d16;padding:2px 7px;border-radius:6px;font-size:12px}
+.pill{font-size:11px;background:#064e3b;color:#6ee7b7;padding:2px 8px;border-radius:999px;border:1px solid #047857}
+.balBox{display:flex;align-items:center;gap:8px}.bal{color:#34d399;font-weight:800;font-size:16px}
+button{border:0;border-radius:10px;padding:10px 12px;font-weight:700;cursor:pointer;color:#fff}
+button:disabled{opacity:.42;cursor:not-allowed}
+.btnRef{background:#1e293b;border:1px solid #334155;font-size:12px;padding:7px 10px}
+.wrap{max-width:960px;margin:0 auto;padding:12px;display:grid;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px}
+.secHead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.search{background:#0b111e;border:1px solid #334155;color:#fff;border-radius:8px;padding:6px 10px;font-size:12px;width:155px}
+.games{display:grid;grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:7px;max-height:175px;overflow-y:auto}
+.gbtn{background:var(--card2);border:1px solid #293548;text-align:left;padding:8px 10px;border-radius:10px}
+.gbtn .gn{font-size:12px;font-weight:700;color:#f1f5f9;display:block}.gbtn .gp{font-size:10px;color:var(--gold)}
+.gbtn.active{background:linear-gradient(135deg,#0c4a6e,#1e3a8a);border-color:#38bdf8}
+.felt{background:radial-gradient(circle at top,#065f46 0%,#064e3b 48%,#022c22 100%);border:2px solid #059669;border-radius:14px;padding:12px;margin:10px 0;min-height:112px}
+.feltTop{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#a7f3d0}
+.pbar{height:5px;background:rgba(0,0,0,.35);border-radius:999px;overflow:hidden;margin:8px 0}
+.pfill{height:100%;background:linear-gradient(90deg,#10b981,#fbbf24);width:100%;transition:width .4s linear}
+.visualRow{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;min-height:54px}
+.pcard{width:42px;height:58px;background:#fff;color:#0f172a;border-radius:7px;display:flex;flex-direction:column;justify-content:space-between;padding:4px 5px;font-weight:800;font-size:13px}
+.pcard.red{color:#dc2626}.pcard.back{background:#1d4ed8;border:2px solid #93c5fd}
+.die{width:44px;height:44px;background:#f8fafc;color:#0f172a;border-radius:10px;display:grid;place-items:center;font-size:20px;font-weight:900}
+.winBanner{background:rgba(0,0,0,.5);border:1px solid #fbbf24;color:#fde68a;padding:6px 12px;border-radius:999px;font-weight:800;font-size:13px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.chip{border-radius:999px;padding:7px 13px;font-size:12px;border:2px dashed rgba(255,255,255,.45)}
+.c100{background:#0284c7}.c500{background:#059669}.c1000{background:#d97706}.c2500{background:#7c3aed}
+.chip.active{outline:2px solid #fff}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.optBtn{background:linear-gradient(180deg,#2563eb,#1d4ed8);border:1px solid #60a5fa;padding:12px 10px;font-size:13px}
+.beads{display:flex;gap:5px;flex-wrap:wrap;margin-top:9px;align-items:center}
+.bead{font-size:11px;background:#1e293b;border:1px solid #334155;padding:3px 8px;border-radius:999px;color:#e2e8f0}
+.tabs{display:flex;gap:8px;margin-bottom:10px}.tab{background:#1e293b;color:#cbd5e1;font-size:12px;padding:8px 12px}.tab.active{background:#2563eb;color:#fff}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #1e2937;font-size:12px}
+.won{color:#34d399;font-weight:800}.lost{color:#f87171;font-weight:700}.pend{color:#fbbf24;font-weight:700}
+</style>
+</head>
+<body>
+<div class="disc"><strong>VIRTUAL-COIN TRAINING ONLY</strong> (No signup, no real money). 18+ (or 21+ where applicable) age restrictions apply.</div>
+<div class="hdr">
+  <div>
+    <div class="brand">GOLDBET9 <span>LIVE STUDIO</span></div>
+    <div style="font-size:11px;color:var(--muted);margin-top:2px"><span id="sid">Connecting...</span> <span class="pill">SUPABASE SYNC</span></div>
+  </div>
+  <div class="balBox">
+    <span class="bal" id="bal">10,000 VC</span>
+    <button class="btnRef" id="refill">Reset 10k</button>
+  </div>
+</div>
+<div class="wrap">
+  <div class="card">
+    <div class="secHead"><b style="font-size:13px">24 Training Tables</b><input class="search" id="q" placeholder="Filter 24 games..."/></div>
+    <div class="games" id="games"></div>
+  </div>
+  <div class="card">
+    <div class="secHead" style="margin-bottom:2px">
+      <div><b id="gname" style="font-size:16px">Loading...</b><div id="rid" style="font-size:11px;color:var(--muted)"></div></div>
+      <div style="text-align:right"><span id="phase" style="font-size:11px;font-weight:800;padding:3px 8px;border-radius:6px;background:#065f46;color:#6ee7b7">OPEN</span> <b id="timer" style="font-size:16px;margin-left:4px">--s</b></div>
+    </div>
+    <div class="felt">
+      <div class="feltTop"><span id="stageHint">Place selection before lock</span><span id="payoutTag">Payout --x</span></div>
+      <div class="pbar"><div class="pfill" id="pfill"></div></div>
+      <div class="visualRow" id="visualRow"></div>
+    </div>
+    <div class="chips">
+      <button class="chip c100 active" data-c="100">100 VC</button>
+      <button class="chip c500" data-c="500">500 VC</button>
+      <button class="chip c1000" data-c="1000">1,000 VC</button>
+      <button class="chip c2500" data-c="2500">2,500 VC</button>
+    </div>
+    <div class="opts" id="opts"></div>
+    <div id="msg" style="margin-top:8px;font-size:12px;color:#93c5fd;min-height:16px"></div>
+    <div class="beads" id="recent"></div>
+  </div>
+  <div class="card">
+    <div class="tabs"><button class="tab active" id="tBets">Live Bets &amp; Settlements</button><button class="tab" id="tStmt">Account Statement</button></div>
+    <div id="hist" style="font-size:12px;color:var(--muted)">No entries yet.</div>
+    <div id="stmt" style="display:none;font-size:12px;color:#cbd5e1"></div>
+  </div>
+</div>
 <script>
-let sid=localStorage.getItem("gb9_sid")||"",gid="teen-patti-2020",chip=100,round=null,games=[];
+let sid=localStorage.getItem("gb9_sid")||"",gid="teen-patti-2020",chip=100,round=null,games=[],filter="";
 const setBal=(v)=>document.getElementById("bal").textContent=Number(v).toLocaleString()+" VC";
+const suits=[{s:"♠",r:false},{s:"♥",r:true},{s:"♣",r:false},{s:"♦",r:true}];
+const ranks=["A","K","Q","J","10","9","8","7"];
+
+function hashNum(str){let h=0;for(let i=0;i<str.length;i++)h=(h*31+str.charCodeAt(i))>>>0;return h;}
+function renderStage(g,r,recent){
+  const box=document.getElementById("visualRow"),hint=document.getElementById("stageHint");
+  const isDice=g.id.includes("seven")||g.id.includes("sic-bo");
+  if(r.status==="OPEN"){
+    hint.textContent="Betting OPEN — tap an option below";
+    box.innerHTML=isDice?`<div class="die">?</div><div class="die">?</div>`:`<div class="pcard back"></div><div class="pcard back"></div><div class="pcard back"></div>`;
+    return;
+  }
+  const latest=(recent&&recent[0]&&recent[0].winningOption)||g.options[0],h=hashNum(r.roundId);
+  hint.textContent=r.status==="LOCKED"?"Bets LOCKED — dealing round outcome...":"Round SETTLED";
+  if(isDice){
+    const d1=(h%6)+1,d2=((h>>3)%6)+1;
+    box.innerHTML=`<div class="die">${d1}</div><div class="die">${d2}</div><div class="winBanner">Total ${d1+d2}</div>`;
+  }else{
+    const c1=suits[h%4],c2=suits[(h>>2)%4],r1=ranks[h%8],r2=ranks[(h>>4)%8];
+    box.innerHTML=`<div class="pcard ${c1.r?"red":""}"><span>${r1}</span><span style="align-self:flex-end">${c1.s}</span></div><div class="pcard ${c2.r?"red":""}"><span>${r2}</span><span style="align-self:flex-end">${c2.s}</span></div><div class="winBanner">${r.status==="LOCKED"?"Revealing...":"Winner: "+latest}</div>`;
+  }
+}
+
 async function initSession(){
   try{
     const r=await fetch("/api/session",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sessionId:sid})});
     const d=await r.json();
-    if(!r.ok){document.getElementById("sid").textContent="Session retry...";document.getElementById("msg").textContent=(d.detail||d.error||"Session init error");return;}
+    if(!r.ok){document.getElementById("sid").textContent="Retrying session...";document.getElementById("msg").textContent=d.detail||d.error;return;}
     sid=d.sessionId;localStorage.setItem("gb9_sid",sid);document.getElementById("sid").textContent=sid;setBal(d.balance);hist();
   }catch(e){document.getElementById("msg").textContent="Network error: "+e.message;}
 }
+
 async function boot(){
   games=(await (await fetch("/api/games")).json()).games||[];renderGames();poll();
-  setInterval(poll,1000);setInterval(hist,2000);
-  await initSession();
+  setInterval(poll,1000);setInterval(hist,2000);await initSession();
 }
 function renderGames(){
   const el=document.getElementById("games");el.innerHTML="";
-  games.forEach(g=>{const b=document.createElement("button");b.className="gbtn"+(g.id===gid?" active":"");b.textContent=g.name;b.onclick=()=>{gid=g.id;renderGames();poll();};el.appendChild(b);});
+  games.filter(g=>g.name.toLowerCase().includes(filter)).forEach(g=>{
+    const b=document.createElement("button");
+    b.className="gbtn"+(g.id===gid?" active":"");
+    b.innerHTML=`<span class="gn">${g.name}</span><span class="gp">${g.payout}x • ${g.durationSec}s</span>`;
+    b.onclick=()=>{gid=g.id;document.getElementById("msg").textContent="";renderGames();poll();};
+    el.appendChild(b);
+  });
 }
+
 async function poll(){
   const d=await (await fetch("/api/rounds/active?gameId="+encodeURIComponent(gid))).json();round=d.round;
-  document.getElementById("gname").textContent=`${d.game.name} (${d.game.payout}x)`;document.getElementById("rid").textContent=round.roundId;
-  document.getElementById("phase").textContent=round.status;document.getElementById("timer").textContent=round.secondsRemaining+"s";
+  document.getElementById("gname").textContent=d.game.name;document.getElementById("payoutTag").textContent=`Payout ${d.game.payout}x`;document.getElementById("rid").textContent=round.roundId;
+  const ph=document.getElementById("phase");ph.textContent=round.status;ph.style.background=round.status==="OPEN"?"#065f46":"#7f1d1d";ph.style.color=round.status==="OPEN"?"#6ee7b7":"#fca5a5";
+  document.getElementById("timer").textContent=round.secondsRemaining+"s";
+  const pct=Math.max(0,Math.min(100,Math.round((round.secondsRemaining/(d.game.durationSec||20))*100)));
+  document.getElementById("pfill").style.width=(round.status==="OPEN"?pct:0)+"%";
+  renderStage(d.game,round,d.recentResults);
   const o=document.getElementById("opts");o.innerHTML="";
-  d.game.options.forEach(op=>{const b=document.createElement("button");b.textContent=`${op} (${chip} VC)`;b.disabled=round.status!=="OPEN";b.onclick=()=>bet(op);o.appendChild(b);});
-  document.getElementById("recent").textContent="Recent: "+((d.recentResults||[]).map(x=>x.winningOption).join(" • ")||"--");
+  const canBet=round.status==="OPEN"&&round.secondsRemaining>1;
+  d.game.options.forEach(op=>{const b=document.createElement("button");b.className="optBtn";b.textContent=`${op} • ${chip.toLocaleString()} VC`;b.disabled=!canBet;b.onclick=()=>bet(op);o.appendChild(b);});
+  const beads=(d.recentResults||[]).map(x=>`<span class="bead">${x.winningOption}</span>`).join("");
+  document.getElementById("recent").innerHTML=`<span style="font-size:11px;color:#94a3b8">Recent:</span> ${beads||"--"}`;
 }
+
 async function bet(selection){
   if(!sid)await initSession();
   const r=await fetch(`/api/rounds/${encodeURIComponent(round.roundId)}/entries`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sessionId:sid,gameId:gid,selection,amount:chip,idempotencyKey:`${round.roundId}-${selection}-${Date.now()}`})});
   const d=await r.json();if(!r.ok){document.getElementById("msg").textContent=d.detail||d.error;return;}
-  setBal(d.balance);document.getElementById("msg").textContent=`Placed ${chip} VC on ${selection}`;hist();
+  setBal(d.balance);document.getElementById("msg").textContent=`Accepted: ${chip.toLocaleString()} VC on ${selection}`;hist();
 }
+
 async function hist(){
   if(!sid)return;const r=await fetch("/api/history?sessionId="+encodeURIComponent(sid));if(!r.ok)return;const d=await r.json();setBal(d.balance);
-  document.getElementById("hist").innerHTML=(d.history||[]).map(h=>`<div class="row"><div><b>${h.gameName}</b> ${h.selection} (${h.amount} VC)${h.winningOption?" -> "+h.winningOption:""}</div><div>${h.result}${Number(h.payout)?" +"+h.payout+" VC":""}</div></div>`).join("")||"None yet.";
-  document.getElementById("stmt").innerHTML=(d.statements||[]).map(s=>`<div class="row"><div><b>${s.entry_type}</b>: ${s.description}</div><div style="text-align:right">${Number(s.debit)?"-"+s.debit:""}${Number(s.credit)?"+"+s.credit:""} VC<br/><span style="color:#94a3b8">Bal: ${s.balance_after}</span></div></div>`).join("")||"No entries.";
+  document.getElementById("hist").innerHTML=(d.history||[]).map(h=>{const cls=h.result==="WON"?"won":(h.result==="LOST"?"lost":"pend");return `<div class="row"><div><b>${h.gameName}</b> • ${h.selection} (${Number(h.amount).toLocaleString()} VC)${h.winningOption?" → <b>"+h.winningOption+"</b>":""}</div><div class="${cls}">${h.result}${Number(h.payout)?" +"+Number(h.payout).toLocaleString()+" VC":""}</div></div>`;}).join("")||"No entries yet.";
+  document.getElementById("stmt").innerHTML=(d.statements||[]).map(s=>`<div class="row"><div><b>${s.entry_type}</b><div style="color:#94a3b8">${s.description}</div></div><div style="text-align:right"><b>${Number(s.debit)?"-"+Number(s.debit).toLocaleString():""}${Number(s.credit)?"+"+Number(s.credit).toLocaleString():""} VC</b><div style="color:#94a3b8">Bal: ${Number(s.balance_after).toLocaleString()}</div></div></div>`).join("")||"No ledger entries.";
 }
+
+document.getElementById("q").oninput=(e)=>{filter=e.target.value.trim().toLowerCase();renderGames();};
 document.getElementById("tBets").onclick=()=>{document.getElementById("tBets").classList.add("active");document.getElementById("tStmt").classList.remove("active");document.getElementById("hist").style.display="block";document.getElementById("stmt").style.display="none";};
 document.getElementById("tStmt").onclick=()=>{document.getElementById("tStmt").classList.add("active");document.getElementById("tBets").classList.remove("active");document.getElementById("hist").style.display="none";document.getElementById("stmt").style.display="block";};
 document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));b.classList.add("active");chip=Number(b.dataset.c);poll();});
 document.getElementById("refill").onclick=async()=>{const d=await (await fetch(`/api/session/${encodeURIComponent(sid)}/refill`,{method:"POST"})).json();setBal(d.balance);hist();};
 boot();
-</script></body></html>
+</script>
+</body>
+</html>
