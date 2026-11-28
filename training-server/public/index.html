@@ -6,7 +6,8 @@ button{background:#2563eb;color:#fff;border:0;border-radius:8px;padding:10px 12p
 .chip{background:#1e293b;border:1px solid #475569}.chip.active{background:#059669}.wrap{max-width:920px;margin:0 auto;padding:14px;display:grid;gap:12px}
 .card{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:14px}.games{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;max-height:190px;overflow:auto}
 .gbtn{background:#1e293b;border:1px solid #334155;text-align:left;font-size:12px}.gbtn.active{background:#0c4a6e;border-color:#38bdf8}
-.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:10px}.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1f2937;font-size:13px}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:10px}.row{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #1f2937;font-size:13px}
+.tabs{display:flex;gap:8px;margin-bottom:10px}.tab{background:#1e293b;font-size:13px}.tab.active{background:#2563eb}
 </style></head><body>
 <div class="bar"><strong>VIRTUAL-COIN TRAINING ONLY</strong> (No signup, no real money). 18+ (or 21+ where applicable) age restrictions apply.</div>
 <div class="top"><div id="sid">Session...</div><div style="display:flex;gap:8px;align-items:center"><span class="bal" id="bal">10,000 VC</span><button id="refill">Reset 10,000 VC</button></div></div>
@@ -14,7 +15,8 @@ button{background:#2563eb;color:#fff;border:0;border-radius:8px;padding:10px 12p
 <div class="card"><div style="display:flex;justify-content:space-between"><div><b id="gname">...</b><div id="rid" style="font-size:12px;color:#94a3b8"></div></div><div><span id="phase">OPEN</span> <b id="timer">--s</b></div></div>
 <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="chip active" data-c="100">100</button><button class="chip" data-c="500">500</button><button class="chip" data-c="1000">1,000</button><button class="chip" data-c="2500">2,500</button></div>
 <div class="opts" id="opts"></div><div id="msg" style="margin-top:8px;font-size:13px;color:#93c5fd"></div><div id="recent" style="margin-top:8px;font-size:12px;color:#cbd5e1"></div></div>
-<div class="card"><b>Live Bet &amp; Settlement History</b><div id="hist" style="margin-top:8px;font-size:13px;color:#94a3b8">None yet.</div></div></div>
+<div class="card"><div class="tabs"><button class="tab active" id="tBets">Live Bets &amp; Settlements</button><button class="tab" id="tStmt">Account Statement</button></div>
+<div id="hist" style="font-size:13px;color:#94a3b8">None yet.</div><div id="stmt" style="display:none;font-size:12px;color:#cbd5e1"></div></div></div>
 <script>
 let sid=localStorage.getItem("gb9_sid")||"",gid="teen-patti-2020",chip=100,round=null,games=[];
 const setBal=(v)=>document.getElementById("bal").textContent=Number(v).toLocaleString()+" VC";
@@ -43,9 +45,12 @@ async function bet(selection){
 }
 async function hist(){
   if(!sid)return;const r=await fetch("/api/history?sessionId="+encodeURIComponent(sid));if(!r.ok)return;const d=await r.json();setBal(d.balance);
-  document.getElementById("hist").innerHTML=(d.history||[]).slice(0,15).map(h=>`<div class="row"><div><b>${h.gameName}</b> ${h.selection} (${h.amount} VC)${h.winningOption?" -> "+h.winningOption:""}</div><div>${h.result}${h.payout?" +"+h.payout+" VC":""}</div></div>`).join("")||"None yet.";
+  document.getElementById("hist").innerHTML=(d.history||[]).map(h=>`<div class="row"><div><b>${h.gameName}</b> ${h.selection} (${h.amount} VC)${h.winningOption?" -> "+h.winningOption:""}</div><div>${h.result}${Number(h.payout)?" +"+h.payout+" VC":""}</div></div>`).join("")||"None yet.";
+  document.getElementById("stmt").innerHTML=(d.statements||[]).map(s=>`<div class="row"><div><b>${s.entry_type}</b>: ${s.description}</div><div style="text-align:right">${Number(s.debit)?"-"+s.debit:""}${Number(s.credit)?"+"+s.credit:""} VC<br/><span style="color:#94a3b8">Bal: ${s.balance_after}</span></div></div>`).join("")||"No entries.";
 }
+document.getElementById("tBets").onclick=()=>{document.getElementById("tBets").classList.add("active");document.getElementById("tStmt").classList.remove("active");document.getElementById("hist").style.display="block";document.getElementById("stmt").style.display="none";};
+document.getElementById("tStmt").onclick=()=>{document.getElementById("tStmt").classList.add("active");document.getElementById("tBets").classList.remove("active");document.getElementById("hist").style.display="none";document.getElementById("stmt").style.display="block";};
 document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));b.classList.add("active");chip=Number(b.dataset.c);poll();});
-document.getElementById("refill").onclick=async()=>{const d=await (await fetch(`/api/session/${encodeURIComponent(sid)}/refill`,{method:"POST"})).json();setBal(d.balance);};
+document.getElementById("refill").onclick=async()=>{const d=await (await fetch(`/api/session/${encodeURIComponent(sid)}/refill`,{method:"POST"})).json();setBal(d.balance);hist();};
 boot();
 </script></body></html>
