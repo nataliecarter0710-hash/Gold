@@ -169,3 +169,29 @@ Status: logged for a future implementation pass; does not block Phase A syntheti
 - [x] Supabase project inventory was checked read-only. The only listed Goldbet9 projects were the protected Goldbet9-Staging project and inactive/paused throwaway test projects. No eligible, separately verified safe non-protected test target was identified; no project was queried beyond inventory, resumed, or modified.
 - [x] Render workspace/service inventory was checked read-only. The inventory includes the prohibited Goldbet9 API staging service and other services, but no separately verified, approved isolated test target was established. No service details beyond inventory were used to run tests, and no service was modified, deployed, paused, resumed, or otherwise acted upon.
 - [x] No tests were run as part of this target-inventory check. No writes, migrations, deployments, or protected-resource operations occurred.
+
+
+## Fold 8 live Render preview and read-only isolated sandbox audit (28 Nov 2026; commit `9ba2a668`)
+
+**Live static preview:** https://goldbet9-virtual-bets-preview.onrender.com/simulation-lobby-history.html
+
+- [x] Preview load and feed status: **Synthetic feed loaded and validated.**; **28 of 28 sample records shown**.
+- [x] Notices and layout/scroll observation on Fold 8: `SIMULATION ONLY` label and explicit **18+ (or 21+ where applicable)** age restriction, regional/legal restriction, and responsible-use notices visible. No horizontal overflow observed during the reported check. This is a user-reported device check, not a full browser/device certification.
+- [x] Standalone Round state `REVIEW` (Bet status set to `All bet statuses`): **4 of 28 sample records shown**.
+- [x] Zero-match search: searching `zzzz` showed **0 of 28** and the empty state (“No matching sample records”). Reset restored **28 of 28**.
+
+**Read-only isolated Supabase audit:** `goldbet9-isolated-test` / project ref `luqtgnnabhyprweulcto`, schema `test_sandbox`.
+
+- [x] Checks 1 and 6: **VERIFIED PASS (runtime/catalog)**, as reported for this audit.
+- [x] Checks 2–5 and 7–8: **VERIFIED PASS — logic review of SQL function definitions only**. These are not recorded as runtime mutation executions.
+- [x] Cleanup/row check: **0 leftover rows** in `test_sandbox.sim_users` and `test_sandbox.sim_ledger_entries`.
+- [ ] Live API/backend wiring and runtime mutation execution remain pending; this audit does not certify live integration, protected environments, production grants/paths, or broad concurrency/load behavior.
+
+## Safe promotion plan — static preview toward staging readiness (plan only)
+
+1. Freeze this preview as the review baseline; retain the synthetic-only feed and UI scope.
+2. Finish remaining independent review items: documented offline/invalid-feed browser scenarios, full scroll and filter-combination coverage, and any backend/API wiring review that is separately approved and isolated.
+3. Prepare a proposed staging design and risk checklist, including environment separation, synthetic-only data, least-privilege access, rollback, monitoring, and explicit prohibited financial/ledger routes.
+4. Review the proposal and evidence with the owner; resolve outstanding checklist items or label them clearly as pending.
+5. **Explicit approval gate:** do not promote, deploy, connect, migrate, or modify any protected asset until the owner gives clear, specific approval for the exact target and actions. Protected assets remain untouched by this checklist update.
+6. After approval only, execute a separately scoped staging change, then verify deployment and isolation and document rollback/verification results.
