@@ -1,261 +1,153 @@
-import express from "express";
-import cors from "cors";
-import crypto from "node:crypto";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import pg from "pg";
+const express = require("express");
+const path = require("path");
+const { Pool } = require("pg");
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
-const PORT = Number(process.env.PORT) || 3000;
-app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
-app.get("/admin", (_req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
+const PORT = process.env.PORT || 3000;
+const ROUND_CYCLE_SEC = 35;
+const BET_WINDOW_SEC = 30;
+const HARD_LOCK_SEC = 5;
+const A1_TO_B1_DELAY_MS = 2500;
+const CARD_STEP_MS = 2500;
+const ONEDAY_STAGE_SEC = 20;
 
-const dbUrl = process.env.TRAINING_DATABASE_URL || "";
-const pool = dbUrl ? new pg.Pool({ connectionString: dbUrl, ssl: { rejectUnauthorized: false } }) : null;
+const DB_URL = process.env.TRAINING_DATABASE_URL || process.env.DATABASE_URL || "";
+const pool = DB_URL ? new Pool({ connectionString: DB_URL, ssl: { rejectUnauthorized: false } }) : null;
 
 const GAMES = [
-  { id: "teen-patti-2020", name: "Teen Patti 20-20", cat: "Cards", options: ["Player A", "Player B"], payout: 1.95, durationSec: 25 },
-  { id: "dragon-tiger", name: "Dragon Tiger", cat: "Cards", options: ["Dragon", "Tiger", "Tie"], payout: 1.95, durationSec: 25 },
-  { id: "andar-bahar", name: "Andar Bahar", cat: "Cards", options: ["Andar", "Bahar"], payout: 1.9, durationSec: 25 },
-  { id: "baccarat", name: "Baccarat", cat: "Cards", options: ["Player", "Banker", "Tie"], payout: 1.95, durationSec: 25 },
-  { id: "roulette", name: "European Roulette", cat: "Wheel", options: ["Red", "Black", "Green 0"], payout: 2.0, durationSec: 25 },
-  { id: "seven-up-down", name: "7 Up 7 Down", cat: "Dice", options: ["7 Down", "7 Exact", "7 Up"], payout: 2.0, durationSec: 25 },
-  { id: "poker-t20", name: "Poker T20", cat: "Cards", options: ["Player A", "Player B"], payout: 1.95, durationSec: 25 },
-  { id: "sic-bo", name: "Sic Bo", cat: "Dice", options: ["Small (4-10)", "Big (11-17)"], payout: 1.95, durationSec: 25 },
-  { id: "football-studio", name: "Football Studio", cat: "Cards", options: ["Home", "Away", "Draw"], payout: 1.95, durationSec: 25 },
-  { id: "casino-war", name: "Casino War", cat: "Cards", options: ["Player", "Dealer", "War"], payout: 1.95, durationSec: 25 },
-  { id: "lightning-roulette", name: "Lightning Roulette", cat: "Wheel", options: ["Red", "Black", "Lightning"], payout: 2.0, durationSec: 25 },
-  { id: "crazy-time", name: "Crazy Time Wheel", cat: "Wheel", options: ["1", "2", "5", "Bonus"], payout: 2.0, durationSec: 25 },
-  { id: "horse-racing", name: "Virtual Horse Racing", cat: "Track", options: ["Lane 1", "Lane 2", "Lane 3", "Lane 4"], payout: 3.6, durationSec: 25 },
-  { id: "lucky-7", name: "Lucky 7", cat: "Cards", options: ["Low", "High"], payout: 1.95, durationSec: 25 },
-  { id: "32-cards", name: "32 Cards", cat: "Cards", options: ["Player 8", "Player 9", "Player 10", "Player 11"], payout: 3.6, durationSec: 25 },
-  { id: "amar-akbar-anthony", name: "Amar Akbar Anthony", cat: "Cards", options: ["Amar", "Akbar", "Anthony"], payout: 2.85, durationSec: 25 },
-  { id: "bollywood-casino", name: "Bollywood Casino", cat: "Cards", options: ["Don", "Amar", "Akbar", "Anthony"], payout: 3.6, durationSec: 25 },
-  { id: "muflis-teen-patti", name: "Muflis Teen Patti", cat: "Cards", options: ["Player A", "Player B"], payout: 1.95, durationSec: 25 },
-  { id: "race-20", name: "Race 20", cat: "Cards", options: ["Spade", "Heart", "Club", "Diamond"], payout: 3.6, durationSec: 25 },
-  { id: "queen", name: "Queen", cat: "Cards", options: ["Total 0", "Total 1", "Total 2", "Total 3"], payout: 3.6, durationSec: 25 },
-  { id: "worli-matka", name: "Instant Worli", cat: "Numbers", options: ["Single Odd", "Single Even"], payout: 1.9, durationSec: 25 },
-  { id: "dt-lion", name: "Dragon Tiger Lion", cat: "Cards", options: ["Dragon", "Tiger", "Lion"], payout: 2.85, durationSec: 25 },
-  { id: "one-day-teen-patti", name: "1-Day Teen Patti", cat: "Cards", options: ["Player A", "Player B"], payout: 1.95, durationSec: 25 },
-  { id: "super-over", name: "Super Over Cricket", cat: "Sports", options: ["Batting", "Bowling"], payout: 1.95, durationSec: 25 }
+  { id: "teen-patti-2020", name: "Teen Patti 20-20", cat: "Cards", mode: "3CARD", options: ["Player A", "Player B"], fancyOptions: ["Pair Plus", "3 Card Flush"], payout: 1.95 },
+  { id: "teen-patti-oneday", name: "Teen Patti One Day", cat: "Cards", mode: "ONEDAY", options: ["Player A", "Player B"], fancyOptions: ["High Card", "Sequence"], payout: 1.95 },
+  { id: "poker-t20", name: "Poker T20", cat: "Cards", mode: "3CARD", options: ["Player A", "Player B"], fancyOptions: [" suited", "Pair"], payout: 1.95 },
+  { id: "poker-oneday", name: "Poker One Day", cat: "Cards", mode: "POKER_ONEDAY", options: ["Player A", "Player B"], fancyOptions: ["Flop Hit", "River Ace"], payout: 1.95 },
+  { id: "dragon-tiger", name: "Dragon Tiger", cat: "Cards", mode: "3CARD", options: ["Dragon", "Tiger", "Tie"], fancyOptions: ["Suited Tie"], payout: 1.95 },
+  { id: "baccarat", name: "Baccarat", cat: "Cards", mode: "3CARD", options: ["Player", "Banker", "Tie"], fancyOptions: ["Pair"], payout: 1.95 },
+  { id: "andar-bahar", name: "Andar Bahar", cat: "Cards", mode: "3CARD", options: ["Andar", "Bahar"], fancyOptions: ["First Card Match"], payout: 1.9 },
+  { id: "casino-war", name: "Casino War", cat: "Cards", mode: "3CARD", options: ["Player", "Dealer", "War"], fancyOptions: ["Tie War"], payout: 1.9 },
+  { id: "amar-akbar-anthony", name: "Amar Akbar Anthony", cat: "Cards", mode: "3CARD", options: ["Amar", "Akbar", "Anthony"], fancyOptions: ["Red Suit"], payout: 2.85 },
+  { id: "lucky-7", name: "Lucky 7", cat: "Cards", mode: "3CARD", options: ["Low (1-6)", "7 Lucky", "High (8-13)"], fancyOptions: ["Even", "Odd"], payout: 1.95 },
+  { id: "32-cards", name: "32 Cards Casino", cat: "Cards", mode: "3CARD", options: ["8", "9", "10", "11"], fancyOptions: ["Highest Hand"], payout: 3.6 },
+  { id: "football-studio", name: "Football Studio", cat: "Cards", mode: "3CARD", options: ["Home", "Away", "Draw"], fancyOptions: ["High Card"], payout: 1.95 },
+  { id: "roulette-live", name: "Live Roulette", cat: "Wheel", mode: "WHEEL", options: ["Red", "Black", "Zero"], fancyOptions: ["Odd", "Even"], payout: 1.95 },
+  { id: "lightning-roulette", name: "Lightning Roulette", cat: "Wheel", mode: "WHEEL", options: ["Red", "Black", "Lucky No"], fancyOptions: ["Multiplier Hit"], payout: 2.0 },
+  { id: "crazy-time", name: "Crazy Time", cat: "Wheel", mode: "WHEEL", options: ["1x", "2x", "5x", "Bonus"], fancyOptions: ["Top Slot Match"], payout: 2.0 },
+  { id: "dream-catcher", name: "Dream Catcher", cat: "Wheel", mode: "WHEEL", options: ["1", "2", "5", "10"], fancyOptions: ["2x Spin"], payout: 2.0 },
+  { id: "sic-bo", name: "Sic Bo", cat: "Dice", mode: "DICE", options: ["Small", "Big", "Triple"], fancyOptions: ["Double"], payout: 1.9 },
+  { id: "7-up-7-down", name: "7 Up 7 Down", cat: "Dice", mode: "DICE", options: ["Under 7", "Exact 7", "Over 7"], fancyOptions: ["Doubles"], payout: 1.9 },
+  { id: "horse-racing", name: "Horse Racing", cat: "Track", mode: "TRACK", options: ["Lane 1", "Lane 2", "Lane 3", "Lane 4"], fancyOptions: ["Exacta"], payout: 2.8 },
+  { id: "greyhound-racing", name: "Greyhound Racing", cat: "Track", mode: "TRACK", options: ["Trap 1", "Trap 2", "Trap 3", "Trap 4"], fancyOptions: ["Show"], payout: 2.7 },
+  { id: "virtual-cricket", name: "Virtual Cricket", cat: "Sports", mode: "SPORTS", options: ["Team A", "Team B"], fancyOptions: ["Six Over"], payout: 1.9 },
+  { id: "virtual-football", name: "Virtual Football", cat: "Sports", mode: "SPORTS", options: ["Home", "Draw", "Away"], fancyOptions: ["Both Score"], payout: 1.95 },
+  { id: "virtual-tennis", name: "Virtual Tennis", cat: "Sports", mode: "SPORTS", options: ["Player 1", "Player 2"], fancyOptions: ["Tiebreak"], payout: 1.9 },
+  { id: "virtual-kabaddi", name: "Virtual Kabaddi", cat: "Sports", mode: "SPORTS", options: ["Raid A", "Raid B"], fancyOptions: ["Super Raid"], payout: 1.95 }
 ];
-
-const ROLES = ["SUPER_ADMIN", "ADMIN", "SUB_ADMIN", "AGENT", "USER"];
-const accounts = new Map([
-  ["superadmin", { id: "superadmin", name: "Super Master", role: "SUPER_ADMIN", parentId: null, balance: 5000000, limit: 5000000, active: true, pass: "admin123", demo: false }],
-  ["admin01", { id: "admin01", name: "Master Admin", role: "ADMIN", parentId: "superadmin", balance: 1000000, limit: 1000000, active: true, pass: "admin123", demo: false }],
-  ["subadmin01", { id: "subadmin01", name: "Sub Admin West", role: "SUB_ADMIN", parentId: "admin01", balance: 250000, limit: 250000, active: true, pass: "admin123", demo: false }],
-  ["agent01", { id: "agent01", name: "Agent Desk 1", role: "AGENT", parentId: "subadmin01", balance: 50000, limit: 50000, active: true, pass: "admin123", demo: false }],
-  ["player01", { id: "player01", name: "Demo Player 01", role: "USER", parentId: "agent01", balance: 10000, limit: 25000, active: true, pass: "player123", demo: false }],
-  ["mgmt_demo", { id: "mgmt_demo", name: "Management Demo (Read-Only)", role: "ADMIN", parentId: "superadmin", balance: 1000000, limit: 1000000, active: true, pass: "", demo: true }]
-]);
-
-const memSessions = new Map(), roundsByGame = new Map(), recentByGame = new Map(), idempotency = new Map();
-const houseConfig = { globalHouseProfitPct: 15, perGamePct: {}, forcedNextWinner: {} };
-const adminStats = { totalVolume: 0, totalPayout: 0, roundsSettled: 0 };
-const r2 = (n) => Math.round(Number(n) * 100) / 100;
-const getEffectiveHouseProfitPct = (gid) => typeof houseConfig.perGamePct[gid] === "number" ? houseConfig.perGamePct[gid] : houseConfig.globalHouseProfitPct;
-const getMult = (g, win) => (["Tie", "Draw", "Green 0"].includes(win) ? 8.0 : g.payout);
-
-function isDescendant(ancestorId, targetId) {
-  if (ancestorId === "superadmin" || ancestorId === targetId) return true;
-  let cur = accounts.get(targetId);
-  while (cur && cur.parentId) { if (cur.parentId === ancestorId) return true; cur = accounts.get(cur.parentId); }
-  return false;
+  const RED_N = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+const C1_N = new Set([1,4,7,10,13,16,19,22,25,28,31,34]);
+const C2_N = new Set([2,5,8,11,14,17,20,23,26,29,32,35]);
+function allOutcomes(g) {
+  if (g.id === "roulette-live" || g.id === "lightning-roulette") return Array.from({ length: 37 }, (_, i) => String(i));
+  return (g.options || []).concat((g.fancyOptions || []).map(x => x.trim()).filter(Boolean));
 }
-
-function selectOutcomeByHouseProfit(g, r) {
-  if (houseConfig.forcedNextWinner[g.id] && g.options.includes(houseConfig.forcedNextWinner[g.id])) {
-    const w = houseConfig.forcedNextWinner[g.id]; delete houseConfig.forcedNextWinner[g.id]; return w;
+function payFor(g, e, out) {
+  const sel = String(e.selection || "").trim();
+  const mult = e.isFancy ? 2 : (g.payout || 1.95);
+  if (g.id === "roulette-live" || g.id === "lightning-roulette") {
+    const n = Number(out);
+    if (sel === String(n)) return Math.round(e.amount * 35);
+    if (sel === "Red" && RED_N.has(n)) return Math.round(e.amount * 1.95);
+    if (sel === "Black" && n > 0 && !RED_N.has(n)) return Math.round(e.amount * 1.95);
+    if (sel === "Zero" && n === 0) return Math.round(e.amount * 35);
+    if (sel === "Odd" && n > 0 && n % 2 === 1) return Math.round(e.amount * 1.95);
+    if (sel === "Even" && n > 0 && n % 2 === 0) return Math.round(e.amount * 1.95);
+    if (sel === "Column 1" && C1_N.has(n)) return Math.round(e.amount * 2.9);
+    if (sel === "Column 2" && C2_N.has(n)) return Math.round(e.amount * 2.9);
+    if (sel === "Column 3" && n > 0 && !C1_N.has(n) && !C2_N.has(n)) return Math.round(e.amount * 2.9);
+    return 0;
   }
-  const pct = Math.max(0, Math.min(100, Number(getEffectiveHouseProfitPct(g.id)) || 0));
-  if (!r.entries.length || pct === 0) return g.options[crypto.randomInt(0, g.options.length)];
-  const totalStake = r.entries.reduce((a, e) => a + Number(e.amount || 0), 0);
-  const maxPay = totalStake * (1 - pct / 100);
-  const scored = g.options.map((op) => {
-    const est = r.entries.filter((e) => e.selection === op).reduce((a, e) => a + r2(e.amount * getMult(g, op)), 0);
-    return { op, est, ok: est <= maxPay };
-  });
-  if (pct >= 100) return [...scored].sort((a, b) => a.est - b.est)[0].op;
-  const safe = scored.filter((x) => x.ok);
-  const poolList = safe.length ? safe : scored;
-  return poolList[crypto.randomInt(0, poolList.length)].op;
+  return sel === out ? Math.round(e.amount * mult) : 0;
 }
-async function logStmt(db, sid, type, ref, desc, debit, credit, balAfter) {
-  const stmtId = `STM-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
-  if (db) {
-    await db.query(`insert into training_app.account_statement (statement_id, session_id, entry_type, reference_id, description, debit, credit, balance_after) values ($1,$2,$3,$4,$5,$6,$7,$8)`, [stmtId, sid, type, ref, desc, debit, credit, balAfter]);
+function pickWinner(g, roundId) {
+  if (state.forcedNextWinner[g.id]) { const w = state.forcedNextWinner[g.id]; delete state.forcedNextWinner[g.id]; return w; }
+  const entries = state.entries[roundId] || [];
+  const list = allOutcomes(g).map(out => ({ out, loss: entries.reduce((t, e) => t + payFor(g, e, out), 0) })).sort((x, y) => x.loss - y.loss);
+  const h = hashStr(roundId), pct = effPct(g.id) / 100;
+  if ((h % 100) / 100 < pct && entries.length && list.length) {
+    const zero = list.filter(x => x.loss === 0);
+    const poolList = zero.length ? zero : list.filter(x => x.loss === list[0].loss);
+    const chosen = poolList[h % poolList.length].out;
+    if (g.id === "roulette-live" || g.id === "lightning-roulette") { const n = Number(chosen); return n === 0 ? "Zero" : (RED_N.has(n) ? "Red" : "Black"); }
+    if ((g.options || []).includes(chosen)) return chosen;
+    return (list.find(x => (g.options || []).includes(x.out)) || list[0]).out;
+  }
+  return (g.options || ["Player A"])[h % (g.options || ["Player A"]).length];
+}
+function getOrAdvanceRound(gid) {
+  const g = getGame(gid), now = Date.now();
+  let r = state.rounds[gid];
+  const revealMs = g.mode === "POKER_ONEDAY" ? ONEDAY_STAGE_SEC * 1000 : (g.mode === "ONEDAY" ? ONEDAY_STAGE_SEC * 1000 : 6 * CARD_STEP_MS);
+  if (!r) {
+    const roundId = `${gid.toUpperCase()}-${Math.floor(now / 1000)}`;
+    r = state.rounds[gid] = { roundId, gameId: gid, startedAt: now, status: "OPEN", hand: buildHand(roundId, g.mode), settled: false, winningOption: null };
+  }
+  const elapsedMs = now - r.startedAt, elapsedSec = Math.floor(elapsedMs / 1000);
+  if (elapsedSec < BET_WINDOW_SEC) { r.status = "OPEN"; r.fancyLocked = false; r.secondsRemaining = ROUND_CYCLE_SEC - elapsedSec; r.dealStep = 0; }
+  else if (elapsedSec < ROUND_CYCLE_SEC) { r.status = "LOCKED"; r.fancyLocked = true; r.secondsRemaining = ROUND_CYCLE_SEC - elapsedSec; r.dealStep = 0; }
+  else if (elapsedMs < ROUND_CYCLE_SEC * 1000 + revealMs) {
+    r.status = "DEALING"; r.fancyLocked = true; r.secondsRemaining = 0;
+    const stepUnit = g.mode === "ONEDAY" ? Math.floor((ONEDAY_STAGE_SEC * 1000) / 6) : (g.mode === "POKER_ONEDAY" ? Math.floor((ONEDAY_STAGE_SEC * 1000) / 4) : CARD_STEP_MS);
+    r.dealStep = Math.min(g.mode === "POKER_ONEDAY" ? 4 : 6, Math.floor((elapsedMs - ROUND_CYCLE_SEC * 1000) / stepUnit) + 1);
   } else {
-    const s = memSessions.get(sid);
-    if (s) { s.statements.unshift({ statement_id: stmtId, entry_type: type, reference_id: ref, description: desc, debit, credit, balance_after: balAfter, created_at: new Date().toISOString() }); s.statements = s.statements.slice(0, 150); }
+    if (!r.settled) { r.settled = true; r.status = "SETTLED"; r.fancyLocked = true; r.dealStep = g.mode === "POKER_ONEDAY" ? 4 : 6; r.winningOption = pickWinner(g, r.roundId); settleRound(g, r); }
+    if (elapsedMs >= ROUND_CYCLE_SEC * 1000 + revealMs + 3000) {
+      const nextId = `${gid.toUpperCase()}-${Math.floor(now / 1000)}`;
+      if (nextId !== r.roundId) r = state.rounds[gid] = { roundId: nextId, gameId: gid, startedAt: now, status: "OPEN", hand: buildHand(nextId, g.mode), settled: false, winningOption: null, dealStep: 0, secondsRemaining: ROUND_CYCLE_SEC };
+    }
   }
+  return r;
 }
-
-const newRound = (g) => {
-  const now = Date.now();
-  const r = { roundId: `${g.id.toUpperCase()}-${now}-${crypto.randomBytes(2).toString("hex").toUpperCase()}`, gameId: g.id, gameName: g.name, status: "OPEN", bettingEndsAt: now + 25000, settlesAt: now + 29500, entries: [], dealStep: 0 };
-  roundsByGame.set(g.id, r); return r;
-};
-
-const settle = async (g, r) => {
-  if (r.status === "SETTLED") return;
-  const win = selectOutcomeByHouseProfit(g, r);
-  r.winningOption = win; r.status = "SETTLED";
-  const mult = getMult(g, win);
-  let stakeSum = 0, paySum = 0;
-  for (const e of r.entries) {
-    if (e.settled) continue;
-    e.settled = true; stakeSum = r2(stakeSum + Number(e.amount || 0));
-    const payout = e.selection === win ? r2(e.amount * mult) : 0;
-    paySum = r2(paySum + payout);
-    e.payout = payout; e.result = payout > 0 ? "WON" : "LOST"; e.winningOption = win;
-    const acc = accounts.get(e.sessionId);
-    if (acc && payout > 0) acc.balance = r2(acc.balance + payout);
-    if (pool && e.sessionId.startsWith("TRAIN-")) {
-      const client = await pool.connect();
-      try {
-        await client.query("begin");
-        await client.query(`update training_app.training_entries set result=$1, payout=$2, winning_option=$3, settled=true where entry_id=$4`, [e.result, payout, win, e.entryId]);
-        if (payout > 0) {
-          const u = await client.query(`update training_app.training_sessions set balance = balance + $1, display_points = balance + $1, updated_at = now() where session_id=$2 returning balance`, [payout, e.sessionId]);
-          if (u.rows[0]) await logStmt(client, e.sessionId, "WIN_SETTLEMENT", e.entryId, `${g.name} (${e.selection}) won on ${win}`, 0, payout, Number(u.rows[0].balance));
-        }
-        await client.query("commit");
-      } catch (err) { await client.query("rollback"); } finally { client.release(); }
-    } else {
-      const s = memSessions.get(e.sessionId);
-      if (s && payout > 0) { s.balance = r2(s.balance + payout); await logStmt(null, e.sessionId, "WIN_SETTLEMENT", e.entryId, `${g.name} (${e.selection}) won on ${win}`, 0, payout, s.balance); }
-    }
-  }
-  adminStats.totalVolume = r2(adminStats.totalVolume + stakeSum);
-  adminStats.totalPayout = r2(adminStats.totalPayout + paySum);
-  adminStats.roundsSettled += 1;
-  const list = recentByGame.get(g.id) || [];
-  list.unshift({ roundId: r.roundId, winningOption: win, houseProfitPct: getEffectiveHouseProfitPct(g.id) });
-  recentByGame.set(g.id, list.slice(0, 12));
-};
-
-const tick = () => {
-  const now = Date.now();
-  for (const g of GAMES) {
-    const r = roundsByGame.get(g.id) || newRound(g);
-    if (r.status === "OPEN" && now >= r.bettingEndsAt) r.status = "LOCKED";
-    if (r.status === "LOCKED") {
-      r.dealStep = Math.min(3, Math.floor((now - r.bettingEndsAt) / 1500) + 1);
-      if (now >= r.settlesAt) { settle(g, r); newRound(g); }
-    }
-  }
-};
-GAMES.forEach(newRound);
-setInterval(tick, 500);
-
-app.get("/api/health", (_req, res) => res.json({ ok: true, db: Boolean(pool), games: GAMES.length, roles: ROLES.length, houseProfitPct: houseConfig.globalHouseProfitPct }));
-
-app.post("/api/auth/login", (req, res) => {
-  const { accountId, password, mode } = req.body || {};
-  if (mode === "PLAYER_DEMO_5M") {
-    const id = `DEMO5M-${crypto.randomBytes(2).toString("hex").toUpperCase()}`;
-    const acc = { id, name: "5-Min Player Demo", role: "USER", parentId: "agent01", balance: 10000, limit: 10000, active: true, pass: "", demo: true, expiresAt: Date.now() + 300000 };
-    accounts.set(id, acc); memSessions.set(id, { sessionId: id, balance: 10000, history: [], statements: [] });
-    return res.json({ ok: true, account: acc });
-  }
-  if (mode === "MGMT_DEMO_RO") return res.json({ ok: true, account: accounts.get("mgmt_demo") });
-  const acc = accounts.get(String(accountId || "").trim());
-  if (!acc || !acc.active) return res.status(403).json({ error: "ACCOUNT_INACTIVE_OR_NOT_FOUND" });
-  if (acc.pass && password && acc.pass !== password) return res.status(401).json({ error: "INVALID_PASSWORD" });
-  res.json({ ok: true, account: { id: acc.id, name: acc.name, role: acc.role, parentId: acc.parentId, balance: acc.balance, limit: acc.limit, active: acc.active, demo: acc.demo } });
+app.get("/api/rounds/active", (req, res) => {
+  const g = getGame(req.query.gameId), r = getOrAdvanceRound(g.id);
+  const vh = r.status === "OPEN" ? null : Object.fromEntries((r.hand.order || []).slice(0, r.dealStep || 0).map(k => [k, r.hand.cards[k]]));
+  res.json({ game: { ...g, houseProfitPct: effPct(g.id) }, round: { roundId: r.roundId, gameId: r.gameId, status: r.status, secondsRemaining: r.secondsRemaining, dealStep: r.dealStep, fancyLocked: r.fancyLocked, winningOption: r.status === "SETTLED" ? r.winningOption : null, visibleHand: vh }, recentResults: state.recent[g.id] || [] });
 });
+
+app.post("/api/rounds/:roundId/entries", (req, res) => {
+  const { gameId, selection, amount, isFancy, accountId } = req.body || {};
+  const g = getGame(gameId), r = getOrAdvanceRound(g.id), amt = Number(amount) || 0;
+  if (r.status !== "OPEN" || (r.secondsRemaining || 0) <= HARD_LOCK_SEC) return res.status(409).json({ error: "HARD_LOCK" });
+  if (isFancy && r.fancyLocked) return res.status(409).json({ error: "FANCY_LOCKED" });
+  if (amt <= 0) return res.status(400).json({ error: "INVALID_AMOUNT" });
+  const acc = state.accounts[accountId || "player01"] || state.accounts.player01;
+  if (acc.balance < amt) return res.status(400).json({ error: "INSUFFICIENT_BALANCE" });
+  acc.balance -= amt;
+  const item = { id: `${r.roundId}-${Date.now()}`, roundId: r.roundId, gameId: g.id, gameName: g.name, selection, amount: amt, isFancy: Boolean(isFancy), accountId: acc.id, result: "PENDING", payout: 0 };
+  state.entries[r.roundId] = (state.entries[r.roundId] || []).concat(item);
+  state.history[acc.id] = [item].concat(state.history[acc.id] || []).slice(0, 50);
+  res.json({ ok: true, entry: item, balance: acc.balance });
+});
+
+app.get("/api/history", (req, res) => {
+  const acc = state.accounts[req.query.accountId || "player01"] || state.accounts.player01;
+  res.json({ balance: acc.balance, history: state.history[acc.id] || [] });
+});
+
 app.post("/api/admin/config", (req, res) => {
-  const { actorId, globalHouseProfitPct, gameId, gameHouseProfitPct, clearGameOverride, forcedWinner } = req.body || {};
-  const actor = accounts.get(actorId || "superadmin");
-  if (actor && actor.demo) return res.status(403).json({ error: "READ_ONLY_DEMO" });
-  if (typeof globalHouseProfitPct !== "undefined") houseConfig.globalHouseProfitPct = Math.max(0, Math.min(100, Number(globalHouseProfitPct) || 0));
-  if (gameId && GAMES.some((x) => x.id === gameId)) {
-    if (clearGameOverride) delete houseConfig.perGamePct[gameId];
-    else if (typeof gameHouseProfitPct !== "undefined") houseConfig.perGamePct[gameId] = Math.max(0, Math.min(100, Number(gameHouseProfitPct) || 0));
-    if (typeof forcedWinner === "string") { if (!forcedWinner) delete houseConfig.forcedNextWinner[gameId]; else houseConfig.forcedNextWinner[gameId] = forcedWinner; }
-  }
-  res.json({ ok: true, globalHouseProfitPct: houseConfig.globalHouseProfitPct, perGamePct: houseConfig.perGamePct });
+  const { globalHouseProfitPct, gameId, gameHouseProfitPct, clearGameOverride, forcedWinner } = req.body || {};
+  if (typeof globalHouseProfitPct === "number") state.globalHouseProfitPct = Math.max(0, Math.min(100, globalHouseProfitPct));
+  if (gameId && clearGameOverride) delete state.perGamePct[gameId];
+  else if (gameId && typeof gameHouseProfitPct === "number") state.perGamePct[gameId] = Math.max(0, Math.min(100, gameHouseProfitPct));
+  if (gameId && typeof forcedWinner === "string") state.forcedNextWinner[gameId] = forcedWinner;
+  res.json({ ok: true, globalHouseProfitPct: state.globalHouseProfitPct, perGamePct: state.perGamePct });
 });
-app.post("/api/admin/round-action", async (req, res) => {
-  const { actorId, gameId, action } = req.body || {};
-  const actor = accounts.get(actorId || "superadmin");
-  if (actor && actor.demo) return res.status(403).json({ error: "READ_ONLY_DEMO" });
-  const g = GAMES.find((x) => x.id === gameId) || GAMES[0], r = roundsByGame.get(g.id) || newRound(g);
-  if (action === "lock") { r.status = "LOCKED"; r.bettingEndsAt = Date.now(); }
-  else if (action === "settle") { await settle(g, r); newRound(g); }
-  else if (action === "reset-round") { newRound(g); }
-  res.json({ ok: true });
+
+app.post("/api/admin/round-action", (req, res) => {
+  const g = getGame(req.body && req.body.gameId), r = getOrAdvanceRound(g.id), act = req.body && req.body.action;
+  if (act === "lock") { r.status = "LOCKED"; r.fancyLocked = true; }
+  else if (act === "settle" && !r.settled) { r.settled = true; r.status = "SETTLED"; r.fancyLocked = true; r.winningOption = pickWinner(g, r.roundId); settleRound(g, r); }
+  else if (act === "reset-round") { const nextId = `${g.id.toUpperCase()}-${Date.now()}`; state.rounds[g.id] = { roundId: nextId, gameId: g.id, startedAt: Date.now(), status: "OPEN", hand: buildHand(nextId, g.mode), settled: false, winningOption: null, dealStep: 0, secondsRemaining: ROUND_CYCLE_SEC, fancyLocked: false }; }
+  res.json({ ok: true, round: state.rounds[g.id] });
 });
-app.post("/api/session", async (req, res) => {
-  try {
-    const reqId = String(req.body?.sessionId || "").trim();
-    if (accounts.has(reqId)) { const a = accounts.get(reqId); return res.json({ sessionId: a.id, balance: a.balance, role: a.role, name: a.name }); }
-    if (pool) {
-      if (reqId) { const ex = await pool.query(`select session_id, coalesce(balance, display_points, 10000) as balance from training_app.training_sessions where session_id=$1`, [reqId]); if (ex.rows[0]) return res.json({ sessionId: ex.rows[0].session_id, balance: Number(ex.rows[0].balance), role: "USER", name: "Guest Player" }); }
-      const sid = `TRAIN-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
-      await pool.query(`insert into training_app.training_sessions (session_id, display_points, balance) values ($1, 10000, 10000)`, [sid]);
-      await logStmt(pool, sid, "OPENING_CREDIT", sid, "Initial training balance", 0, 10000, 10000);
-      return res.status(201).json({ sessionId: sid, balance: 10000, role: "USER", name: "Guest Player" });
-    }
-    const sid = `TRAIN-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
-    memSessions.set(sid, { sessionId: sid, balance: 10000, history: [], statements: [] });
-    res.status(201).json({ sessionId: sid, balance: 10000, role: "USER", name: "Guest Player" });
-  } catch (err) { res.status(500).json({ error: "SESSION_DB_ERROR", detail: err.message }); }
-});
-app.post("/api/session/:id/refill", async (req, res) => {
-  const sid = req.params.id;
-  if (accounts.has(sid)) { accounts.get(sid).balance = 10000; return res.json({ ok: true, balance: 10000 }); }
-  if (pool) { await pool.query(`update training_app.training_sessions set balance=10000, display_points=10000, updated_at=now() where session_id=$1`, [sid]); await logStmt(pool, sid, "REFILL_RESET", sid, "Reset training balance to 10,000 VC", 0, 10000, 10000); }
-  res.json({ ok: true, balance: 10000 });
-});
-app.get("/api/games", (_req, res) => res.json({ games: GAMES.map((g) => ({ ...g, houseProfitPct: getEffectiveHouseProfitPct(g.id) })) }));
-app.get("/api/rounds/active", (req, res) => { tick(); const g = GAMES.find((x) => x.id === String(req.query.gameId || GAMES[0].id)) || GAMES[0], r = roundsByGame.get(g.id), now = Date.now(); const secondsRemaining = Math.max(0, Math.ceil(((r.status === "OPEN" ? r.bettingEndsAt : r.settlesAt) - now) / 1000)); res.json({ game: { ...g, houseProfitPct: getEffectiveHouseProfitPct(g.id) }, round: { roundId: r.roundId, status: r.status, secondsRemaining, dealStep: r.dealStep }, recentResults: recentByGame.get(g.id) || [] }); });
-app.post("/api/rounds/:roundId/entries", async (req, res) => {
-  tick(); const { sessionId, gameId, selection, amount, idempotencyKey } = req.body || {}; const amt = r2(amount);
-  const g = GAMES.find((x) => x.id === gameId), r = g && roundsByGame.get(g.id);
-  if (!sessionId || !g || !g.options.includes(selection) || !r || r.roundId !== req.params.roundId || r.status !== "OPEN" || amt <= 0) return res.status(409).json({ error: "ROUND_OR_SESSION_INVALID" });
-  const key = `${sessionId}:${idempotencyKey}`;
-  if (idempotency.has(key)) return res.json({ status: "REPLAY", ...idempotency.get(key) });
-  const entry = { entryId: `ENT-${crypto.randomBytes(3).toString("hex").toUpperCase()}`, sessionId, gameName: g.name, selection, amount: amt, result: "PENDING", payout: 0, winningOption: null, settled: false };
-  if (accounts.has(sessionId)) {
-    const a = accounts.get(sessionId);
-    if (a.expiresAt && Date.now() > a.expiresAt) return res.status(403).json({ error: "DEMO_5M_EXPIRED" });
-    if (a.balance < amt) return res.status(400).json({ error: "INSUFFICIENT_BALANCE" });
-    a.balance = r2(a.balance - amt); r.entries.push(entry);
-    const s = memSessions.get(sessionId) || { sessionId, balance: a.balance, history: [], statements: [] };
-    s.history.unshift(entry); s.statements.unshift({ statement_id: `STM-${crypto.randomBytes(3).toString("hex").toUpperCase()}`, entry_type: "BET_PLACED", description: `${g.name} - ${selection}`, debit: amt, credit: 0, balance_after: a.balance, created_at: new Date().toISOString() });
-    memSessions.set(sessionId, s); idempotency.set(key, { entry, balance: a.balance });
-    return res.status(201).json({ status: "ACCEPTED", entry, balance: a.balance });
-  }
-  if (pool) {
-    const client = await pool.connect();
-    try {
-      await client.query("begin");
-      const u = await client.query(`update training_app.training_sessions set balance = balance - $1, display_points = balance - $1, updated_at = now() where session_id=$2 and balance >= $1 returning balance`, [amt, sessionId]);
-      if (!u.rows[0]) { await client.query("rollback"); return res.status(400).json({ error: "INSUFFICIENT_OR_INVALID_SESSION" }); }
-      const newBal = Number(u.rows[0].balance);
-      await client.query(`insert into training_app.training_entries (entry_id, session_id, round_id, game_id, game_name, selection, amount) values ($1,$2,$3,$4,$5,$6,$7)`, [entry.entryId, sessionId, r.roundId, g.id, g.name, selection, amt]);
-      await logStmt(client, sessionId, "BET_PLACED", entry.entryId, `${g.name} - ${selection} (${r.roundId})`, amt, 0, newBal);
-      await client.query("commit"); r.entries.push(entry); idempotency.set(key, { entry, balance: newBal });
-      return res.status(201).json({ status: "ACCEPTED", entry, balance: newBal });
-    } catch (err) { await client.query("rollback"); return res.status(500).json({ error: "DB_ERROR", detail: err.message }); } finally { client.release(); }
-  }
-  res.status(404).json({ error: "SESSION_NOT_FOUND" });
-});
-app.get("/api/history", async (req, res) => {
-  const sid = String(req.query.sessionId || "");
-  if (accounts.has(sid)) { const a = accounts.get(sid), s = memSessions.get(sid) || { history: [], statements: [] }; return res.json({ balance: a.balance, history: s.history, statements: s.statements }); }
-  if (pool) {
-    const s = await pool.query(`select balance from training_app.training_sessions where session_id=$1`, [sid]);
-    if (!s.rows[0]) return res.status(404).json({ error: "SESSION_NOT_FOUND" });
-    const h = await pool.query(`select entry_id as "entryId", game_name as "gameName", selection, amount, result, payout, winning_option as "winningOption" from training_app.training_entries where session_id=$1 order by created_at desc limit 30`, [sid]);
-    const st = await pool.query(`select statement_id, entry_type, reference_id, description, debit, credit, balance_after, created_at from training_app.account_statement where session_id=$1 order by created_at desc limit 50`, [sid]);
-    return res.json({ balance: Number(s.rows[0].balance), history: h.rows, statements: st.rows });
-  }
-  res.status(404).json({ error: "SESSION_NOT_FOUND" });
-});
-app.listen(PORT, "0.0.0.0", () => console.log("READY_ON_3000"));
+
+app.use(express.static(path.join(__dirname, "public")));
+app.get("*", (req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
+app.listen(PORT, () => console.log(`Goldbet9 35s Studio running on port ${PORT}`));
