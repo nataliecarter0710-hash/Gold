@@ -1,5 +1,5 @@
 let sid=localStorage.getItem("gb9_sid")||"",role="USER",gid="teen-patti-2020",chip=100,round=null,games=[],filter="",cat="ALL",admOpen=location.pathname==="/admin";
-const $=id=>document.getElementById(id),setBal=v=>$("bal").textContent=Number(v).toLocaleString()+" VC";
+const $=id=>document.getElementById(id)||{style:{},dataset:{},classList:{add:()=>{},remove:()=>{}}},setBal=v=>$("bal").textContent=Number(v).toLocaleString()+" VC";
 const suits=[{s:"♠",r:false},{s:"♥",r:true},{s:"♣",r:false},{s:"♦",r:true}],ranks=["A","K","Q","J","10","9","8","7"];
 const hashNum=s=>{let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h;};
 
