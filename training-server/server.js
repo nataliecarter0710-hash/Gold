@@ -1,90 +1,117 @@
 import express from "express";
 import cors from "cors";
-import pg from "pg";
+import crypto from "node:crypto";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
+const PORT = Number(process.env.PORT) || 3000;
 app.use(cors());
 app.use(express.json());
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
 
-const { Pool } = pg;
-const pool = process.env.TRAINING_DATABASE_URL
-  ? new Pool({ connectionString: process.env.TRAINING_DATABASE_URL, ssl: process.env.PGSSL === "true" ? { rejectUnauthorized: false } : undefined })
-  : null;
+const GAMES = [
+  { id: "teen-patti-2020", name: "Teen Patti 20-20", options: ["Player A", "Player B"], payout: 1.95, durationSec: 25 },
+  { id: "dragon-tiger", name: "Dragon Tiger", options: ["Dragon", "Tiger", "Tie"], payout: 1.95, durationSec: 20 },
+  { id: "andar-bahar", name: "Andar Bahar", options: ["Andar", "Bahar"], payout: 1.9, durationSec: 20 },
+  { id: "baccarat", name: "Baccarat", options: ["Player", "Banker", "Tie"], payout: 1.95, durationSec: 25 },
+  { id: "roulette", name: "European Roulette", options: ["Red", "Black", "Green 0"], payout: 2.0, durationSec: 25 },
+  { id: "seven-up-down", name: "7 Up 7 Down", options: ["7 Down", "7 Exact", "7 Up"], payout: 2.0, durationSec: 20 },
+  { id: "poker-t20", name: "Poker T20", options: ["Player A", "Player B"], payout: 1.95, durationSec: 25 },
+  { id: "sic-bo", name: "Sic Bo", options: ["Small (4-10)", "Big (11-17)"], payout: 1.95, durationSec: 20 },
+  { id: "football-studio", name: "Football Studio", options: ["Home", "Away", "Draw"], payout: 1.95, durationSec: 20 },
+  { id: "casino-war", name: "Casino War", options: ["Player", "Dealer", "War"], payout: 1.95, durationSec: 20 },
+  { id: "lightning-roulette", name: "Lightning Roulette", options: ["Red", "Black", "Lightning"], payout: 2.0, durationSec: 25 },
+  { id: "crazy-time", name: "Crazy Time Wheel", options: ["1", "2", "5", "Bonus"], payout: 2.0, durationSec: 25 },
+  { id: "horse-racing", name: "Virtual Horse Racing", options: ["Lane 1", "Lane 2", "Lane 3", "Lane 4"], payout: 3.6, durationSec: 25 },
+  { id: "lucky-7", name: "Lucky 7", options: ["Low", "High"], payout: 1.95, durationSec: 20 },
+  { id: "32-cards", name: "32 Cards", options: ["Player 8", "Player 9", "Player 10", "Player 11"], payout: 3.6, durationSec: 25 },
+  { id: "amar-akbar-anthony", name: "Amar Akbar Anthony", options: ["Amar", "Akbar", "Anthony"], payout: 2.85, durationSec: 20 },
+  { id: "bollywood-casino", name: "Bollywood Casino", options: ["Don", "Amar", "Akbar", "Anthony"], payout: 3.6, durationSec: 20 },
+  { id: "muflis-teen-patti", name: "Muflis Teen Patti", options: ["Player A", "Player B"], payout: 1.95, durationSec: 25 },
+  { id: "race-20", name: "Race 20", options: ["Spade", "Heart", "Club", "Diamond"], payout: 3.6, durationSec: 25 },
+  { id: "queen", name: "Queen", options: ["Total 0", "Total 1", "Total 2", "Total 3"], payout: 3.6, durationSec: 20 },
+  { id: "worli-matka", name: "Instant Worli", options: ["Single Odd", "Single Even"], payout: 1.9, durationSec: 20 },
+  { id: "dt-lion", name: "Dragon Tiger Lion", options: ["Dragon", "Tiger", "Lion"], payout: 2.85, durationSec: 20 },
+  { id: "one-day-teen-patti", name: "1-Day Teen Patti", options: ["Player A", "Player B"], payout: 1.95, durationSec: 25 },
+  { id: "super-over", name: "Super Over Cricket", options: ["Batting", "Bowling"], payout: 1.95, durationSec: 20 }
+];
 
-const games = [
-["tp20","Teen Patti 2020",["Player A","Player B"],35],["poker20","Poker 2020",["Player A","Player B"],35],
-["dt20","Dragon Tiger",["Dragon","Tiger","Tie"],35],["baccarat","Baccarat",["Player","Banker","Tie"],35],
-["aaa","Amar Akbar Anthony",["Amar","Akbar","Anthony"],25],["lucky7","Lucky 7",["Low 7","High 7"],25],
-["32cards","32 Cards",["Player 8","Player 9","Player 10","Player 11"],25],["roulette","Roulette",["Red","Black","Green"],35],
-["aviator","Aviator",["Demo flight"],25],["tp1d","Teen Patti One Day",["Player A","Player B"],35],
-["pk1d","Poker One Day",["Player A","Player B"],35],["dtcf","Dragon Tiger Coin Flip",["Dragon","Tiger"],25],
-["football","Football Studio",["Home","Away","Draw"],25],["muflis","Muflis Teen Patti",["Player A","Player B"],35],
-["32ab","32 Cards A/B",["A","B"],25],["andar1","Andar Bahar 1",["Andar","Bahar"],25],
-["andar2","Andar Bahar 2",["Andar","Bahar"],25],["bollywood","Bollywood Casino",["Don","Amar","Akbar","Anthony"],25],
-["worli","Worli Matka",["Demo 1","Demo 2"],25],["lightning","Lightning Roulette",["Red","Black","Green"],35],
-["crazytime","Crazy Time",["1","2","5","10"],25],["sicbo","Sic Bo",["Small","Big","Triple"],25],
-["sevenup","Seven Up Down",["7 Up","7 Down","7"],25],["race20","Race 20",["Spade","Heart","Club","Diamond"],25]
-].map(([id,name,options,durationSec])=>({id,name,options,durationSec}));
-
-const rounds = new Map();
-const sessions = new Map();
-const activity = [];
-const now = () => Date.now();
-const roundFor = (game) => {
-  const durationMs=game.durationSec*1000;
-  const bucket=Math.floor(now()/durationMs);
-  const roundId=game.id+"-"+bucket;
-  if(!rounds.has(roundId)){
-    const start=bucket*durationMs, end=start+durationMs;
-    rounds.set(roundId,{roundId,gameId:game.id,gameName:game.name,startAt:start,lockAt:end-5000,endAt:end,outcome:game.options[Math.floor(Math.random()*game.options.length)],saved:false});
-  }
-  return rounds.get(roundId);
+const sessions = new Map(), roundsByGame = new Map(), recentByGame = new Map(), idempotency = new Map();
+const newRound = (g) => {
+  const now = Date.now(), r = { roundId: `${g.id.toUpperCase()}-${now}-${crypto.randomBytes(2).toString("hex").toUpperCase()}`, gameId: g.id, gameName: g.name, status: "OPEN", bettingEndsAt: now + g.durationSec * 1000, settlesAt: now + (g.durationSec + 5) * 1000, entries: [] };
+  roundsByGame.set(g.id, r); return r;
 };
-async function initDb(){
- if(!pool)return;
- await pool.query("CREATE SCHEMA IF NOT EXISTS training_app");
- await pool.query("CREATE TABLE IF NOT EXISTS training_app.training_sessions (session_id text primary key, display_points numeric not null default 10000, updated_at timestamptz default now())");
- await pool.query("CREATE TABLE IF NOT EXISTS training_app.training_activity (activity_id text primary key, session_id text not null, round_id text not null, game_name text not null, observed_outcome text not null, created_at timestamptz default now())");
-}
-async function saveSession(s){
- if(pool)await pool.query("INSERT INTO training_app.training_sessions(session_id,display_points) VALUES($1,$2) ON CONFLICT(session_id) DO UPDATE SET display_points=EXCLUDED.display_points,updated_at=now()",[s.sessionId,s.displayPoints]);
-}
-async function saveActivity(a){
- activity.unshift(a); activity.splice(1000);
- if(pool)await pool.query("INSERT INTO training_app.training_activity(activity_id,session_id,round_id,game_name,observed_outcome) VALUES($1,$2,$3,$4,$5) ON CONFLICT(activity_id) DO NOTHING",[a.activityId,a.sessionId,a.roundId,a.gameName,a.observedOutcome]);
-}
-async function historyFor(sessionId){
- if(pool){const q=await pool.query("SELECT activity_id as \"activityId\",session_id as \"sessionId\",round_id as \"roundId\",game_name as \"gameName\",observed_outcome as \"observedOutcome\",created_at as \"createdAt\" FROM training_app.training_activity WHERE session_id=$1 ORDER BY created_at DESC LIMIT 100",[sessionId]);return q.rows;}
- return activity.filter(a=>a.sessionId===sessionId).slice(0,100);
-}
-app.get("/api/health",(req,res)=>res.json({status:"ok",mode:"non-wagering-training"}));
-app.post("/api/session",async(req,res)=>{
- try{const sessionId=crypto.randomUUID();const s={sessionId,displayPoints:10000};sessions.set(sessionId,s);await saveSession(s);res.json(s);}
- catch(e){res.status(500).json({error:"Session creation failed"});}
+const settle = (g, r) => {
+  if (r.status === "SETTLED") return;
+  const win = g.options[crypto.randomInt(0, g.options.length)];
+  r.winningOption = win; r.status = "SETTLED";
+  for (const e of r.entries) {
+    if (e.settled) continue; e.settled = true;
+    const mult = ["Tie", "Draw", "Green 0"].includes(win) ? 8.0 : g.payout;
+    e.payout = e.selection === win ? Math.round(e.amount * mult * 100) / 100 : 0;
+    e.result = e.payout > 0 ? "WON" : "LOST"; e.winningOption = win;
+    const s = sessions.get(e.sessionId);
+    if (s && e.payout > 0) s.balance = Math.round((s.balance + e.payout) * 100) / 100;
+  }
+  const list = recentByGame.get(g.id) || [];
+  list.unshift({ roundId: r.roundId, winningOption: win });
+  recentByGame.set(g.id, list.slice(0, 12));
+};
+const tick = () => {
+  const now = Date.now();
+  for (const g of GAMES) {
+    const r = roundsByGame.get(g.id) || newRound(g);
+    if (r.status === "OPEN" && now >= r.bettingEndsAt) r.status = "LOCKED";
+    if (r.status === "LOCKED" && now >= r.settlesAt) { settle(g, r); newRound(g); }
+  }
+};
+GAMES.forEach(newRound);
+setInterval(tick, 500);
+app.get("/api/health", (_req, res) => res.json({ ok: true, games: GAMES.length }));
+app.post("/api/session", (req, res) => {
+  const id = String(req.body?.sessionId || "").trim();
+  if (id && sessions.has(id)) return res.json(sessions.get(id));
+  const s = { sessionId: `TRAIN-${crypto.randomBytes(4).toString("hex").toUpperCase()}`, balance: 10000, history: [] };
+  sessions.set(s.sessionId, s); res.status(201).json(s);
 });
-app.post("/api/session/:id/refill",async(req,res)=>{
- try{let s=sessions.get(req.params.id);if(!s&&pool){const q=await pool.query("SELECT session_id,display_points FROM training_app.training_sessions WHERE session_id=$1",[req.params.id]);if(q.rows[0])s={sessionId:q.rows[0].session_id,displayPoints:Number(q.rows[0].display_points)};}
- if(!s)return res.status(404).json({error:"Session not found"});s.displayPoints=10000;sessions.set(s.sessionId,s);await saveSession(s);res.json(s);}
- catch(e){res.status(500).json({error:"Refill failed"});}
+app.post("/api/session/:id/refill", (req, res) => {
+  const s = sessions.get(req.params.id);
+  if (!s) return res.status(404).json({ error: "SESSION_NOT_FOUND" });
+  s.balance = 10000; res.json({ ok: true, balance: s.balance });
 });
-app.get("/api/games",(req,res)=>res.json(games));
-app.get("/api/rounds/active",async(req,res)=>{
- const game=games.find(g=>g.id===req.query.gameId);if(!game)return res.status(400).json({error:"Valid gameId required"});
- const r=roundFor(game);const t=now();const phase=t<r.lockAt?"OPEN":t<r.endAt?"LOCKED":"COMPLETED";
- if(phase==="COMPLETED"&&!r.saved){
-  r.saved=true;
-  const sid=String(req.query.sessionId||"guest");
-  await saveActivity({activityId:r.roundId+"-"+sid,sessionId:sid,roundId:r.roundId,gameName:r.gameName,observedOutcome:r.outcome,createdAt:new Date().toISOString()});
- }
- res.json({roundId:r.roundId,gameId:r.gameId,gameName:r.gameName,phase,secondsRemaining:Math.max(0,Math.ceil(( (phase==="OPEN"?r.lockAt:phase==="LOCKED"?r.endAt:r.endAt)-t)/1000)),lockAt:r.lockAt,endAt:r.endAt,outcome:phase==="COMPLETED"?r.outcome:null});
+app.get("/api/games", (_req, res) => res.json({ games: GAMES }));
+app.get("/api/rounds/active", (req, res) => {
+  tick();
+  const g = GAMES.find((x) => x.id === String(req.query.gameId || GAMES[0].id)) || GAMES[0];
+  const r = roundsByGame.get(g.id), now = Date.now();
+  const secondsRemaining = Math.max(0, Math.ceil(((r.status === "OPEN" ? r.bettingEndsAt : r.settlesAt) - now) / 1000));
+  res.json({ game: g, round: { roundId: r.roundId, status: r.status, secondsRemaining }, recentResults: recentByGame.get(g.id) || [] });
 });
-app.get("/api/history",async(req,res)=>{
- const sessionId=String(req.query.sessionId||"");
- if(!sessionId)return res.status(400).json({error:"sessionId required"});
- try{let s=sessions.get(sessionId);if(!s&&pool){const q=await pool.query("SELECT session_id,display_points FROM training_app.training_sessions WHERE session_id=$1",[sessionId]);if(q.rows[0])s={sessionId:q.rows[0].session_id,displayPoints:Number(q.rows[0].display_points)};}
- res.json({session:s||null,history:await historyFor(sessionId)});}
- catch(e){res.status(500).json({error:"History unavailable"});}
+app.post("/api/rounds/:roundId/entries", (req, res) => {
+  tick();
+  const { sessionId, gameId, selection, amount, idempotencyKey } = req.body || {};
+  const amt = Number(amount);
+  if (!sessionId || !gameId || !selection || !idempotencyKey || !Number.isFinite(amt) || amt <= 0) return res.status(400).json({ error: "INVALID_INPUT" });
+  const key = `${sessionId}:${idempotencyKey}`, fp = JSON.stringify({ roundId: req.params.roundId, gameId, selection, amt });
+  if (idempotency.has(key)) {
+    const prev = idempotency.get(key);
+    return prev.fp !== fp ? res.status(409).json({ error: "IDEMPOTENCY_CONFLICT" }) : res.json({ status: "REPLAY", entry: prev.entry, balance: sessions.get(sessionId)?.balance });
+  }
+  const s = sessions.get(sessionId), g = GAMES.find((x) => x.id === gameId), r = g && roundsByGame.get(g.id);
+  if (!s || !g || !g.options.includes(selection) || !r || r.roundId !== req.params.roundId || r.status !== "OPEN") return res.status(409).json({ error: "ROUND_OR_SESSION_INVALID" });
+  if (s.balance < amt) return res.status(400).json({ error: "INSUFFICIENT_BALANCE" });
+  s.balance = Math.round((s.balance - amt) * 100) / 100;
+  const entry = { entryId: `ENT-${crypto.randomBytes(3).toString("hex").toUpperCase()}`, gameName: g.name, selection, amount: amt, result: "PENDING", payout: 0, winningOption: null, settled: false };
+  r.entries.push({ ...entry, sessionId });
+  s.history.unshift(entry); s.history = s.history.slice(0, 100);
+  idempotency.set(key, { fp, entry });
+  res.status(201).json({ status: "ACCEPTED", entry, balance: s.balance });
 });
-const PORT=process.env.PORT||3000;
-initDb().then(()=>app.listen(PORT,"0.0.0.0",()=>console.log("Training simulator listening on "+PORT))).catch(e=>{console.error("Database setup failed");process.exit(1);});
+app.get("/api/history", (req, res) => {
+  const s = sessions.get(String(req.query.sessionId || ""));
+  if (!s) return res.status(404).json({ error: "SESSION_NOT_FOUND" });
+  res.json({ balance: s.balance, history: s.history });
+});
+app.listen(PORT, "0.0.0.0", () => console.log("READY_ON_3000"));
