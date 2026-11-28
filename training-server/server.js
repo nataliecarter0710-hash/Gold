@@ -1,4 +1,6 @@
-const express = require("express");
+import express from "express";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
 const path = require("path");
 const { Pool } = require("pg");
 
