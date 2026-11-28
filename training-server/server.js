@@ -107,47 +107,8 @@ function getOrAdvanceRound(gid) {
 }
 app.get("/api/rounds/active", (req, res) => {
   const g = getGame(req.query.gameId), r = getOrAdvanceRound(g.id);
-  const vh = r.status === "OPEN" ? null : Object.fromEntries((r.hand.order || []).slice(0, r.dealStep || 0).map(k => [k, r.hand.cards[k]]));
+  const vh = r.status === "OPEN" ? null : (g.mode === "POKER_ONEDAY"
+    ? { pA: r.dealStep >= 1 ? (r.hand.pA || []) : [], pB: r.dealStep >= 2 ? (r.hand.pB || []) : [], comm: r.dealStep >= 3 ? (r.hand.comm || []).slice(0, r.dealStep === 3 ? 3 : 5) : [] }
+    : Object.fromEntries((r.hand.order || []).slice(0, r.dealStep || 0).map(k => [k, r.hand.cards[k]])));
   res.json({ game: { ...g, houseProfitPct: effPct(g.id) }, round: { roundId: r.roundId, gameId: r.gameId, status: r.status, secondsRemaining: r.secondsRemaining, dealStep: r.dealStep, fancyLocked: r.fancyLocked, winningOption: r.status === "SETTLED" ? r.winningOption : null, visibleHand: vh }, recentResults: state.recent[g.id] || [] });
 });
-
-app.post("/api/rounds/:roundId/entries", (req, res) => {
-  const { gameId, selection, amount, isFancy, accountId } = req.body || {};
-  const g = getGame(gameId), r = getOrAdvanceRound(g.id), amt = Number(amount) || 0;
-  if (r.status !== "OPEN" || (r.secondsRemaining || 0) <= HARD_LOCK_SEC) return res.status(409).json({ error: "HARD_LOCK" });
-  if (isFancy && r.fancyLocked) return res.status(409).json({ error: "FANCY_LOCKED" });
-  if (amt <= 0) return res.status(400).json({ error: "INVALID_AMOUNT" });
-  const acc = state.accounts[accountId || "player01"] || state.accounts.player01;
-  if (acc.balance < amt) return res.status(400).json({ error: "INSUFFICIENT_BALANCE" });
-  acc.balance -= amt;
-  const item = { id: `${r.roundId}-${Date.now()}`, roundId: r.roundId, gameId: g.id, gameName: g.name, selection, amount: amt, isFancy: Boolean(isFancy), accountId: acc.id, result: "PENDING", payout: 0 };
-  state.entries[r.roundId] = (state.entries[r.roundId] || []).concat(item);
-  state.history[acc.id] = [item].concat(state.history[acc.id] || []).slice(0, 50);
-  res.json({ ok: true, entry: item, balance: acc.balance });
-});
-
-app.get("/api/history", (req, res) => {
-  const acc = state.accounts[req.query.accountId || "player01"] || state.accounts.player01;
-  res.json({ balance: acc.balance, history: state.history[acc.id] || [] });
-});
-
-app.post("/api/admin/config", (req, res) => {
-  const { globalHouseProfitPct, gameId, gameHouseProfitPct, clearGameOverride, forcedWinner } = req.body || {};
-  if (typeof globalHouseProfitPct === "number") state.globalHouseProfitPct = Math.max(0, Math.min(100, globalHouseProfitPct));
-  if (gameId && clearGameOverride) delete state.perGamePct[gameId];
-  else if (gameId && typeof gameHouseProfitPct === "number") state.perGamePct[gameId] = Math.max(0, Math.min(100, gameHouseProfitPct));
-  if (gameId && typeof forcedWinner === "string") state.forcedNextWinner[gameId] = forcedWinner;
-  res.json({ ok: true, globalHouseProfitPct: state.globalHouseProfitPct, perGamePct: state.perGamePct });
-});
-
-app.post("/api/admin/round-action", (req, res) => {
-  const g = getGame(req.body && req.body.gameId), r = getOrAdvanceRound(g.id), act = req.body && req.body.action;
-  if (act === "lock") { r.status = "LOCKED"; r.fancyLocked = true; }
-  else if (act === "settle" && !r.settled) { r.settled = true; r.status = "SETTLED"; r.fancyLocked = true; r.winningOption = pickWinner(g, r.roundId); settleRound(g, r); }
-  else if (act === "reset-round") { const nextId = `${g.id.toUpperCase()}-${Date.now()}`; state.rounds[g.id] = { roundId: nextId, gameId: g.id, startedAt: Date.now(), status: "OPEN", hand: buildHand(nextId, g.mode), settled: false, winningOption: null, dealStep: 0, secondsRemaining: ROUND_CYCLE_SEC, fancyLocked: false }; }
-  res.json({ ok: true, round: state.rounds[g.id] });
-});
-
-app.use(express.static(path.join(__dirname, "public")));
-app.get("*", (req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
-app.listen(PORT, () => console.log(`Goldbet9 35s Studio running on port ${PORT}`));
