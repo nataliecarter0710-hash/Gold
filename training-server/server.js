@@ -43,8 +43,38 @@ const GAMES = [
 ];
 
 const memSessions = new Map(), roundsByGame = new Map(), recentByGame = new Map(), idempotency = new Map();
+const houseConfig = { globalHouseProfitPct: 15, perGamePct: {}, forcedNextWinner: {} };
+const adminStats = { totalVolume: 0, totalPayout: 0, roundsSettled: 0 };
 const r2 = (n) => Math.round(Number(n) * 100) / 100;
+const getEffectiveHouseProfitPct = (gameId) => {
+  const custom = houseConfig.perGamePct[gameId];
+  return typeof custom === "number" && !Number.isNaN(custom) ? custom : houseConfig.globalHouseProfitPct;
+};
+const getMult = (g, win) => (["Tie", "Draw", "Green 0"].includes(win) ? 8.0 : g.payout);
 
+function selectOutcomeByHouseProfit(g, r) {
+  if (houseConfig.forcedNextWinner[g.id] && g.options.includes(houseConfig.forcedNextWinner[g.id])) {
+    const picked = houseConfig.forcedNextWinner[g.id];
+    delete houseConfig.forcedNextWinner[g.id];
+    return picked;
+  }
+  const pct = Math.max(0, Math.min(100, Number(getEffectiveHouseProfitPct(g.id)) || 0));
+  if (!r.entries.length || pct === 0) return g.options[crypto.randomInt(0, g.options.length)];
+  const totalStake = r.entries.reduce((acc, e) => acc + Number(e.amount || 0), 0);
+  const targetMaxPayout = totalStake * (1 - pct / 100);
+  const scored = g.options.map((op) => {
+    const mult = getMult(g, op);
+    const estPayout = r.entries.filter((e) => e.selection === op).reduce((acc, e) => acc + r2(e.amount * mult), 0);
+    return { op, estPayout, withinTarget: estPayout <= targetMaxPayout };
+  });
+  const safePool = scored.filter((x) => x.withinTarget);
+  if (pct >= 100) {
+    const lowest = [...scored].sort((a, b) => a.estPayout - b.estPayout)[0];
+    return lowest ? lowest.op : g.options[0];
+  }
+  const poolList = safePool.length ? safePool : scored;
+  return poolList[crypto.randomInt(0, poolList.length)].op;
+}
 async function logStmt(db, sid, type, ref, desc, debit, credit, balAfter) {
   const stmtId = `STM-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
   if (db) {
@@ -65,13 +95,16 @@ const newRound = (g) => {
 
 const settle = async (g, r) => {
   if (r.status === "SETTLED") return;
-  const win = g.options[crypto.randomInt(0, g.options.length)];
+  const win = selectOutcomeByHouseProfit(g, r);
   r.winningOption = win; r.status = "SETTLED";
-  const mult = ["Tie", "Draw", "Green 0"].includes(win) ? 8.0 : g.payout;
+  const mult = getMult(g, win);
+  let roundStake = 0, roundPaid = 0;
   for (const e of r.entries) {
     if (e.settled) continue;
     e.settled = true;
+    roundStake = r2(roundStake + Number(e.amount || 0));
     const payout = e.selection === win ? r2(e.amount * mult) : 0;
+    roundPaid = r2(roundPaid + payout);
     const result = payout > 0 ? "WON" : "LOST";
     e.payout = payout; e.result = result; e.winningOption = win;
     if (pool) {
@@ -90,8 +123,11 @@ const settle = async (g, r) => {
       if (s && payout > 0) { s.balance = r2(s.balance + payout); await logStmt(null, e.sessionId, "WIN_SETTLEMENT", e.entryId, `${g.name} (${e.selection}) won on ${win}`, 0, payout, s.balance); }
     }
   }
+  adminStats.totalVolume = r2(adminStats.totalVolume + roundStake);
+  adminStats.totalPayout = r2(adminStats.totalPayout + roundPaid);
+  adminStats.roundsSettled += 1;
   const list = recentByGame.get(g.id) || [];
-  list.unshift({ roundId: r.roundId, winningOption: win });
+  list.unshift({ roundId: r.roundId, winningOption: win, houseProfitPct: getEffectiveHouseProfitPct(g.id) });
   recentByGame.set(g.id, list.slice(0, 12));
 };
 
@@ -105,7 +141,55 @@ const tick = () => {
 };
 GAMES.forEach(newRound);
 setInterval(tick, 500);
-app.get("/api/health", async (_req, res) => res.json({ ok: true, db: Boolean(pool), games: GAMES.length }));
+
+app.get("/api/health", async (_req, res) => res.json({ ok: true, db: Boolean(pool), games: GAMES.length, houseProfitPct: houseConfig.globalHouseProfitPct }));
+
+app.get("/api/admin/state", (req, res) => {
+  const gid = String(req.query.gameId || GAMES[0].id);
+  const g = GAMES.find((x) => x.id === gid) || GAMES[0];
+  const r = roundsByGame.get(g.id);
+  const exposure = {};
+  g.options.forEach((op) => { exposure[op] = 0; });
+  (r?.entries || []).forEach((e) => { exposure[e.selection] = r2((exposure[e.selection] || 0) + Number(e.amount || 0)); });
+  res.json({
+    globalHouseProfitPct: houseConfig.globalHouseProfitPct,
+    effectiveGamePct: getEffectiveHouseProfitPct(g.id),
+    perGamePct: houseConfig.perGamePct,
+    forcedNextWinner: houseConfig.forcedNextWinner,
+    stats: { ...adminStats, netHouseProfit: r2(adminStats.totalVolume - adminStats.totalPayout) },
+    activeRoundExposure: exposure
+  });
+});
+
+app.post("/api/admin/config", (req, res) => {
+  const { globalHouseProfitPct, gameId, gameHouseProfitPct, clearGameOverride, forcedWinner } = req.body || {};
+  if (typeof globalHouseProfitPct !== "undefined") {
+    const v = Math.max(0, Math.min(100, Number(globalHouseProfitPct)));
+    if (!Number.isNaN(v)) houseConfig.globalHouseProfitPct = v;
+  }
+  if (gameId && GAMES.some((x) => x.id === gameId)) {
+    if (clearGameOverride) delete houseConfig.perGamePct[gameId];
+    else if (typeof gameHouseProfitPct !== "undefined") {
+      const gv = Math.max(0, Math.min(100, Number(gameHouseProfitPct)));
+      if (!Number.isNaN(gv)) houseConfig.perGamePct[gameId] = gv;
+    }
+    if (typeof forcedWinner === "string") {
+      if (!forcedWinner) delete houseConfig.forcedNextWinner[gameId];
+      else houseConfig.forcedNextWinner[gameId] = forcedWinner;
+    }
+  }
+  res.json({ ok: true, globalHouseProfitPct: houseConfig.globalHouseProfitPct, perGamePct: houseConfig.perGamePct, forcedNextWinner: houseConfig.forcedNextWinner });
+});
+
+app.post("/api/admin/round-action", async (req, res) => {
+  const { gameId, action } = req.body || {};
+  const g = GAMES.find((x) => x.id === gameId) || GAMES[0];
+  const r = roundsByGame.get(g.id) || newRound(g);
+  if (action === "lock") { r.status = "LOCKED"; r.bettingEndsAt = Date.now(); }
+  else if (action === "settle") { await settle(g, r); newRound(g); }
+  else if (action === "reset-round") { newRound(g); }
+  res.json({ ok: true, gameId: g.id, action });
+});
 
 app.post("/api/session", async (req, res) => {
   try {
@@ -151,14 +235,14 @@ app.post("/api/session/:id/refill", async (req, res) => {
   }
 });
 
-app.get("/api/games", (_req, res) => res.json({ games: GAMES }));
+app.get("/api/games", (_req, res) => res.json({ games: GAMES.map((g) => ({ ...g, houseProfitPct: getEffectiveHouseProfitPct(g.id) })) }));
 
 app.get("/api/rounds/active", (req, res) => {
   tick();
   const g = GAMES.find((x) => x.id === String(req.query.gameId || GAMES[0].id)) || GAMES[0];
   const r = roundsByGame.get(g.id), now = Date.now();
   const secondsRemaining = Math.max(0, Math.ceil(((r.status === "OPEN" ? r.bettingEndsAt : r.settlesAt) - now) / 1000));
-  res.json({ game: g, round: { roundId: r.roundId, status: r.status, secondsRemaining }, recentResults: recentByGame.get(g.id) || [] });
+  res.json({ game: { ...g, houseProfitPct: getEffectiveHouseProfitPct(g.id) }, round: { roundId: r.roundId, status: r.status, secondsRemaining }, recentResults: recentByGame.get(g.id) || [] });
 });
 
 app.post("/api/rounds/:roundId/entries", async (req, res) => {
