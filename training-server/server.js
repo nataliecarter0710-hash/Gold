@@ -108,37 +108,47 @@ setInterval(tick, 500);
 app.get("/api/health", async (_req, res) => res.json({ ok: true, db: Boolean(pool), games: GAMES.length }));
 
 app.post("/api/session", async (req, res) => {
-  const reqId = String(req.body?.sessionId || "").trim();
-  if (pool) {
-    if (reqId) {
-      const ex = await pool.query(`select session_id, balance from training_app.training_sessions where session_id=$1`, [reqId]);
-      if (ex.rows[0]) return res.json({ sessionId: ex.rows[0].session_id, balance: Number(ex.rows[0].balance) });
+  try {
+    const reqId = String(req.body?.sessionId || "").trim();
+    if (pool) {
+      if (reqId) {
+        const ex = await pool.query(`select session_id, coalesce(balance, display_points, 10000) as balance from training_app.training_sessions where session_id=$1`, [reqId]);
+        if (ex.rows[0]) return res.json({ sessionId: ex.rows[0].session_id, balance: Number(ex.rows[0].balance) });
+      }
+      const sid = `TRAIN-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
+      await pool.query(`insert into training_app.training_sessions (session_id, display_points, balance) values ($1, 10000, 10000)`, [sid]);
+      await logStmt(pool, sid, "OPENING_CREDIT", sid, "Initial training balance", 0, 10000, 10000);
+      return res.status(201).json({ sessionId: sid, balance: 10000 });
     }
-    const sid = `TRAIN-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
-    await pool.query(`insert into training_app.training_sessions (session_id, display_points, balance) values ($1, 10000, 10000)`, [sid]);
-    await logStmt(pool, sid, "OPENING_CREDIT", sid, "Initial training balance", 0, 10000, 10000);
-    return res.status(201).json({ sessionId: sid, balance: 10000 });
+    if (reqId && memSessions.has(reqId)) { const s = memSessions.get(reqId); return res.json({ sessionId: s.sessionId, balance: s.balance }); }
+    const s = { sessionId: `TRAIN-${crypto.randomBytes(4).toString("hex").toUpperCase()}`, balance: 10000, history: [], statements: [] };
+    memSessions.set(s.sessionId, s);
+    await logStmt(null, s.sessionId, "OPENING_CREDIT", s.sessionId, "Initial training balance", 0, 10000, 10000);
+    res.status(201).json({ sessionId: s.sessionId, balance: s.balance });
+  } catch (err) {
+    console.error("SESSION_ERR:", err);
+    res.status(500).json({ error: "SESSION_DB_ERROR", detail: err.message });
   }
-  if (reqId && memSessions.has(reqId)) { const s = memSessions.get(reqId); return res.json({ sessionId: s.sessionId, balance: s.balance }); }
-  const s = { sessionId: `TRAIN-${crypto.randomBytes(4).toString("hex").toUpperCase()}`, balance: 10000, history: [], statements: [] };
-  memSessions.set(s.sessionId, s);
-  await logStmt(null, s.sessionId, "OPENING_CREDIT", s.sessionId, "Initial training balance", 0, 10000, 10000);
-  res.status(201).json({ sessionId: s.sessionId, balance: s.balance });
 });
 
 app.post("/api/session/:id/refill", async (req, res) => {
-  const sid = req.params.id;
-  if (pool) {
-    const u = await pool.query(`update training_app.training_sessions set balance=10000, display_points=10000, updated_at=now() where session_id=$1 returning balance`, [sid]);
-    if (!u.rows[0]) return res.status(404).json({ error: "SESSION_NOT_FOUND" });
-    await logStmt(pool, sid, "REFILL_RESET", sid, "Reset training balance to 10,000 VC", 0, 10000, 10000);
-    return res.json({ ok: true, balance: 10000 });
+  try {
+    const sid = req.params.id;
+    if (pool) {
+      const u = await pool.query(`update training_app.training_sessions set balance=10000, display_points=10000, updated_at=now() where session_id=$1 returning balance`, [sid]);
+      if (!u.rows[0]) return res.status(404).json({ error: "SESSION_NOT_FOUND" });
+      await logStmt(pool, sid, "REFILL_RESET", sid, "Reset training balance to 10,000 VC", 0, 10000, 10000);
+      return res.json({ ok: true, balance: 10000 });
+    }
+    const s = memSessions.get(sid);
+    if (!s) return res.status(404).json({ error: "SESSION_NOT_FOUND" });
+    s.balance = 10000;
+    await logStmt(null, sid, "REFILL_RESET", sid, "Reset training balance to 10,000 VC", 0, 10000, 10000);
+    res.json({ ok: true, balance: 10000 });
+  } catch (err) {
+    console.error("REFILL_ERR:", err);
+    res.status(500).json({ error: "REFILL_DB_ERROR", detail: err.message });
   }
-  const s = memSessions.get(sid);
-  if (!s) return res.status(404).json({ error: "SESSION_NOT_FOUND" });
-  s.balance = 10000;
-  await logStmt(null, sid, "REFILL_RESET", sid, "Reset training balance to 10,000 VC", 0, 10000, 10000);
-  res.json({ ok: true, balance: 10000 });
 });
 
 app.get("/api/games", (_req, res) => res.json({ games: GAMES }));
@@ -178,7 +188,7 @@ app.post("/api/rounds/:roundId/entries", async (req, res) => {
       r.entries.push({ ...entry, sessionId });
       idempotency.set(key, { fp, entry, balance: newBal });
       return res.status(201).json({ status: "ACCEPTED", entry, balance: newBal });
-    } catch (err) { await client.query("rollback"); return res.status(500).json({ error: "DB_ERROR" }); } finally { client.release(); }
+    } catch (err) { await client.query("rollback"); console.error("BET_ERR:", err); return res.status(500).json({ error: "DB_ERROR", detail: err.message }); } finally { client.release(); }
   }
 
   const s = memSessions.get(sessionId);
@@ -193,17 +203,22 @@ app.post("/api/rounds/:roundId/entries", async (req, res) => {
 });
 
 app.get("/api/history", async (req, res) => {
-  const sid = String(req.query.sessionId || "");
-  if (pool) {
-    const s = await pool.query(`select balance from training_app.training_sessions where session_id=$1`, [sid]);
-    if (!s.rows[0]) return res.status(404).json({ error: "SESSION_NOT_FOUND" });
-    const h = await pool.query(`select entry_id as "entryId", game_name as "gameName", selection, amount, result, payout, winning_option as "winningOption" from training_app.training_entries where session_id=$1 order by created_at desc limit 30`, [sid]);
-    const st = await pool.query(`select statement_id, entry_type, reference_id, description, debit, credit, balance_after, created_at from training_app.account_statement where session_id=$1 order by created_at desc limit 50`, [sid]);
-    return res.json({ balance: Number(s.rows[0].balance), history: h.rows, statements: st.rows });
+  try {
+    const sid = String(req.query.sessionId || "");
+    if (pool) {
+      const s = await pool.query(`select balance from training_app.training_sessions where session_id=$1`, [sid]);
+      if (!s.rows[0]) return res.status(404).json({ error: "SESSION_NOT_FOUND" });
+      const h = await pool.query(`select entry_id as "entryId", game_name as "gameName", selection, amount, result, payout, winning_option as "winningOption" from training_app.training_entries where session_id=$1 order by created_at desc limit 30`, [sid]);
+      const st = await pool.query(`select statement_id, entry_type, reference_id, description, debit, credit, balance_after, created_at from training_app.account_statement where session_id=$1 order by created_at desc limit 50`, [sid]);
+      return res.json({ balance: Number(s.rows[0].balance), history: h.rows, statements: st.rows });
+    }
+    const s = memSessions.get(sid);
+    if (!s) return res.status(404).json({ error: "SESSION_NOT_FOUND" });
+    res.json({ balance: s.balance, history: s.history, statements: s.statements });
+  } catch (err) {
+    console.error("HIST_ERR:", err);
+    res.status(500).json({ error: "HIST_DB_ERROR", detail: err.message });
   }
-  const s = memSessions.get(sid);
-  if (!s) return res.status(404).json({ error: "SESSION_NOT_FOUND" });
-  res.json({ balance: s.balance, history: s.history, statements: s.statements });
 });
 
 app.listen(PORT, "0.0.0.0", () => console.log("READY_ON_3000"));

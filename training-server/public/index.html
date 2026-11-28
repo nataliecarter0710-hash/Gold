@@ -20,11 +20,18 @@ button{background:#2563eb;color:#fff;border:0;border-radius:8px;padding:10px 12p
 <script>
 let sid=localStorage.getItem("gb9_sid")||"",gid="teen-patti-2020",chip=100,round=null,games=[];
 const setBal=(v)=>document.getElementById("bal").textContent=Number(v).toLocaleString()+" VC";
+async function initSession(){
+  try{
+    const r=await fetch("/api/session",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sessionId:sid})});
+    const d=await r.json();
+    if(!r.ok){document.getElementById("sid").textContent="Session retry...";document.getElementById("msg").textContent=(d.detail||d.error||"Session init error");return;}
+    sid=d.sessionId;localStorage.setItem("gb9_sid",sid);document.getElementById("sid").textContent=sid;setBal(d.balance);hist();
+  }catch(e){document.getElementById("msg").textContent="Network error: "+e.message;}
+}
 async function boot(){
-  const r=await fetch("/api/session",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sessionId:sid})});
-  const d=await r.json();sid=d.sessionId;localStorage.setItem("gb9_sid",sid);document.getElementById("sid").textContent=sid;setBal(d.balance);
-  games=(await (await fetch("/api/games")).json()).games||[];renderGames();poll();hist();
+  games=(await (await fetch("/api/games")).json()).games||[];renderGames();poll();
   setInterval(poll,1000);setInterval(hist,2000);
+  await initSession();
 }
 function renderGames(){
   const el=document.getElementById("games");el.innerHTML="";
@@ -39,8 +46,9 @@ async function poll(){
   document.getElementById("recent").textContent="Recent: "+((d.recentResults||[]).map(x=>x.winningOption).join(" • ")||"--");
 }
 async function bet(selection){
+  if(!sid)await initSession();
   const r=await fetch(`/api/rounds/${encodeURIComponent(round.roundId)}/entries`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sessionId:sid,gameId:gid,selection,amount:chip,idempotencyKey:`${round.roundId}-${selection}-${Date.now()}`})});
-  const d=await r.json();if(!r.ok){document.getElementById("msg").textContent=d.error;return;}
+  const d=await r.json();if(!r.ok){document.getElementById("msg").textContent=d.detail||d.error;return;}
   setBal(d.balance);document.getElementById("msg").textContent=`Placed ${chip} VC on ${selection}`;hist();
 }
 async function hist(){
